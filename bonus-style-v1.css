@@ -1,0 +1,50 @@
+/* Feed the Wolf bonus-arcade styles: adaptive illustrated game cards for iPhone PWA. */
+#bonus{padding:10px 0 40px}#bonus-root{max-width:740px;margin:0 auto}
+.fw-bonus{background:linear-gradient(155deg,#342345,#1e1832 63%,#141126);border:2px solid #9b6e9e;border-radius:20px;box-shadow:0 13px 38px #0006;padding:clamp(12px,3vw,23px);color:#f6e9dc;display:grid;gap:13px;position:relative}
+.fw-world-0{--fw-accent:#f2ba69;--fw-accent-dark:#8e623e;--fw-board:#352d57}
+.fw-world-1{--fw-accent:#c3a0ff;--fw-accent-dark:#745baf;--fw-board:#32295d}
+.fw-world-2{--fw-accent:#ecb36e;--fw-accent-dark:#895c32;--fw-board:#49352a}
+.fw-world-3{--fw-accent:#a7edcb;--fw-accent-dark:#598e74;--fw-board:#243f37}
+.fw-world-4{--fw-accent:#eab5d5;--fw-accent-dark:#9b5c86;--fw-board:#392443}
+.fw-bonus-header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.fw-bonus-kicker{font:800 10px/1.4 var(--body);letter-spacing:1.2px;text-transform:uppercase;color:var(--fw-accent);margin:0 0 6px}
+.fw-bonus-header h1{font:400 clamp(27px,7vw,41px)/1.06 var(--display);color:#fff4dc;margin:0}
+.fw-bonus-header p{margin:5px 0 0;color:#e3cde7;font:700 13px var(--body)}
+.fw-bonus-reward{padding:7px 12px;border-radius:999px;border:1px solid var(--fw-accent);background:#24182dbb;color:var(--fw-accent);font:800 14px var(--body);white-space:nowrap}
+.fw-bonus-instructions{font:600 13px/1.5 var(--body);color:#dacbe1;margin:0}
+.fw-bonus-hud{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;font:700 14px var(--body);color:var(--fw-accent)}
+.fw-bonus-play{border:2px solid var(--fw-accent-dark);border-radius:16px;background:radial-gradient(circle at 30% 25%,#ffffff0b,transparent 70%),var(--fw-board);padding:10px;min-height:280px}
+.fw-bonus-message{min-height:2.6em;color:#e7d8eb;font:600 13px/1.3 var(--body);text-align:center;margin:0}
+.fw-bonus-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:8px}
+.fw-bonus button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.fw-bonus-actions button,.fw-bonus-end button,.fw-pipe-test{border:1px solid #ac92c8;border-radius:11px;background:#493656;color:#fff2dc;padding:11px 13px;font:800 13px var(--body);cursor:pointer}
+.fw-bonus-actions button.fw-bonus-skip{border-color:var(--fw-accent);color:var(--fw-accent);background:#20192f}
+.fw-food-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;max-width:510px;margin:2px auto}
+.fw-food-tile{position:relative;aspect-ratio:1;background:linear-gradient(145deg,#74597d,#413254);border:2px solid #9e84a1;border-bottom-color:#d2a4b3;border-radius:12px;padding:5px;display:grid;place-items:center;cursor:pointer;box-shadow:inset 0 1px 6px #fff3,0 3px 2px #0004}
+.fw-food-tile svg{width:100%;max-width:67px;height:100%;filter:drop-shadow(1px 3px 2px #0006)}
+.fw-food-tile.selected{outline:4px solid #ffe6a8;outline-offset:-2px;transform:scale(1.04);z-index:2}
+.fw-food-tile.power{background:radial-gradient(circle,#ffe28a,#9356a1 66%);animation:fw-howl-pulse 1.2s ease-in-out infinite alternate}
+.fw-howl{position:absolute;bottom:2px;font:900 7px var(--body);letter-spacing:.5px;background:#30183f;color:#ffea99;padding:3px;border-radius:6px}
+@keyframes fw-howl-pulse{from{box-shadow:inset 0 0 7px #ffdd7a;transform:scale(1)}to{box-shadow:0 0 14px #ffdd7a;transform:scale(1.035)}}
+.fw-pipe-labels{display:flex;justify-content:space-between;padding:2px 4px 8px;color:var(--fw-accent);font:900 11px var(--body);letter-spacing:.6px}
+.fw-pipe-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;max-width:460px;margin:0 auto}
+.fw-pipe-tile{border:2px solid #78637e;background:#2c213b;border-radius:12px;aspect-ratio:1;display:grid;place-items:center;padding:2px;cursor:pointer}
+.fw-pipe-tile svg{width:100%;height:100%;filter:drop-shadow(0 2px 3px #0006)}
+.fw-pipe-tile.flowing{border-color:#a5f4cf;box-shadow:0 0 12px #8bf3c455}
+.fw-pipe-caption{font:600 12px/1.4 var(--body);color:#dfcfe4;text-align:center;margin:10px 0 0}
+.fw-pipe-test{background:var(--fw-accent-dark)}
+.fw-detective-list{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font:700 12px var(--body)}
+.fw-detective-list span{border:1px solid #b29ac6;background:#382a4f;color:#f2e5eb;padding:7px 10px;border-radius:999px}
+.fw-detective-list span.done{background:#235a4e;border-color:#a5eacb;text-decoration:line-through;color:#b7e9d5}
+.fw-detective-scene{width:100%;display:block;touch-action:manipulation}
+.fw-detective-item{cursor:pointer;outline:none;transition:opacity .18s,filter .18s}
+.fw-detective-item:hover,.fw-detective-item:focus{filter:drop-shadow(0 0 9px #fff3)}
+.fw-detective-item.found{opacity:.65}
+.fw-bonus-overlay:not([hidden]){position:absolute;inset:0;background:#110d23e6;z-index:12;display:grid;place-items:center;padding:18px;border-radius:17px}
+.fw-bonus-end{max-width:360px;background:#332242;border:2px solid var(--fw-accent);border-radius:18px;padding:25px 18px;display:grid;gap:15px;text-align:center;box-shadow:0 20px 50px #0009}
+.fw-bonus-end span{font-size:26px;color:var(--fw-accent)}
+.fw-bonus-end h2{font:400 34px var(--display);color:#ffeab6;margin:0}
+.fw-bonus-end p{font:600 14px/1.5 var(--body);margin:0}
+.fw-bonus-end button{background:var(--fw-accent-dark);min-height:48px}
+@media(max-width:460px){.fw-bonus{padding:11px;gap:10px}.fw-bonus-play{padding:6px;min-height:240px}.fw-food-grid{gap:3px}.fw-food-tile{border-radius:8px;border-width:1px;padding:2px}.fw-pipe-grid{gap:3px}.fw-pipe-tile{border-radius:7px;border-width:1px}.fw-bonus-actions button{padding:10px;font-size:11px}}
+@media(prefers-reduced-motion:reduce){.fw-food-tile.power{animation:none}.fw-detective-item{transition:none}}
