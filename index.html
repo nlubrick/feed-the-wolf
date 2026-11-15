@@ -351,6 +351,12 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 .tile.gem-unaffordable{opacity:.78}
 </style>
 <script src="./test-store-v2.js"></script>
+<link rel="stylesheet" href="./bonus-style-v1.css">
+<script src="./bonus-levels-v1.js"></script>
+<script src="./world-music-v1.js"></script>
+<script src="./bonus-match-v1.js"></script>
+<script src="./bonus-pipes-v1.js"></script>
+<script src="./bonus-hidden-v1.js"></script>
 <script src="./studio-boot-v2.js" defer></script>
 </head>
 <body>
@@ -393,13 +399,16 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
   </nav>
  </div>
 
+ <section id="bonus" hidden aria-label="Bonus mini-game levels">
+   <div id="bonus-root"></div>
+ </section>
  <section id="unlock" hidden aria-label="Unlock the full game">
     <div class="shop-top"><button class="quiet" id="unlock-back" type="button">&#8249; Back to the castle</button></div>
     <div class="unlock-card">
       <p class="unlock-kicker">The next wing awaits</p><img id="unlock-wolf" alt="The wolf is ready for his next adventure">
       <h1>Still hungry?</h1>
-      <p class="unlock-body">The first five castles are free. Unlock the remaining 95 levels, Hard Mode, and daily challenges in five locations.</p>
-      <div class="unlock-perks"><span>100 main levels</span><span>Hard Mode</span><span>Daily puzzles</span><span>No ads</span></div>
+      <p class="unlock-body">The first five castle puzzles plus one bonus game are free. Unlock all 115 story levels, Hard Mode, and daily challenges across five locations.</p>
+      <div class="unlock-perks"><span>115 story levels</span><span>Hard Mode</span><span>Daily puzzles</span><span>No ads</span></div>
       <div class="unlock-price"><span id="unlock-price">$2.99</span><small>One-time purchase · No subscription</small></div>
       <button class="go" id="unlock-buy" type="button" disabled>Unlock the full game</button>
       <button class="quiet" id="unlock-restore" type="button" disabled>Restore purchases</button>
@@ -419,13 +428,13 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
         <span>Game progress</span><strong id="dev-progress-state">Level 1 / 100</strong>
       </div>
       <label class="dev-option" for="dev-full"><input type="checkbox" id="dev-full"> Preview full game without purchasing</label>
-      <p class="dev-help">Turn this on to browse any level. Turn it off to test the real five-level gate and fake checkout.</p>
+      <p class="dev-help">Browse levels 1–115, including optional mini-games. The first bonus level is free. Turn off preview to test the purchase gate.</p>
       <div class="dev-level-row">
         <label for="dev-level">Jump to level</label>
-        <input id="dev-level" type="number" inputmode="numeric" min="1" max="100" value="1">
+        <input id="dev-level" type="number" inputmode="numeric" min="1" max="115" value="1">
         <button class="quiet" id="dev-jump" type="button">Go</button>
       </div>
-      <button class="quiet" id="dev-view-paywall" type="button">Preview the Level 6 Purchase Screen</button>
+      <button class="quiet" id="dev-view-paywall" type="button">Preview the Level 7 Purchase Screen</button>
       <div class="dev-reset-actions">
         <button class="quiet" id="dev-reset-purchase" type="button">Reset test purchase</button>
         <small>Remove the fake full-game purchase and all gem packs, but keep progress and items bought with gems.</small>
@@ -482,7 +491,7 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
     <button class="quiet" id="store-dev" type="button" hidden>Developer</button>
   </div>
   <h1>Store</h1>
-  <p class="ftw-store-intro">Earn gems by solving puzzles, or get more with test purchases. <strong>Every character, costume and pet can be unlocked with gems.</strong></p>
+  <p class="ftw-store-intro">Earn gems from puzzle wins and optional bonus games, or get more with test purchases. <strong>Every character, costume and pet can be unlocked with gems.</strong></p>
   <div class="ftw-store-purchase-head"><h2 class="shelf">Gem Packs &amp; Full Game</h2><p class="ftw-test-checkout" id="store-test-note" hidden>TEST STORE · NO ACTUAL MONEY IS CHARGED</p></div>
   <div id="store-products" class="ftw-products"></div>
   <h2 class="shelf">Characters &amp; Companions</h2>
@@ -524,14 +533,14 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
    <p class="fe-eyebrow">Failure Entertainment Presents</p>
    <div class="fe-finale-mark">★ ★ ★</div>
    <h1 id="fe-finale-heading">The Castle Is Yours</h1>
-   <p id="fe-finale-description">All 100 levels complete. The wolf is finally fed.</p>
+   <p id="fe-finale-description">All 115 levels complete. The wolf is finally fed.</p>
    <p id="fe-finale-next">Try Hard Mode challenges, or return for tomorrow's daily puzzle.</p>
    <div class="fe-finale-actions">
     <button class="go" id="finish-hard" type="button">Try Hard Mode</button>
     <button class="quiet" id="finish-daily" type="button">Daily Puzzle</button>
     <button class="quiet" id="finish-credits" type="button">Watch Credits</button>
     <button class="quiet" id="finish-replay" type="button">Replay from Level 1</button>
-    <button class="quiet" id="finish-return" type="button">Back to Level 100</button>
+    <button class="quiet" id="finish-return" type="button">Back to Level 115</button>
    </div>
    <p class="fe-credits-sub">6/10. Good enough.</p>
   </div>
@@ -1953,6 +1962,7 @@ function resolve(){
   resTimer = setTimeout(showResult, s.status === "win" ? 1400 : s.why === "stuck" ? 300 : 900, true);
 }
 function frame(ts){
+ if($("game").hidden){last=ts/1000;requestAnimationFrame(frame);return;}
   const now = ts / 1000; const dt = Math.min(.034, Math.max(.001, now - last)); last = now; clock = now;
   const sub = dt > .024 ? 3 : 2;
   frameNo++; avgDt += (dt - avgDt) * .05; slow = avgDt > .026;
@@ -1977,6 +1987,56 @@ function testCheckoutAvailable(){ return FTW_TEST_BUILD && !nativeStore(); }
 function hasFullAccess(){
   return fullGame || (testCheckoutAvailable() && (simulatedPurchase || (developerMode && previewFull)));
 }
+/* 115-stage campaign wrapper. The 100 original puzzle IDs never change. */
+let campaignStage=1,bonusResults={};
+function stageForPuzzle(index){return window.FTWBonus.puzzleStage(index).number;}
+function bonusEarnedGems(){
+ return Object.entries(bonusResults).reduce((total,[number,result])=>{
+  const stage=window.FTWBonus.at(Number(number));
+  return total+(stage?.type==="bonus"&&result==="win"?stage.reward:0);
+ },0);
+}
+function canEnterBonus(stage){return stage.number===6||hasFullAccess();}
+function finishBonusStage(stage,won){
+ if(!stage||stage.type!=="bonus")return;
+ if(won)bonusResults[stage.number]="win";
+ else if(!bonusResults[stage.number])bonusResults[stage.number]="skip";
+ syncPrizes();save();renderWardrobe();
+ if(won)sfx("coin");
+ goToCampaignStage(stage.number+1);
+}
+function enterBonusStage(stage){
+ if(!stage||stage.type!=="bonus")return false;
+ if(!canEnterBonus(stage)){openUnlock(stage.afterPuzzleIndex+1,false);return false;}
+ daily=false;clearTimeout(resTimer);
+ campaignStage=stage.number;
+ show("bonus");musicStop();
+ bonusController.start(stage);
+ save();return true;
+}
+function goToCampaignStage(number){
+ const stage=window.FTWBonus.at(number);if(!stage)return false;
+ if(stage.type==="bonus")return enterBonusStage(stage);
+ campaignStage=number;
+ if(!canPlay(stage.puzzleIndex,false)){
+  if(bonusController.stage)bonusController.close();
+  save();openUnlock(stage.puzzleIndex,false);return false;
+ }
+ if(bonusController.stage)bonusController.close();
+ daily=false;show("game");
+ const ok=load(stage.puzzleIndex,null,true);
+ if(ok)save();
+ return ok;
+}
+const bonusController=window.FTWBonus.mount($("bonus-root"),{
+ finish:finishBonusStage,back:stage=>goToCampaignStage(Math.max(1,stage.number-1)),
+ musicEnabled:()=>musicOn,
+ toggleMusic:()=>{
+  musicOn=!musicOn;
+  try{localStorage.setItem("ftw-music",musicOn?"on":"off");}catch(e){}
+  musicLabel();if(!musicOn)musicStop();
+ }
+});
 function renderDeveloper(){
   $("developer-open").hidden = !FTW_TEST_BUILD;
   $("developer-from-unlock").hidden = !FTW_TEST_BUILD;
@@ -1986,9 +2046,9 @@ function renderDeveloper(){
   $("dev-purchase-state").textContent = nativeStore()
     ? "Apple purchases (cannot reset here)"
     : (simulatedPurchase ? "Full game purchased" : "Demo · no full unlock") + " · " + extra + " test gems";
-  $("dev-progress-state").textContent = "Level " + (li+1) + " / " + LEVELS.length +
+  $("dev-progress-state").textContent = "Level " + campaignStage + " / 115" +
     " · " + Object.keys(cleared).filter(k => /^\d+$/.test(k)).length + " complete";
-  $("dev-level").value = String(li+1);
+  $("dev-level").value = String(campaignStage);
   $("dev-reset-purchase").disabled = !testCheckoutAvailable();
   $("dev-reset-all").disabled = !testCheckoutAvailable();
 }
@@ -2041,7 +2101,7 @@ function resetTesting(kind){
   pendingUnlockTarget=null; entitlementReturnLevel=null;
   if(kind!=="purchase"){
     try{ localStorage.removeItem("ftw-save"); }catch(e){}
-    cleared={};stars={};fails={};owned={};worn={};gemUnlocked={};hints=0;
+    cleared={};stars={};fails={};owned={};worn={};gemUnlocked={};bonusResults={};campaignStage=1;hints=0;
     hintPaid={};hintOn=false;hintKey="";dailyDone={};seen={};seq=[];
     daily=false;hardOn=false;li=0;
     syncPrizes();load(0,null,true);save();
@@ -2069,10 +2129,9 @@ $("dev-full").addEventListener("change",e=>setPreviewFull(e.target.checked));
 $("dev-jump").addEventListener("click",()=>{
   if(!developerMode)return;
   const requested=Number($("dev-level").value);
-  const level=Math.max(1,Math.min(LEVELS.length,Math.round(requested||1)));
+  const level=Math.max(1,Math.min(window.FTWBonus.stages.length,Math.round(requested||1)));
   daily=false;hardOn=false;
-  if(!canPlay(level-1,false)){openUnlock(level-1,false);return;}
-  load(level-1,null,true);show("game");
+  goToCampaignStage(level);
 });
 $("dev-level").addEventListener("keydown",e=>{if(e.key==="Enter")$("dev-jump").click();});
 $("dev-reset-purchase").addEventListener("click",()=>resetTesting("purchase"));
@@ -2193,7 +2252,7 @@ function updateStoreButtons(){
   if (testing && developerMode && previewFull){
     $("unlock-status").textContent = "Developer full-game preview is active. No purchase was made.";
   } else if(testing){
-    $("unlock-status").textContent = simulatedPurchase ? "Simulated purchase active — all 100 levels unlocked." :
+    $("unlock-status").textContent = simulatedPurchase ? "Simulated purchase active — all 115 story levels unlocked." :
       "Test checkout: tap to unlock the game without paying real money.";
   } else if (fullGame){
     $("unlock-status").textContent = "Full game unlocked. Thanks for feeding the wolf!";
@@ -2206,6 +2265,7 @@ function updateStoreButtons(){
 function openUnlock(index,isDaily){
   pendingUnlockTarget = {index:Number.isInteger(index) && index >= 0 && index < LEVELS.length ? index : Math.max(li,0),daily:!!isDaily};
   $("unlock-wolf").src = heroSvg("joy", OUTFITS.filter(o => worn[o.slot] === o.id).map(o => o.id), worn.hero || "wolf").src;
+  if(bonusController.stage)bonusController.music.stop();
   updateStoreButtons(); show("unlock");
 }
 function acceptEntitlement(result){
@@ -2260,7 +2320,10 @@ async function storeAction(action){
 }
 $("unlock-buy").addEventListener("click",()=>storeAction("purchase"));
 $("unlock-restore").addEventListener("click",()=>storeAction("restore"));
-$("unlock-back").addEventListener("click",()=>show("game"));
+$("unlock-back").addEventListener("click",()=>{
+ if(!hasFullAccess()&&campaignStage===7&&li===4)goToCampaignStage(6);
+ else{show("game");campaignStage=stageForPuzzle(li);musicStart();}
+});
 $("unlock-link").addEventListener("click",()=>openUnlock(Math.max(FREE_LEVEL_COUNT,li+1),false));
 window.addEventListener("pageshow",()=>refreshStoreEntitlement());
 /* ---------- level flow ---------- */
@@ -2281,16 +2344,18 @@ function load(index, replay, fresh){
   clearTimeout(resTimer);
   const old = board.querySelector(".result"); if (old) old.remove();
   li = index; lv = activeLevel(); P = prep(lv); s = newState(lv); seq = [];
-  if(FTW_TEST_BUILD) $("dev-level").value=String(li+1);
+  if(!daily)campaignStage=stageForPuzzle(index);
+  if(FTW_TEST_BUILD) $("dev-level").value=String(campaignStage);
   for (const i of (replay || [])){ if (pull(s, lv, i)) seq.push(i); }
   document.body.classList.toggle("hard", hardOn);
   { const T = theme(), st = document.documentElement.style; st.setProperty("--night", T.css[0]); st.setProperty("--night-2", T.css[1]); st.setProperty("--stone", T.css[2]); st.setProperty("--stone-dark", T.css[3]); st.setProperty("--edge", T.edge); }
   if (daily) $("level").innerHTML = "Daily puzzle<small>" + new Date().toLocaleDateString(undefined, {weekday:"long", month:"short", day:"numeric"}) + (dailyDone[dayNo()] ? " · solved" : "") + "</small>";
-  else $("level").innerHTML = "Level " + (li+1) + (hardOn ? "<em>HARD</em>" : "") + "<small>" + locationFor(li).name + " · " + wing(li).name + " · " + lv.name + (stars[key()] ? " · " + "★".repeat(stars[key()]) : "") + "</small>";
+  else $("level").innerHTML = "Level " + campaignStage + " / 115" + (hardOn ? "<em>HARD</em>" : "") + "<small>" + locationFor(li).name + " · Puzzle " + (li+1) + "/100 · " + lv.name + (stars[key()] ? " · " + "★".repeat(stars[key()]) : "") + "</small>";
   tipText = daily ? "A different castle every day. Solve it for 5 gems." : (hardOn && LEVELS[li].hard ? (lv.rooms.some(r => r.has && r.has.captive) ? "A friend of mine is in that cage. Get him out too. " : "Hard mode. Same castle, worse plumbing. ") : "") + (lv.hint || "");
   { const b0 = Math.floor(li / 20) * 20;               // one castle's worth of dots at a time
     $("dots").innerHTML = daily ? "" : LEVELS.slice(b0, b0 + 20).map((_,q) => { const i = b0 + q; return '<i class="' + (i === li ? "now" : cleared[i] || cleared[i + "h"] ? "done" : "") + '"></i>'; }).join(""); }
-  $("prev").disabled = daily || li === 0; $("next2").disabled = daily || li + 1 >= reached();
+  $("prev").disabled = daily || campaignStage === 1;
+  $("next2").disabled = daily || campaignStage >= 115 || (li + 1 >= reached() && !cleared[li] && !cleared[li+"h"]);
   const hb = $("hard"); hb.textContent = hasFullAccess() ? "Hard: " + (hardOn ? "on" : "off") : "Hard: full game"; hb.disabled = daily; hb.style.opacity = daily ? .4 : 1;
   $("daily").innerHTML = !hasFullAccess() ? "Daily puzzle · Full game" : daily ? "Back to level " + (li + 1) : dailyDone[dayNo()] ? "Daily puzzle: solved today" : 'Daily puzzle +<i class="gem"></i>5'; hb.setAttribute("aria-pressed", hardOn ? "true" : "false");
   castle.style.setProperty("--cols", lv.cols);
@@ -2324,11 +2389,12 @@ function load(index, replay, fresh){
   calm = 0;
   if (s.status !== "play"){ busy = true; showResult(false); }
   else if (!daily && !replay && li > 0 && li % 5 === 0 && !seen[li]){ seen[li] = true; save(); reveal(); }
+  if(!$("game").hidden)musicStart();
 }
 function reveal(){                                  // a moment for reaching somewhere new
   const el = document.createElement("div"), extra = [];
   if (li % 20 === 0) extra.push(locationFor(li).story);
-  for (const o of OUTFITS) if (o.from === li + 1) extra.push("The " + o.name.toLowerCase() + " is now on sale in the wardrobe.");
+  for (const o of OUTFITS) if (o.from === li + 1) extra.push("The " + o.name.toLowerCase() + " can now be unlocked in the Store.");
   el.className = "result win reveal"; el.setAttribute("role", "status");
   el.innerHTML = "<p>" + (li % 20 === 0 ? "New location" : "New wing") + "</p><h2>" + (li % 20 === 0 ? locationFor(li).name : wing(li).name) + "</h2>" + extra.map(t => "<p>" + t + "</p>").join("") + '<button class="go" id="go" type="button">In we go</button>';
   board.appendChild(el); busy = true; sfx("win");
@@ -2383,11 +2449,11 @@ function showResult(focus){
       dressWolf(); save(); renderWardrobe();
     }
     el.className = "result win";
-    el.innerHTML = '<div class="stars" role="img" aria-label="' + st + ' of 3 stars">' + "★".repeat(st) + "<i>" + "★".repeat(3 - st) + "</i></div><h2>" + (lastLv ? "All " + LEVELS.length + " cleared" : "Dinner is served") + "</h2>" +
+    el.innerHTML = '<div class="stars" role="img" aria-label="' + st + ' of 3 stars">' + "★".repeat(st) + "<i>" + "★".repeat(3 - st) + "</i></div><h2>" + (lastLv ? "The final feast!" : "Dinner is served") + "</h2>" +
       (prize ? '<div class="prize"><img alt="" src="' + thumb(prize.id) + '"><p><b>Prize: ' + prize.name + '</b><br>' + (gain ? 'Plus <i class="gem"></i>' + gain + ". " : "") + (prize.slot === "pet" ? "It is already following him." : "He is already wearing it.") + '</p></div>'
              : "<p>" + (lastLv ? (hardOn ? "On hard mode. The ad owes you an apology." : "Now try them with hard mode on.") : "Solved in " + seq.length + (seq.length === 1 ? " pull" : " pulls") + (hardOn ? ", on hard." : ".")) + "</p>" + (gain ? '<p class="gain">+<i class="gem"></i>' + gain + "</p>" : "")) +
-      (!hasFullAccess() && li === FREE_LEVEL_COUNT - 1 ? '<p>Five castles down. Ninety-five more await beyond the gates!</p>' : "") +
-      '<button class="go" id="next" type="button">' + (lastLv ? "Finish" : (!hasFullAccess() && li === FREE_LEVEL_COUNT - 1 ? "See the full game" : "Next level")) + "</button>";
+      (!hasFullAccess() && li === FREE_LEVEL_COUNT - 1 ? '<p>Five castle puzzles down! The free bonus Level 6 is next.</p>' : "") +
+      '<button class="go" id="next" type="button">' + (lastLv ? "Finish" : (!hasFullAccess() && li === FREE_LEVEL_COUNT - 1 ? "Try bonus Level 6" : "Next level")) + "</button>";
     if(lastLv && focus){showFinale();return;}
   } else if (s.status === "lose"){
     const w = WHY[s.why] || WHY.stuck;
@@ -2417,12 +2483,12 @@ board.addEventListener("click", e => {
   if (t.id === "go"){ t.closest(".result").remove(); busy = false; return; }
   if (t.id === "retry"){ load(li); return; }
   if (t.id === "undo2"){ undo(); return; }
-  if (t.id === "next"){ if(daily){daily=false;load(li)} else if(li===LEVELS.length-1){showFinale()} else load(li+1); return; }
+  if (t.id === "next"){ if(daily){daily=false;load(li)} else if(li===LEVELS.length-1){showFinale()} else goToCampaignStage(stageForPuzzle(li)+1); return; }
   if (t.classList.contains("pin")) doPull(+t.dataset.i, t);
 });
 $("reset").addEventListener("click", () => load(li));
-$("prev").addEventListener("click", () => { if (li > 0) load(li - 1); });
-$("next2").addEventListener("click", () => { if (li + 1 < reached()) load(li + 1); });
+$("prev").addEventListener("click", () => {if(campaignStage>1)goToCampaignStage(campaignStage-1);});
+$("next2").addEventListener("click", () => {if(campaignStage<115)goToCampaignStage(campaignStage+1);});
 $("hard").addEventListener("click", toggleHard);
 $("daily").addEventListener("click", () => {
   if (pend) return;
@@ -2478,10 +2544,10 @@ function syncPrizes(){
     if (o.cost && owned[o.id]) g -= o.cost;
   }
   const prizeGemsSpent=Object.values(gemUnlocked).reduce((t,n)=>t+(Number.isSafeInteger(n)&&n>0?n:0),0);
-  gems = Math.max(0, g + mockGemCredits() - prizeGemsSpent - hints + 5 * Object.keys(dailyDone).length);
+  gems = Math.max(0, g + mockGemCredits() + bonusEarnedGems() - prizeGemsSpent - hints + 5 * Object.keys(dailyDone).length);
   return got;
 }
-function save(){ try { localStorage.setItem("ftw-save", JSON.stringify({cleared, stars, owned, worn, gemUnlocked, hints, hp:hintPaid, dd:dailyDone, seen, li, hard:hardOn})); } catch (e) {} }
+function save(){ try { localStorage.setItem("ftw-save", JSON.stringify({cleared, stars, owned, worn, gemUnlocked, bs:bonusResults, cs:campaignStage, hints, hp:hintPaid, dd:dailyDone, seen, li, hard:hardOn})); } catch (e) {} }
 /* Every cosmetic is available for gems. Level and Hard Mode rewards are
    also earnable for free, but can be bought early instead of waiting. */
 function gemPrice(o){
@@ -2533,7 +2599,7 @@ $("shop").addEventListener("click",e=>{
 });
 function menu(){}
 function show(name){                                // screens: the castle, the wardrobe, the rules, the finale, credits
-  for (const id of ["game","shop","help","credits","ftw-finale","unlock","developer"]) $(id).hidden = id !== name;
+  for (const id of ["game","shop","help","credits","ftw-finale","unlock","developer","bonus"]) $(id).hidden = id !== name;
   window.scrollTo(0, 0);
   if (name === "game"){ setSize(); renderBg(); }
   if (name === "shop"){renderWardrobe();renderStore();}
@@ -2557,8 +2623,8 @@ function showFinale(){
  const solvedHard=LEVELS.filter((_,i)=>!!cleared[i+"h"]).length;
  const uniqueSolved=LEVELS.filter((_,i)=>!!cleared[i]||!!cleared[i+"h"]).length;
  $("fe-finale-heading").textContent=hardOn?(solvedHard===LEVELS.length?"Hard Mode Conquered":"The Final Hard Castle"):"The Castle Is Yours";
- $("fe-finale-description").textContent="You finished Level 100, the grand finale. The wolf is fed. Mostly.";
- $("fe-finale-next").textContent=uniqueSolved+" of 100 levels cleared; "+solvedNormal+" normal and "+solvedHard+" hard variants solved. The daily puzzle and your wardrobe are still waiting.";
+ $("fe-finale-description").textContent="You finished Level 115, the grand finale. The wolf is fed. Mostly.";
+ $("fe-finale-next").textContent=uniqueSolved+" of 100 pull-the-pin puzzles cleared and "+Object.values(bonusResults).filter(x=>x==="win").length+" of 15 bonus stages won. The Store and daily puzzle are still waiting.";
  $("finish-hard").hidden=hardOn;
  show("ftw-finale");
 }
@@ -2708,26 +2774,44 @@ function buildTune(hard){
 }
 let tunes = {}, musicOn = true;
 try { musicOn = localStorage.getItem("ftw-music") !== "off"; } catch (e) {}
-function musicStart(){ if(window.__feStudioIntroActive) return;                              // normal and hard mode each have their own cut of the tune
-  if (!musicOn) return;
-  try {
-    const k = hardOn ? "h" : "n", other = tunes[hardOn ? "n" : "h"];
-    if (!tunes[k]){ const a = new Audio(URL.createObjectURL(new Blob([buildTune(hardOn).buffer], {type:"audio/wav"}))); a.loop = true; a.volume = .8; tunes[k] = a; }
-    if (other && !other.paused) other.pause();
-    if (tunes[k].paused){ if (other) tunes[k].currentTime = 0; const p = tunes[k].play(); if (p && p.catch) p.catch(() => {}); }
-  } catch (e) {}
+/* Castle music remains original. The other four locations use their own
+   composed loops; bonus-game arrangements share the same chapter motifs. */
+function musicChapter(){return daily?Math.floor((dayNo()%100)/20):Math.floor(li/20);}
+function musicStart(){
+ if(window.__feStudioIntroActive||!musicOn||$("game").hidden)return;
+ try{
+  const world=musicChapter(),id=world+":"+(hardOn?"h":"n");
+  for(const [k,audio] of Object.entries(tunes)){
+   if(k!==id&&!audio.paused){audio.pause();audio.currentTime=0;}
+  }
+  if(!tunes[id]){
+   const wav=world===0?buildTune(hardOn):window.FTWWorldMusic.render(world,hardOn,window.FTWBonus.worldScores);
+   const audio=new Audio(URL.createObjectURL(new Blob([wav.buffer],{type:"audio/wav"})));
+   audio.loop=true;audio.volume=world===0?.8:.72;
+   tunes[id]=audio;
+  }
+  const current=tunes[id];
+  if(current.paused){const p=current.play();if(p?.catch)p.catch(()=>{});}
+ }catch(e){}
 }
 function musicStop(){ try { for (const k in tunes) tunes[k].pause(); } catch (e) {} }
 window.addEventListener("failure-studio-intro-closed",()=>{ /* Start music on the next intentional game tap, not during the studio intro. */ });
 function musicLabel(){ const b = $("music"); b.setAttribute("aria-pressed", musicOn ? "true" : "false"); b.setAttribute("aria-label", "Music: " + (musicOn ? "on" : "off")); }
 musicLabel();
-document.addEventListener("click", () => { if (musicOn && !window.__feStudioIntroActive) musicStart(); }, true);
+document.addEventListener("click", () => {if(musicOn&&!window.__feStudioIntroActive&&!$("game").hidden)musicStart();},true);
 $("music").addEventListener("click", () => {
   musicOn = !musicOn;
   try { localStorage.setItem("ftw-music", musicOn ? "on" : "off"); } catch (e) {}
   musicLabel(); if (musicOn) musicStart(); else musicStop();
 });
-document.addEventListener("visibilitychange", () => { if (document.hidden) musicStop(); else if (musicOn && (tunes.n || tunes.h)) musicStart(); });
+document.addEventListener("visibilitychange",()=>{
+ if(document.hidden){musicStop();if(bonusController.stage)bonusController.music.stop();}
+ else if(musicOn){
+  if(!$("game").hidden)musicStart();
+  if(!$("bonus").hidden&&bonusController.stage)
+   bonusController.music.start(bonusController.stage.mode,bonusController.stage.chapter,true);
+ }
+});
 
 function start(data){
   data=data||{};
@@ -2737,7 +2821,9 @@ function start(data){
   cleared=obj(sv.cleared)||obj(data.cleared)||{};stars=obj(sv.stars)||obj(data.stars)||{};
   owned=obj(sv.owned)||obj(data.owned)||{};worn=obj(sv.worn)||obj(data.worn)||{};
   gemUnlocked=obj(sv.gemUnlocked)||{};
+  bonusResults=obj(sv.bs)||{};
   hints=+sv.hints||+data.hints||0;hintPaid=obj(sv.hp)||{};dailyDone=obj(sv.dd)||{};seen=obj(sv.seen)||{};
+  const savedStage=Number.isInteger(sv.cs)&&window.FTWBonus.at(sv.cs)?sv.cs:null;
   const requested = Number.isInteger(sv.li)&&LEVELS[sv.li] ? sv.li :
     Number.isInteger(data.li)&&LEVELS[data.li] ? data.li : 0;
   hardOn=hasFullAccess() && !!(sv.hard ?? data.hard);
@@ -2747,6 +2833,11 @@ function start(data){
   if(requested>=FREE_LEVEL_COUNT&&!hasFullAccess())entitlementReturnLevel=requested;
   const index=hasFullAccess()?requested:Math.min(requested,FREE_LEVEL_COUNT-1);
   load(index,index===requested?data.seq:null,true);
+  if(savedStage&&window.FTWBonus.at(savedStage)?.type==="bonus"&&canEnterBonus(window.FTWBonus.at(savedStage))){
+    enterBonusStage(window.FTWBonus.at(savedStage));
+  }else if(savedStage&&savedStage!==stageForPuzzle(index)&&hasFullAccess()){
+    goToCampaignStage(savedStage);
+  }
   refreshStoreEntitlement();
   requestAnimationFrame(ts=>{last=ts/1000;clock=last;requestAnimationFrame(frame);});
 }
