@@ -296,7 +296,49 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 .ftw-dev-panel p{margin:0;color:#cdbfe0;line-height:1.3}
 .tile.ftw-premium-locked{opacity:.44;filter:grayscale(.95) saturate(.35)}
 .tile.ftw-premium-locked::before{content:"FULL GAME";position:absolute;top:4px;left:4px;right:4px;z-index:2;font:bold 9px var(--body);letter-spacing:.6px;color:#fff;text-shadow:0 2px 4px #000;text-align:center}
+
+/* Temporary PWA beta tools. Delete before App Store submission. */
+#developer{display:flex;flex-direction:column;gap:16px}
+#developer .dev-console{background:linear-gradient(165deg,#302145,#161126);padding:20px 16px;border:2px solid #dcaf58;border-radius:18px;display:grid;gap:12px;max-width:600px;width:100%;margin:0 auto}
+#developer h1{font:400 clamp(30px,8vw,42px) var(--display);color:#ffe4a5;margin:0}
+.dev-tag{font:800 11px var(--body);letter-spacing:1px;border:1px solid #dcaf58;border-radius:999px;color:#ffe4a5;padding:7px 10px}
+.dev-eyebrow{font:800 11px var(--body);text-transform:uppercase;letter-spacing:1.5px;color:#ebbd7b;margin:0}
+.dev-caption,.dev-help{font:600 13px/1.5 var(--body);color:#d6c8e8;margin:0}
+.dev-state{background:#100d20aa;border:1px solid #7c6996;border-radius:12px;padding:12px;display:grid;grid-template-columns:1fr auto;gap:9px;font:700 13px var(--body);color:#d6c8e8}
+.dev-state strong{color:#ffe5a8;text-align:right}
+.dev-option{display:flex;align-items:center;gap:12px;background:#483457;border:1px solid #a28dba;border-radius:12px;padding:12px;font:800 14px var(--body);cursor:pointer}
+.dev-option input{width:23px;height:23px;accent-color:#5be08a;flex:none}
+.dev-level-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font:700 14px var(--body)}
+.dev-level-row input{width:76px;min-height:42px;border-radius:9px;background:#19142e;color:#fff;border:1px solid #9b81bc;padding:6px;font-size:17px}
+.dev-reset-actions{display:grid;gap:6px}
+.dev-reset-actions .quiet{width:100%;text-align:center;border-color:#aa86ae}
+.dev-reset-actions .danger{border-color:#f2a46c;color:#ffccae}
+.dev-reset-actions small{font:600 12px/1.45 var(--body);color:#c3b0d5;margin-bottom:12px}
+.ftw-test-checkout{font:800 11px/1.5 var(--body);letter-spacing:1px;text-align:center;color:#ffe2a7;background:#52381e;border:1px solid #d6a35c;border-radius:9px;padding:8px}
+.ftw-test-toast{position:fixed;top:max(15px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#24513f;color:#f5fff9;border:2px solid #86e5b2;border-radius:13px;box-shadow:0 8px 40px #0008;padding:13px 18px;z-index:1500;font:800 13px/1.3 var(--body);max-width:90vw;text-align:center;pointer-events:none}
+
+.ftw-store-head{text-align:center;max-width:560px;margin:0 auto}
+.ftw-store-head h1{font:400 42px var(--display);margin:6px 0;color:var(--brass)}
+.ftw-store-head p{line-height:1.5}
+.ftw-products{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.ftw-product{display:flex;gap:13px;padding:14px;border:2px solid #685187;border-radius:17px;background:radial-gradient(ellipse at 35% 0,#ffffff0a,transparent),#251b40;align-items:center;flex-wrap:wrap}
+.ftw-product>img{width:92px;height:95px;object-fit:contain;filter:drop-shadow(0 4px 7px #0008)}
+.ftw-product-body{flex:1;min-width:135px}
+.ftw-product b{font:400 23px/1.1 var(--display);color:#ffe6ad;display:block}
+.ftw-product small{font:700 11px var(--body);color:#d4bbe9}
+.ftw-product p{font:500 13px/1.45 var(--body);margin:6px 0;color:#ddd3e9}
+.ftw-product .go{width:100%;min-height:46px;font-size:14px}
+.ftw-product .go[disabled]{opacity:.55;cursor:default}
+.ftw-product-price{font:800 19px var(--body);color:#fff0c6}
+.ftw-test-checkout-overlay{position:fixed;inset:0;background:#100a21da;z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;overscroll-behavior:contain}
+.ftw-test-checkout-card{width:min(100%,420px);padding:25px 18px;border-radius:20px;background:linear-gradient(150deg,#312244,#1c1431);border:2px solid #e9b76b;box-shadow:0 20px 65px #000a;text-align:center;display:flex;flex-direction:column;gap:12px}
+.ftw-test-checkout-card h2{font:400 31px/1.15 var(--display);color:#ffdfa6;margin:0}
+.ftw-test-checkout-card strong{font:700 34px var(--body);color:#fff}
+.ftw-test-checkout-card p{margin:0}
+.ftw-test-checkout-card button{min-height:50px}
+@media(max-width:520px){.ftw-products{grid-template-columns:1fr}.ftw-product{padding:13px}.ftw-product>img{width:84px;height:88px}}
 </style>
+<script src="./test-store.js"></script>
 <script src="./studio-boot-v2.js" defer></script>
 </head>
 <body>
@@ -307,15 +349,6 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
     <button class="wpill" id="wbtn" type="button"><img id="wface" alt=""><span>Wardrobe</span><span class="cnt"><i class="gem"></i><span id="gems2">0</span></span></button>
   </header>
 
-  <div id="dev-preview" class="ftw-dev-panel" hidden>
-    <strong>DEVELOPER PREVIEW · REMOVE BEFORE RELEASE</strong>
-    <div class="ftw-dev-row">
-      <label for="dev-full"><input id="dev-full" type="checkbox"> Preview FULL game</label>
-      <label for="dev-level">Level <input id="dev-level" type="number" min="1" max="100" value="1"></label>
-      <button class="quiet" id="dev-jump" type="button">Jump</button>
-    </div>
-    <p>Switch OFF to see the five-level demo and locked wardrobe. Switch ON to test all 100 levels. This is not a real purchase.</p>
-  </div>
   <div class="bar">
     <div class="level" id="level"></div>
     <div class="nav"><button id="prev" type="button" aria-label="Previous level">&#8249;</button><button id="next2" type="button" aria-label="Next level">&#8250;</button></div>
@@ -344,6 +377,8 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
     <button class="linkish" id="hbtn" type="button">How to play</button>
     <button class="linkish" id="credits-btn" type="button">Credits</button>
     <button class="linkish" id="unlock-link" type="button">Full game</button>
+    <button class="linkish" id="store-open" type="button">Store</button>
+    <button class="linkish" id="developer-open" type="button" hidden>Developer</button>
   </nav>
  </div>
 
@@ -358,8 +393,62 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
       <button class="go" id="unlock-buy" type="button" disabled>Unlock the full game</button>
       <button class="quiet" id="unlock-restore" type="button" disabled>Restore purchases</button>
       <p class="unlock-note" id="unlock-status" role="status" aria-live="polite">This browser demo cannot process purchases.</p>
+      <p class="ftw-test-checkout" id="test-checkout-label" hidden>TEST PURCHASE ONLY · NO PAYMENT WILL BE TAKEN</p>
+      <button class="quiet" id="developer-from-unlock" type="button" hidden>Developer tools</button>
     </div>
   </section>
+  <section id="store" hidden aria-label="Game store">
+    <div class="shop-top"><button class="quiet" id="store-back" type="button">&#8249; Back to the castle</button><button class="quiet" id="store-dev" type="button" hidden>Developer</button></div>
+    <div class="ftw-store-head">
+      <p class="dev-eyebrow">The Wolf's Den</p>
+      <h1>Adventure Store</h1>
+      <p>Try the full-game unlock and optional instant cosmetic unlocks. Everything can still be earned through gameplay. No subscription.</p>
+      <p class="ftw-test-checkout" id="store-test-note" hidden>SIMULATED STORE · NO REAL MONEY WILL BE CHARGED</p>
+    </div>
+    <div id="store-products" class="ftw-products"></div>
+    <p class="dev-help">Cosmetics are optional and do not give a gameplay advantage. In this test build, all purchases are simulations.</p>
+  </section>
+  <section id="developer" hidden aria-label="Developer testing tools">
+    <div class="shop-top"><button class="quiet" id="developer-back" type="button">&#8249; Back to game</button><span class="dev-tag">TEST BUILD</span></div>
+    <div class="dev-console">
+      <p class="dev-eyebrow">Failure Entertainment · Developer Lab</p>
+      <h1>Test the full journey</h1>
+      <p class="dev-caption">Everything here is simulated. No money is charged, and none of these controls will ship in the paid game.</p>
+      <div class="dev-state">
+        <span>Purchase status</span><strong id="dev-purchase-state">Not purchased</strong>
+        <span>Game progress</span><strong id="dev-progress-state">Level 1 / 100</strong>
+      </div>
+      <label class="dev-option" for="dev-full"><input type="checkbox" id="dev-full"> Preview full game without purchasing</label>
+      <p class="dev-help">Turn this on to browse any level. Turn it off to test the real five-level gate and fake checkout.</p>
+      <div class="dev-level-row">
+        <label for="dev-level">Jump to level</label>
+        <input id="dev-level" type="number" inputmode="numeric" min="1" max="100" value="1">
+        <button class="quiet" id="dev-jump" type="button">Go</button>
+      </div>
+      <button class="quiet" id="dev-view-paywall" type="button">Preview the Level 6 Purchase Screen</button>
+      <div class="dev-reset-actions">
+        <button class="quiet" id="dev-reset-purchase" type="button">Reset test purchase</button>
+        <small>Forget the fake $2.99 purchase but keep your level progress. Revisit the purchase screen.</small>
+        <button class="quiet" id="dev-reset-progress" type="button">Reset game progress</button>
+        <small>Erase levels, gems, earned items and saved progress. Keep purchase status.</small>
+        <button class="quiet danger" id="dev-reset-all" type="button">Reset purchase + progress</button>
+        <small>Start exactly like a brand-new download.</small>
+      </div>
+      <button class="go" id="developer-exit" type="button">Exit Developer Mode</button>
+      <p id="dev-message" class="dev-help" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+  <div id="test-checkout" class="ftw-test-checkout-overlay" role="dialog" aria-modal="true" aria-labelledby="test-checkout-title" hidden>
+    <div class="ftw-test-checkout-card">
+      <p class="dev-eyebrow">Simulated App Store checkout</p>
+      <h2 id="test-checkout-title">Confirm test purchase</h2>
+      <strong id="test-checkout-price">$2.99</strong>
+      <p id="test-checkout-description">A test purchase that does not charge you.</p>
+      <p class="ftw-test-checkout">TEST MODE · NO PAYMENT · NO APPLE CHARGE</p>
+      <button class="go" id="test-checkout-confirm" type="button">Confirm test purchase</button>
+      <button class="quiet" id="test-checkout-cancel" type="button">Cancel</button>
+    </div>
+  </div>
   <section id="help" hidden>
   <div class="shop-top"><button class="quiet" id="back3" type="button">&#8249; Back to the castle</button></div>
   <h1>How to play</h1>
@@ -1328,7 +1417,7 @@ function landed(a, g){
   a.vy = 0; a.vr = 0; a.bounces = 0; a.seg = null;
 }
 function reached(){                                 // every level up to the furthest one reached can be revisited
-  if (DEV_PREVIEW && previewFull) return LEVELS.length;
+  if (FTW_TEST_BUILD && developerMode && previewFull && testCheckoutAvailable()) return LEVELS.length;
   let m = 0;
   for (let i = 0; i < LEVELS.length; i++) if (cleared[i] || cleared[i + "h"]) m = i + 1;
   return Math.min(LEVELS.length, m + 1);
@@ -1872,34 +1961,115 @@ function frame(ts){
 const FREE_LEVEL_COUNT = 5;
 const FULL_UNLOCK_PRODUCT_ID = "feed_the_wolf_full_unlock";
 let fullGame = false, storeBusy = false, pendingUnlockTarget = null, entitlementReturnLevel = null;
-/* PRE-RELEASE TEST ONLY. Remove this panel and its logic before App Store submission.
-   Temporary preview control enabled only with ?dev=1 on the test branch. */
-const DEV_PREVIEW = new URLSearchParams(location.search).get("dev") === "1";
-let previewFull = false;
-function hasFullAccess(){ return DEV_PREVIEW ? previewFull : fullGame; }
-$("dev-preview").hidden = !DEV_PREVIEW;
-function setPreviewFull(on){
-  if(!DEV_PREVIEW)return;
-  previewFull=!!on;
-  $("dev-full").checked=previewFull;
-  if(!previewFull){daily=false;hardOn=false;}
-  const target=previewFull?li:Math.min(li,FREE_LEVEL_COUNT-1);
-  show("game");
-  load(target,null,true); // Repaint level labels and locked controls immediately.
-  dressWolf();renderWardrobe();updateStoreButtons();
+/* BETA TEST BUILD ONLY: remove everything here and all local simulated
+   entitlement storage before selling the app. This is not StoreKit ownership. */
+const FTW_TEST_BUILD = true;
+const FTW_TEST_PURCHASE_KEY = "ftw-beta-simulated-unlock-v1";
+let simulatedPurchase = false;
+let developerMode = false, previewFull = false, developerReturnView = "game";
+try { simulatedPurchase = FTW_TEST_BUILD && localStorage.getItem(FTW_TEST_PURCHASE_KEY) === "yes"; }
+catch (e) { /* local storage may be unavailable */ }
+function testCheckoutAvailable(){ return FTW_TEST_BUILD && !nativeStore(); }
+function hasFullAccess(){
+  return fullGame || (testCheckoutAvailable() && (simulatedPurchase || (developerMode && previewFull)));
 }
+function renderDeveloper(){
+  $("developer-open").hidden = !FTW_TEST_BUILD;
+  $("developer-from-unlock").hidden = !FTW_TEST_BUILD;
+  $("dev-full").checked = developerMode && previewFull;
+  $("dev-full").disabled = !testCheckoutAvailable();
+  $("dev-purchase-state").textContent = nativeStore()
+    ? "Apple purchase (cannot reset here)"
+    : simulatedPurchase ? "Simulated purchase active" : "Demo · not purchased";
+  $("dev-progress-state").textContent = "Level " + (li+1) + " / " + LEVELS.length +
+    " · " + Object.keys(cleared).filter(k => /^\d+$/.test(k)).length + " complete";
+  $("dev-level").value = String(li+1);
+  $("dev-reset-purchase").disabled = !testCheckoutAvailable();
+  $("dev-reset-all").disabled = !testCheckoutAvailable();
+}
+function openDeveloper(){
+  if (!FTW_TEST_BUILD) return;
+  developerReturnView = $("unlock").hidden ? "game" : "unlock";
+  developerMode = true;
+  renderDeveloper();
+  $("dev-message").textContent = "Developer tools are active until you exit.";
+  show("developer");
+}
+function leaveDeveloper(exit){
+  if(exit){ developerMode=false; previewFull=false; }
+  if(!hasFullAccess() && (li >= FREE_LEVEL_COUNT || daily || hardOn)){
+    daily=false; hardOn=false; load(FREE_LEVEL_COUNT-1,null,true);
+  }
+  renderDeveloper(); dressWolf(); renderWardrobe(); updateStoreButtons();
+  if(developerReturnView === "unlock" && !hasFullAccess() && pendingUnlockTarget) show("unlock");
+  else show("game");
+}
+function setPreviewFull(on){
+  if (!FTW_TEST_BUILD || !developerMode || !testCheckoutAvailable()) return;
+  previewFull = !!on;
+  if(!hasFullAccess() && (li >= FREE_LEVEL_COUNT || daily || hardOn)){
+    daily=false; hardOn=false; load(FREE_LEVEL_COUNT-1,null,true);
+  }
+  renderDeveloper(); dressWolf(); renderWardrobe(); updateStoreButtons();
+  $("dev-message").textContent = previewFull ? "FULL preview active — no purchase made." : "Demo rules active. Level 6 will require a test purchase.";
+}
+function testToast(message){
+  const old=document.querySelector(".ftw-test-toast"); if(old)old.remove();
+  const el=document.createElement("div");el.className="ftw-test-toast";
+  el.setAttribute("role","status");el.textContent=message;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),3600);
+}
+function resetTesting(kind){
+  if(!FTW_TEST_BUILD || !developerMode || !["purchase","progress","all"].includes(kind))return;
+  if((kind==="purchase"||kind==="all") && !testCheckoutAvailable())return;
+  const what = kind==="all" ? "the simulated purchase AND all game progress" :
+    kind==="purchase" ? "the simulated purchase (game progress is kept)" :
+    "game progress, earned items and gems (purchase is kept)";
+  if(!window.confirm("Reset "+what+"? This cannot be undone."))return;
+  if(kind!=="progress"){
+    try{ localStorage.removeItem(FTW_TEST_PURCHASE_KEY); }catch(e){}
+    simulatedPurchase=false;
+  }
+  previewFull=false;
+  pendingUnlockTarget=null; entitlementReturnLevel=null;
+  if(kind!=="purchase"){
+    try{ localStorage.removeItem("ftw-save"); }catch(e){}
+    cleared={};stars={};fails={};owned={};worn={};hints=0;
+    hintPaid={};hintOn=false;hintKey="";dailyDone={};seen={};seq=[];
+    daily=false;hardOn=false;li=0;
+    syncPrizes();load(0,null,true);save();
+  } else {
+    daily=false;hardOn=false;
+    if(li>=FREE_LEVEL_COUNT)load(FREE_LEVEL_COUNT-1,null,true);
+    else load(Math.max(0,li),null,true);
+  }
+  dressWolf();renderWardrobe();renderDeveloper();updateStoreButtons();
+  developerMode=false;
+  show("game");
+  if(kind==="purchase" && [0,1,2,3,4].every(i=>cleared[i])){
+    openUnlock(FREE_LEVEL_COUNT,false);
+  }
+  testToast(kind==="all" ? "Fresh install test: purchase and progress reset" :
+    kind==="progress" ? "Game progress cleared · purchase retained" :
+    "Test purchase reset · purchase screen is ready");
+}
+$("developer-open").addEventListener("click",openDeveloper);
+$("developer-from-unlock").addEventListener("click",openDeveloper);
+$("developer-back").addEventListener("click",()=>leaveDeveloper(false));
+$("developer-exit").addEventListener("click",()=>leaveDeveloper(true));
 $("dev-full").addEventListener("change",e=>setPreviewFull(e.target.checked));
 $("dev-jump").addEventListener("click",()=>{
-  if(!DEV_PREVIEW)return;
+  if(!developerMode)return;
   const requested=Number($("dev-level").value);
-  const next=Math.max(1,Math.min(LEVELS.length,Math.round(requested||1)));
-  $("dev-level").value=String(next);
-  daily=false;
-  load(next-1,null,true);
+  const level=Math.max(1,Math.min(LEVELS.length,Math.round(requested||1)));
+  daily=false;hardOn=false;
+  if(!canPlay(level-1,false)){openUnlock(level-1,false);return;}
+  load(level-1,null,true);show("game");
 });
 $("dev-level").addEventListener("keydown",e=>{if(e.key==="Enter")$("dev-jump").click();});
-/* The ONLY development preview is the restricted ?dev=1 test panel above.
-   Never expose this query-triggered preview mode in a production build. */
+$("dev-reset-purchase").addEventListener("click",()=>resetTesting("purchase"));
+$("dev-reset-progress").addEventListener("click",()=>resetTesting("progress"));
+$("dev-reset-all").addEventListener("click",()=>resetTesting("all"));
 /* iOS host must expose window.FeedTheWolfStore: async status(id), purchase(id),
    restore(id). It must verify a StoreKit 2 entitlement before returning
    {productId:id, verified:true, entitled:true, displayPrice?}.
@@ -1912,14 +2082,25 @@ function canPlay(index,isDaily){
   return hasFullAccess() || (!isDaily && Number.isInteger(index) && index >= 0 && index < FREE_LEVEL_COUNT);
 }
 function updateStoreButtons(){
-  const native = nativeStore();
-  $("unlock-buy").disabled = !native || storeBusy || hasFullAccess();
-  $("unlock-restore").disabled = !native || storeBusy;
-  $("unlock-buy").textContent = storeBusy ? "Checking purchase…" : hasFullAccess() ? "Full game unlocked" : "Unlock the full game";
-  if (DEV_PREVIEW && previewFull) $("unlock-status").textContent = "Developer full-game preview — no purchase was made.";
-  else if (fullGame) $("unlock-status").textContent = "Full game unlocked. Thanks for feeding the wolf!";
-  else if (!native) $("unlock-status").textContent = "The browser demo is free. Purchases are only available in the iPhone app.";
-  else if (!storeBusy) $("unlock-status").textContent = "One App Store purchase. Every level. No subscription.";
+  const native = nativeStore(), testing = testCheckoutAvailable();
+  $("unlock-buy").disabled = storeBusy || hasFullAccess() || (!native && !testing);
+  $("unlock-restore").disabled = storeBusy || (!native && !testing);
+  $("unlock-buy").textContent = storeBusy ? "Checking purchase…" :
+    hasFullAccess() ? "Full game unlocked" : testing ? "Unlock full game · $2.99 (TEST)" : "Unlock the full game";
+  $("unlock-restore").textContent = testing ? "Restore test purchase" : "Restore purchases";
+  $("test-checkout-label").hidden = !testing;
+  if (testing && developerMode && previewFull){
+    $("unlock-status").textContent = "Developer full-game preview is active. No purchase was made.";
+  } else if(testing){
+    $("unlock-status").textContent = simulatedPurchase ? "Simulated purchase active — all 100 levels unlocked." :
+      "Test checkout: tap to unlock the game without paying real money.";
+  } else if (fullGame){
+    $("unlock-status").textContent = "Full game unlocked. Thanks for feeding the wolf!";
+  } else if (!native){
+    $("unlock-status").textContent = "Purchases are available only in the iPhone app.";
+  } else if (!storeBusy){
+    $("unlock-status").textContent = "One verified App Store purchase. Every level. No subscription.";
+  }
 }
 function openUnlock(index,isDaily){
   pendingUnlockTarget = {index:Number.isInteger(index) && index >= 0 && index < LEVELS.length ? index : Math.max(li,0),daily:!!isDaily};
@@ -1930,7 +2111,7 @@ function acceptEntitlement(result){
   if (!result || result.productId !== FULL_UNLOCK_PRODUCT_ID || result.verified !== true || result.entitled !== true) return false;
   fullGame = true;
   if (typeof result.displayPrice === "string" && result.displayPrice.length < 48) $("unlock-price").textContent = result.displayPrice;
-  updateStoreButtons(); return true;
+  dressWolf(); renderWardrobe(); updateStoreButtons(); return true;
 }
 function resumeUnlockedPlay(){
   if (!hasFullAccess()) return;
@@ -1945,16 +2126,46 @@ async function refreshStoreEntitlement(){
   catch(e){ /* No verified entitlement means no paid access. */ }
 }
 async function storeAction(action){
-  const native = nativeStore();
-  if (!native || storeBusy || !["purchase","restore"].includes(action)) return;
+  const native = nativeStore(), testing = testCheckoutAvailable();
+  if ((!native && !testing) || storeBusy || !["purchase","restore"].includes(action)) return;
+  if (testing){
+    if(action==="purchase"){
+      try{
+        localStorage.setItem(FTW_TEST_PURCHASE_KEY,"yes");
+        simulatedPurchase=true;
+      }catch(e){
+        $("unlock-status").textContent = "Could not save the test purchase. Enable browser storage and try again.";
+        return;
+      }
+      updateStoreButtons();
+      dressWolf(); renderWardrobe();
+      resumeUnlockedPlay();
+      testToast("TEST PURCHASE COMPLETE · No money charged · Full game unlocked");
+      return;
+    }
+    try{simulatedPurchase = localStorage.getItem(FTW_TEST_PURCHASE_KEY)==="yes";}
+    catch(e){simulatedPurchase=false;}
+    updateStoreButtons();
+    if(simulatedPurchase){
+      dressWolf();renderWardrobe();resumeUnlockedPlay();
+      testToast("Test purchase restored · No real transaction");
+    }else{
+      $("unlock-status").textContent = "No simulated purchase found. Tap TEST unlock to continue.";
+    }
+    return;
+  }
   storeBusy = true;
   $("unlock-status").textContent = action === "purchase" ? "Opening App Store purchase…" : "Restoring your purchase…";
   updateStoreButtons();
   try {
-    if (acceptEntitlement(await native[action](FULL_UNLOCK_PRODUCT_ID))){ resumeUnlockedPlay(); return; }
-    $("unlock-status").textContent = action === "restore" ? "No verified purchase found for this Apple Account." : "Purchase not completed. Your five free levels are still here.";
-  } catch(e){ $("unlock-status").textContent = "App Store unavailable. Please try again."; }
-  finally { storeBusy = false; updateStoreButtons(); }
+    if (acceptEntitlement(await native[action](FULL_UNLOCK_PRODUCT_ID))){
+      dressWolf();renderWardrobe();resumeUnlockedPlay();return;
+    }
+    $("unlock-status").textContent = action === "restore" ?
+      "No verified purchase found for this Apple Account." :
+      "Purchase not completed. Your five free levels are still here.";
+  }catch(e){$("unlock-status").textContent="App Store unavailable. Please try again.";}
+  finally{storeBusy=false;updateStoreButtons();}
 }
 $("unlock-buy").addEventListener("click",()=>storeAction("purchase"));
 $("unlock-restore").addEventListener("click",()=>storeAction("restore"));
@@ -1979,7 +2190,7 @@ function load(index, replay, fresh){
   clearTimeout(resTimer);
   const old = board.querySelector(".result"); if (old) old.remove();
   li = index; lv = activeLevel(); P = prep(lv); s = newState(lv); seq = [];
-  if(DEV_PREVIEW) $("dev-level").value=String(li+1);
+  if(FTW_TEST_BUILD) $("dev-level").value=String(li+1);
   for (const i of (replay || [])){ if (pull(s, lv, i)) seq.push(i); }
   document.body.classList.toggle("hard", hardOn);
   { const T = theme(), st = document.documentElement.style; st.setProperty("--night", T.css[0]); st.setProperty("--night-2", T.css[1]); st.setProperty("--stone", T.css[2]); st.setProperty("--stone-dark", T.css[3]); st.setProperty("--edge", T.edge); }
@@ -2018,6 +2229,7 @@ function load(index, replay, fresh){
     }
   }
   hintLabel();
+  if (!daily) save();  // Preserve current level when the home-screen app is closed.
   calm = 0;
   if (s.status !== "play"){ busy = true; showResult(false); }
   else if (!daily && !replay && li > 0 && li % 5 === 0 && !seen[li]){ seen[li] = true; save(); reveal(); }
@@ -2178,7 +2390,7 @@ function syncPrizes(){
   gems = Math.max(0, g - hints + 5 * Object.keys(dailyDone).length);
   return got;
 }
-function save(){ try { localStorage.setItem("ftw-save", JSON.stringify({cleared:cleared, stars:stars, owned:owned, worn:worn, hints:hints, hp:hintPaid, dd:dailyDone, seen:seen})); } catch (e) {} }
+function save(){ try { localStorage.setItem("ftw-save", JSON.stringify({cleared, stars, owned, worn, hints, hp:hintPaid, dd:dailyDone, seen, li, hard:hardOn})); } catch (e) {} }
 function renderWardrobe(){
   $("gems").textContent = $("gems2").textContent = gems;
   const far = reached();
@@ -2211,7 +2423,7 @@ $("shop").addEventListener("click", e => {
 });
 function menu(){}
 function show(name){                                // screens: the castle, the wardrobe, the rules, the finale, credits
-  for (const id of ["game","shop","help","credits","ftw-finale","unlock"]) $(id).hidden = id !== name;
+  for (const id of ["game","shop","help","credits","ftw-finale","unlock","developer"]) $(id).hidden = id !== name;
   window.scrollTo(0, 0);
   if (name === "game"){ setSize(); renderBg(); }
   if (name === "shop") renderWardrobe();
@@ -2408,20 +2620,24 @@ $("music").addEventListener("click", () => {
 document.addEventListener("visibilitychange", () => { if (document.hidden) musicStop(); else if (musicOn && (tunes.n || tunes.h)) musicStart(); });
 
 function start(data){
-  data = data || {};
-  let sv = {};
-  try { sv = JSON.parse(localStorage.getItem("ftw-save") || "{}") || {}; } catch (e) {}
-  const obj = v => v && typeof v === "object" ? v : null;
-  cleared = obj(sv.cleared) || obj(data.cleared) || {}; stars = obj(sv.stars) || obj(data.stars) || {};
-  owned = obj(sv.owned) || obj(data.owned) || {}; worn = obj(sv.worn) || obj(data.worn) || {};
-  hardOn = hasFullAccess() && !!data.hard; hints = +sv.hints || +data.hints || 0; hintPaid = obj(sv.hp) || {}; dailyDone = obj(sv.dd) || {}; seen = obj(sv.seen) || {};
-  for (let i = 5; i < reached() - 1; i += 5) seen[i] = true;   // no fanfare for places already visited
-  syncPrizes(); dressWolf(); save(); renderWardrobe();
-  const idx = Number.isInteger(data.li) && LEVELS[data.li] ? data.li : 0;
-  if(idx >= FREE_LEVEL_COUNT) entitlementReturnLevel = idx;
-  load(Math.min(idx,FREE_LEVEL_COUNT-1),idx < FREE_LEVEL_COUNT ? data.seq : null);
+  data=data||{};
+  let sv={};
+  try{sv=JSON.parse(localStorage.getItem("ftw-save")||"{}")||{};}catch(e){}
+  const obj=v=>v&&typeof v==="object"?v:null;
+  cleared=obj(sv.cleared)||obj(data.cleared)||{};stars=obj(sv.stars)||obj(data.stars)||{};
+  owned=obj(sv.owned)||obj(data.owned)||{};worn=obj(sv.worn)||obj(data.worn)||{};
+  hints=+sv.hints||+data.hints||0;hintPaid=obj(sv.hp)||{};dailyDone=obj(sv.dd)||{};seen=obj(sv.seen)||{};
+  const requested = Number.isInteger(sv.li)&&LEVELS[sv.li] ? sv.li :
+    Number.isInteger(data.li)&&LEVELS[data.li] ? data.li : 0;
+  hardOn=hasFullAccess() && !!(sv.hard ?? data.hard);
+  for(let i=5;i<reached()-1;i+=5)seen[i]=true;
+  syncPrizes();dressWolf();renderWardrobe();
+  renderDeveloper();
+  if(requested>=FREE_LEVEL_COUNT&&!hasFullAccess())entitlementReturnLevel=requested;
+  const index=hasFullAccess()?requested:Math.min(requested,FREE_LEVEL_COUNT-1);
+  load(index,index===requested?data.seq:null,true);
   refreshStoreEntitlement();
-  requestAnimationFrame(ts => { last = ts/1000; clock = last; requestAnimationFrame(frame); });
+  requestAnimationFrame(ts=>{last=ts/1000;clock=last;requestAnimationFrame(frame);});
 }
 const hot = window.claude && window.claude.hot;
 if (hot && hot.snapshot) hot.snapshot(() => ({li:li, seq:seq, cleared:cleared, stars:stars, hard:hardOn, owned:owned, worn:worn, hints:hints}));

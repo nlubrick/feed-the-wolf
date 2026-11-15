@@ -1,5 +1,5 @@
 /* App shell cache for Feed the Wolf. Navigations use network-first for fresh releases. */
-const VERSION="ftw-install-v8";
+const VERSION="ftw-install-v9";
 const CORE=["./","./index.html","./expansion-levels.js","./studio-boot-v2.js","./studio-credits-roll-v2.js","./failure-entertainment-intro-v2.html","./manifest.webmanifest","./feed-the-wolf-icon.svg"];
 self.addEventListener("install",event=>{
  event.waitUntil(caches.open(VERSION).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()));

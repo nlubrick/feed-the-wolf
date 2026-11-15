@@ -1,33 +1,31 @@
-# Feed the Wolf — 100-Level Edition
+# Feed the Wolf — 100-Level Beta
 
 An illustrated pull-the-pin puzzle game from Failure Entertainment.
 
 ## Current game
+- **100 main levels and 100 Hard Mode variants** across five 20-level locations.
+- The first 40 original puzzles are unchanged. Sixty additional solver-certified puzzles use working pressure gears, water blooms, and fire beacons.
+- Extra characters, companion pets, and wearable rewards appear greyed out until the full game is unlocked.
 
-- **100 main levels** plus 100 Hard Mode variants.
-- **Five destinations, 20 levels each:** The Castle (1–20), Wizard's Tower (21–40), Clockwork Citadel (41–60), Moonlit Conservatory (61–80), Ghostlight Theatre (81–100).
-- The original **first 40 levels are unchanged**. The next 60 are solver-tested remixes of established rooms with new puzzles and dependencies.
-- New chapter toys: **pressure gear** (drop a boulder onto it), **magic bloom** (water activates it), **light beacon** (lava ignites it). Each opens a physical gate.
-- Eight additional playable characters, ten illustrated pets, and twelve wearable chapter prizes alongside the original wardrobe.
+## Home-screen app: purchase-flow testing
 
-## Demo and purchases
+The PWA installed on an iPhone starts as a normal **five-level free trial**. After Level 5, choose **See the full game**, then tap **Unlock full game · $2.99 (TEST)**.
 
-The game is free to start: **levels 1–5 are playable**, then the full edition is planned as a **$2.99 one-time App Store non-consumable** `feed_the_wolf_full_unlock`. The web/PWA is a demo; no web checkout or fake purchase. Example native StoreKit 2 integration source lives in `ios/`; the iPhone application itself is not built yet.
+**No money is charged.** This is a clearly marked simulated transaction for this beta version, not an Apple App Store purchase. The simulated unlock is stored **locally in the installed app** and stays active after closing and reopening it. Game progress/last-played level are also stored locally.
 
-**Development branch only:** append `?dev=1` to the URL for the temporary **DEVELOPER PREVIEW** panel. Toggle **Preview FULL game** to inspect all 100 levels, Hard Mode and premium collectibles; toggle it off to test the five-level demo and greyed-out wardrobe. Use **Jump** to inspect any level. This test bypass is **not a purchase** and must be removed before any public release.
+**Developer tools** are accessible from the game footer, or from the purchase screen. They include a no-purchase full-game preview, level jump, **Reset test purchase** (retains progress), **Reset game progress** (retains purchase), and **Reset purchase + progress** (fresh install state). Every reset asks for confirmation.
 
-## Running and verification
+To test a genuine free trial from scratch: open **Developer → Reset purchase + progress**, then complete Levels 1–5 and tap the TEST purchase button. To retest the paywall with saved progress, use **Reset test purchase**.
 
-Serve the repository as a static website or install the PWA. Do not open only `index.html` without its sibling `expansion-levels.js`.
+If you install the PWA separately from a browser, it may have separate local storage. Reset the installed copy directly. Avoid private browsing or disabling storage.
 
-Run:
+## Verification
 ```bash
 npm test
 npm run release:check
 ```
 
-The first command searches for solutions for all **200 normal/hard puzzles** and verifies the first 40's source fingerprint. The release check intentionally **fails** while the QA preview switch remains; see `ios/README.md`.
+The puzzle suite searches all 200 normal/hard levels; the purchase-flow tests cover reset and persistence. **The release guard intentionally fails** while this test checkout or Developer interface exists.
 
-The prototype is not App Store ready until the native app is built and its StoreKit transactions, restore, iPhone layout and performance are tested.
-
-The preview branch is intentionally not merged into the public release while its developer unlock switch is present. The release check must fail until the switch has been removed.
+## App Store release is a separate future build
+Before selling, remove the simulated purchase key and developer console, integrate the real StoreKit 2 non-consumable `feed_the_wolf_full_unlock` at an intended U.S. price of $2.99, and test a signed native app with sandbox transactions, restores, refunds, pending transactions and real iPhones. This public web beta must not be presented as a live payment system.
