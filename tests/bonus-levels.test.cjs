@@ -102,7 +102,7 @@ test("Browser integrates play, skip, saved bonus status and five-level demo",()=
 test("The PWA app shell caches each mode, music and its responsive layout",()=>{
  const sw=fs.readFileSync(path.join(root,"service-worker.js"),"utf8");
  for(const f of sources.concat("bonus-style-v1.css","bonus-themes-v1.css"))assert.ok(sw.includes(f),f+" missing from cache");
- assert.match(sw,/ftw-install-v13/);
+ assert.match(sw,/ftw-install-v14/);
  assert.match(page,/id="bonus-root"/);
 });
 
@@ -123,4 +123,23 @@ test("Every location has its own banner, seek-and-find room and pipe ends",()=>{
  }
  assert.equal(banners.size,5);assert.equal(rooms.size,5);
  assert.match(page,/bonus-themes-v1\.css/);assert.match(page,/bonus-themes-v1\.js/);
+});
+
+test("Pantry Panic: the Test Flow button in the HUD actually pours",()=>{
+ const {FTWPipesRules:r}=setup();
+ const box=()=>({innerHTML:"",on:{},addEventListener(t,f){this.on[t]=f;},removeEventListener(t){delete this.on[t];},querySelector(){return null;}});
+ let msg="",won=false;
+ const api={stage:{chapter:0},play:box(),hud:box(),instructions(){},message(m){msg=m;},win(){won=true;},lose(){},sound(){},tone(){},wolf:null};
+ const game=r.mount(api);
+ assert.match(api.hud.innerHTML,/data-flow-test/);
+ assert.equal(typeof api.hud.on.click,"function","the HUD must listen for the Test Flow tap");
+ const tap=(sel,data)=>({target:{closest:q=>q===sel?{dataset:data||{}}:null}});
+ api.hud.on.click(tap("[data-flow-test]"));
+ assert.notEqual(msg,"");assert.equal(won,false,"the scrambled board must not pass");
+ const data=r.create(0);
+ data.solution.forEach((want,i)=>{if(want===null)return;let m=game.preview()[i],k=0;while(m!==want&&k++<4){api.play.on.click(tap("[data-pipe]",{pipe:String(i)}));m=game.preview()[i];}});
+ api.hud.on.click(tap("[data-flow-test]"));
+ assert.equal(won,true,"a solved board must win when poured");
+ assert.doesNotMatch(api.play.innerHTML,/BOILER|SOUP POT|WOLF'S BOWL/);
+ game.destroy();assert.equal(api.hud.on.click,undefined);
 });

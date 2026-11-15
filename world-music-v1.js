@@ -24,8 +24,8 @@ function render(world,hard,scores){
  const tap=(step,vol,type)=>{
   const start=Math.floor(step*stp*sr),duration=Math.round(sr*.065);
   for(let i=0;i<duration;i++){
-   const t=i/sr,noise=Math.sin(6.2831853*(type==="clock"?1750:70)*t);
-   const decay=Math.exp(-t*(type==="clock"?70:27));
+   const t=i/sr,noise=Math.sin(6.2831853*(type==="clock"?1750:type==="tock"?380:70)*t);
+   const decay=Math.exp(-t*(type==="clock"?70:type==="tock"?48:27));
    buf[(start+i)%n]+=noise*decay*vol;
   }
  };
@@ -37,11 +37,12 @@ function render(world,hard,scores){
    if(beat%2===0)voice(root+12,step,.6,.24,"bell");
    if(beat===0)voice(score.bass[bar%4],step,stp*8,.07,"flute");
    if(beat===6)voice(root+19,step,.5,.10,"bell");
-  }else if(world===2){ // Clockwork: ticking mechanical pulse and staccato melody
-   voice(root+(beat%2?0:12),step,.16,.19,"gear");
-   if(beat%2===0)tap(step,.06,"clock");
-   if(beat%4===0)voice(score.bass[bar%4],step,.36,.14,"gear");
-   if(beat===3||beat===7)tap(step,.09,"thump");
+  }else if(world===2){ // Clockwork: a warm, steady machine. Low round melody, soft wooden tock, no high chimes.
+   if(beat%2===0)voice(root,step,.42,.2,"warm");
+   if(beat===3)voice(root-5,step,.3,.07,"warm");
+   if(beat%4===0)voice(score.bass[bar%4],step,stp*4,.17,"warm");
+   if(beat===2||beat===6)tap(step,.035,"tock");
+   if(beat===0||beat===4)tap(step,.08,"thump");
   }else if(world===3){ // Conservatory: flowing flute-like melody and soft bell swells
    if(beat%2===0)voice(root+12,step,.9,.16,"flute");
    if(beat%4===0)voice(score.bass[bar%4],step,stp*5,.08,"bell");

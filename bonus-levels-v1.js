@@ -31,7 +31,7 @@ function register(mode,factory){if(!modes.includes(mode)||typeof factory!=="func
 const worldScores=[
  {name:"Castle",root:69,bass:[45,43,45,40],motif:[0,3,7,4,3,2,0,7,3,2,0,-2,0,2,3,0],color:"triangle"},
  {name:"Wizard's Tower",root:71,bass:[47,43,45,42],motif:[0,3,7,10,7,5,3,0,5,7,10,12,10,7,3,0],color:"sine"},
- {name:"Clockwork Citadel",root:64,bass:[40,43,45,38],motif:[0,7,3,7,10,7,3,0,2,7,5,7,12,7,5,2],color:"square"},
+ {name:"Clockwork Citadel",root:64,bass:[40,43,45,38],motif:[0,7,3,7,10,7,3,0,2,7,5,7,12,7,5,2],color:"triangle"},
  {name:"Moonlit Conservatory",root:67,bass:[43,45,40,38],motif:[0,2,5,9,7,5,2,0,2,5,9,12,9,7,5,2],color:"sine"},
  {name:"Ghostlight Theatre",root:68,bass:[44,39,42,40],motif:[0,3,6,10,6,3,1,0,3,6,10,13,10,6,3,-1],color:"triangle"}
 ];
@@ -63,12 +63,13 @@ class Music{
   const root=score.root+score.motif[i];
   // Each bonus is a subtle arrangement of its own chapter tune, not a new song.
   if(this.mode==="match"){
-   this.note(midiHz(root+12),.18,score.color==="square"?"triangle":score.color,.033);
+   this.note(midiHz(root+(this.chapter===2?0:12)),.18,score.color,.033);
    if(i%4===0)this.note(midiHz(score.bass[(i>>2)%4]),.3,"triangle",.035);
-   if(i%2===0)this.note(1450,.025,"sine",.009);
+   if(i%2===0&&this.chapter!==2)this.note(1450,.025,"sine",.009);
   }else if(this.mode==="pipes"){
    if(i%2===0)this.note(midiHz(root),.21,score.color,.031);
-   this.note(i%2?810:1130,.045,"square",i%4===0?.011:.006);
+   if(this.chapter===2){if(i%4===2)this.note(196,.06,"sine",.02);}   // Clockwork: a low soft tock, not a high tick
+   else this.note(i%2?810:1130,.045,"sine",i%4===0?.008:.004);
    if(i%4===0)this.note(midiHz(score.bass[(i>>2)%4]),.25,"triangle",.033);
   }else{
    if(i%2===0)this.note(midiHz(root),.53,"sine",.023);
