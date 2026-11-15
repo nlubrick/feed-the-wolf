@@ -1149,6 +1149,57 @@ function renderBg(){
     c.fillStyle = "#c98a12"; c.beginPath(); rr(c,t.x-6,t.y+4,12,4.5,1.5); c.fill();
     c.fillStyle = "rgba(255,255,255,.35)"; c.fillRect(t.x-5,t.y+4.6,10,1);
   }
+  drawLocationAccents(c);
+}
+/* The three new destinations have architectural details, not merely recolored stones.
+   Drawn once per level into the static backdrop so animation cost stays low. */
+function drawLocationAccents(c){
+  const chapter=Math.floor(li/20);
+  if(daily || chapter<2) return;
+  for(const r of lv.rooms){
+    const x=r.x*U+5,y=r.y*U+5;
+    c.save();
+    if(chapter===2){ // Clockwork Citadel: conduits, rivets and turning-house gear emblems
+      c.globalAlpha=.45;
+      c.strokeStyle="#e6b778";c.lineWidth=3.2;
+      c.beginPath();c.moveTo(x+6,y+70);c.lineTo(x+6,y+18);c.quadraticCurveTo(x+6,y+8,x+16,y+8);c.lineTo(x+68,y+8);c.stroke();
+      c.strokeStyle="#3e2a1b";c.lineWidth=1.2;c.stroke();
+      c.fillStyle="#ffdb91";
+      for(const [dx,dy] of [[6,18],[6,68],[68,8]]){
+        c.beginPath();c.arc(x+dx,y+dy,3.2,0,Math.PI*2);c.fill();
+        c.fillStyle="#5c3921";c.beginPath();c.arc(x+dx,y+dy,1.2,0,Math.PI*2);c.fill();c.fillStyle="#ffdb91";
+      }
+      c.translate(x+72,y+25);c.strokeStyle="#d59a45";c.lineWidth=2;c.beginPath();c.arc(0,0,12,0,Math.PI*2);c.stroke();
+      for(let k=0;k<8;k++){const a=k*Math.PI/4;c.beginPath();c.moveTo(Math.cos(a)*9,Math.sin(a)*9);c.lineTo(Math.cos(a)*15,Math.sin(a)*15);c.stroke();}
+    } else if(chapter===3){ // Moonlit Conservatory: glass canopy and trailing vines
+      c.globalAlpha=.42;c.strokeStyle="#b9f0cd";c.lineWidth=1.5;
+      c.beginPath();c.moveTo(x+7,y+32);c.quadraticCurveTo(x+45,y-5,x+83,y+32);c.stroke();
+      c.beginPath();c.moveTo(x+13,y+29);c.quadraticCurveTo(x+45,y+5,x+77,y+29);c.stroke();
+      c.strokeStyle="#5cc78a";c.lineWidth=2;
+      for(const side of [9,82]){
+        c.beginPath();c.moveTo(x+side,y);c.bezierCurveTo(x+side-12,y+21,x+side+9,y+40,x+side-4,y+65);c.stroke();
+        for(let k=0;k<3;k++){
+          const yy=y+20+k*15,xx=x+side-3+(k%2?8:-5);
+          c.save();c.translate(xx,yy);c.rotate((k%2?1:-1)*.6);c.fillStyle=k%2?"#a2f0b6":"#59c48b";
+          c.beginPath();c.ellipse(0,0,6,2.7,0,0,Math.PI*2);c.fill();c.restore();
+        }
+      }
+    } else { // Ghostlight Theatre: velvet curtains and gold bulb trim
+      c.globalAlpha=.38;
+      const grad=c.createLinearGradient(x,0,x+30,0);
+      grad.addColorStop(0,"#a1326b");grad.addColorStop(.6,"#642347");grad.addColorStop(1,"#b4477f");
+      c.fillStyle=grad;
+      for(const side of [0,1]){
+        c.save();if(side){c.translate(x+90,0);c.scale(-1,1);}else c.translate(x,0);
+        c.beginPath();c.moveTo(0,y+3);c.quadraticCurveTo(18,y+17,9,y+41);c.lineTo(18,y+66);c.quadraticCurveTo(4,y+57,2,y+82);c.closePath();c.fill();
+        c.strokeStyle="#f0a2c9";c.lineWidth=1.4;c.beginPath();c.moveTo(3,y+9);c.quadraticCurveTo(16,y+29,7,y+55);c.stroke();
+        c.restore();
+      }
+      c.strokeStyle="#fbd67a";c.lineWidth=2;c.beginPath();c.moveTo(x+6,y+7);c.lineTo(x+84,y+7);c.stroke();
+      c.fillStyle="#ffeaaa";for(let k=0;k<6;k++){c.beginPath();c.arc(x+12+k*13,y+7,2,0,Math.PI*2);c.fill();}
+    }
+    c.restore();
+  }
 }
 function torches(){
   const out = [];
