@@ -353,6 +353,7 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 <script src="./test-store-v2.js"></script>
 <link rel="stylesheet" href="./bonus-style-v1.css">
 <script src="./bonus-levels-v1.js"></script>
+<script src="./world-music-v1.js"></script>
 <script src="./bonus-match-v1.js"></script>
 <script src="./bonus-pipes-v1.js"></script>
 <script src="./bonus-hidden-v1.js"></script>
@@ -2380,6 +2381,7 @@ function load(index, replay, fresh){
   calm = 0;
   if (s.status !== "play"){ busy = true; showResult(false); }
   else if (!daily && !replay && li > 0 && li % 5 === 0 && !seen[li]){ seen[li] = true; save(); reveal(); }
+  if(!$("game").hidden)musicStart();
 }
 function reveal(){                                  // a moment for reaching somewhere new
   const el = document.createElement("div"), extra = [];
@@ -2764,26 +2766,44 @@ function buildTune(hard){
 }
 let tunes = {}, musicOn = true;
 try { musicOn = localStorage.getItem("ftw-music") !== "off"; } catch (e) {}
-function musicStart(){ if(window.__feStudioIntroActive) return;                              // normal and hard mode each have their own cut of the tune
-  if (!musicOn) return;
-  try {
-    const k = hardOn ? "h" : "n", other = tunes[hardOn ? "n" : "h"];
-    if (!tunes[k]){ const a = new Audio(URL.createObjectURL(new Blob([buildTune(hardOn).buffer], {type:"audio/wav"}))); a.loop = true; a.volume = .8; tunes[k] = a; }
-    if (other && !other.paused) other.pause();
-    if (tunes[k].paused){ if (other) tunes[k].currentTime = 0; const p = tunes[k].play(); if (p && p.catch) p.catch(() => {}); }
-  } catch (e) {}
+/* Castle music remains original. The other four locations use their own
+   composed loops; bonus-game arrangements share the same chapter motifs. */
+function musicChapter(){return daily?Math.floor((dayNo()%100)/20):Math.floor(li/20);}
+function musicStart(){
+ if(window.__feStudioIntroActive||!musicOn||$("game").hidden)return;
+ try{
+  const world=musicChapter(),id=world+":"+(hardOn?"h":"n");
+  for(const [k,audio] of Object.entries(tunes)){
+   if(k!==id&&!audio.paused){audio.pause();audio.currentTime=0;}
+  }
+  if(!tunes[id]){
+   const wav=world===0?buildTune(hardOn):window.FTWWorldMusic.render(world,hardOn,window.FTWBonus.worldScores);
+   const audio=new Audio(URL.createObjectURL(new Blob([wav.buffer],{type:"audio/wav"})));
+   audio.loop=true;audio.volume=world===0?.8:.72;
+   tunes[id]=audio;
+  }
+  const current=tunes[id];
+  if(current.paused){const p=current.play();if(p?.catch)p.catch(()=>{});}
+ }catch(e){}
 }
 function musicStop(){ try { for (const k in tunes) tunes[k].pause(); } catch (e) {} }
 window.addEventListener("failure-studio-intro-closed",()=>{ /* Start music on the next intentional game tap, not during the studio intro. */ });
 function musicLabel(){ const b = $("music"); b.setAttribute("aria-pressed", musicOn ? "true" : "false"); b.setAttribute("aria-label", "Music: " + (musicOn ? "on" : "off")); }
 musicLabel();
-document.addEventListener("click", () => { if (musicOn && !window.__feStudioIntroActive) musicStart(); }, true);
+document.addEventListener("click", () => {if(musicOn&&!window.__feStudioIntroActive&&!$("game").hidden)musicStart();},true);
 $("music").addEventListener("click", () => {
   musicOn = !musicOn;
   try { localStorage.setItem("ftw-music", musicOn ? "on" : "off"); } catch (e) {}
   musicLabel(); if (musicOn) musicStart(); else musicStop();
 });
-document.addEventListener("visibilitychange", () => { if (document.hidden) musicStop(); else if (musicOn && (tunes.n || tunes.h)) musicStart(); });
+document.addEventListener("visibilitychange",()=>{
+ if(document.hidden){musicStop();if(bonusController.stage)bonusController.music.stop();}
+ else if(musicOn){
+  if(!$("game").hidden)musicStart();
+  if(!$("bonus").hidden&&bonusController.stage)
+   bonusController.music.start(bonusController.stage.mode,bonusController.stage.chapter,true);
+ }
+});
 
 function start(data){
   data=data||{};
