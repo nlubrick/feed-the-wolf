@@ -1,36 +1,37 @@
-# Feed the Wolf — 100-Level Beta
+# Feed the Wolf — 115-Stage Playable Beta
 
-An illustrated pull-the-pin puzzle game by Failure Entertainment. All 100 original/expansion normal levels and 100 Hard Mode variants remain in place.
+Feed the Wolf by Failure Entertainment is a spooky-fun illustrated puzzle adventure. The existing **100 pull-the-pin levels** and all their original Hard Mode variants remain unchanged. There are now **15 fully playable optional bonus mini-games**, for **115 numbered story stages**.
 
-## One Store
+## Stage numbers — find every bonus easily
 
-The previous Wardrobe and separate test Store are **one Store**, opened from the wolf's Store button at the top of the game. This screen contains the current gem balance, gem packs and (only when not already owned) the full-game purchase, plus **all** playable characters, pets and costumes. There are **no individual cash cosmetics**.
+Every chapter has 20 original pull-the-pin puzzles and three new bonus stages, interleaved just after that chapter's 5th, 12th and 19th pull-the-pin puzzle:
 
-- **Full Adventure: $2.99, one-time** — Levels 6–100, Hard Mode and daily puzzles (Levels 1–5 free).
-- **Gem Pouch: 50 gems for $0.99**
-- **Gem Chest: 150 gems for $1.99**
-- **Gem Vault: 400 gems for $3.99**
+| Chapter | Match-3: Feast Match | Rotating Pipes: Pantry Panic | Hidden Objects: Dinner Detective |
+|---|---|---|---|
+| The Castle | **6** The Larder Shuffle | **14** Copper Pipes | **22** The Missing Feast |
+| Wizard's Tower | **29** Enchanted Ingredients | **37** Potion Plumbing | **45** The Vanished Recipe |
+| Clockwork Citadel | **52** Clockwork Snacks | **60** Factory Feedline | **68** The Hidden Gear |
+| Moonlit Conservatory | **75** Moonlit Harvest | **83** Garden Irrigation | **91** The Secret Bouquet |
+| Ghostlight Theatre | **98** Curtain Call Combo | **106** Backstage Flow | **114** The Final Prop |
 
-All prices above are **SIMULATED TEST CHECKOUTS ONLY** in the home-screen PWA. There is no real charge, Apple receipt, or payment processing in the browser. The gem packs can be purchased repeatedly in the test simulator. The full-game unlock is a one-time purchase.
+**Final pull-the-pin puzzle is Level 115.** Original pull-the-pin Level 6 is now story Level **7**. All old underlying puzzle indices, achievements, saved stars, prizes and Hard Mode solutions are preserved.
 
-All cosmetic items have a **gem price**, including level rewards and Hard Mode companion prizes. A player can buy these early with gems, or earn milestone items by solving the relevant levels as before. There are no combat benefits from cosmetics. **Buying gems does not unlock the full game**; the $2.99 unlock remains separate. Gem-pack test purchases and cosmetic unlocks persist when the installed home-screen app is reopened.
+The mini-games actually work: Feast Match has a six-by-six food board with swapping, gravity, cascades, chain scoring and an unlockable Wolf Howl clearing power; Pantry Panic has a five-by-five grid of rotatable pipes with genuine connectivity testing and five solvable chapter-specific paths; Dinner Detective has original responsive SVG room drawings and twelve tappable, keyboard-accessible objects with a three-object challenge.
 
-## Developer testing
+Every bonus level offers **Skip mini-game** with no progression penalty. Completing a bonus for the first time pays 5–13 bonus gems depending on chapter; skipped stages pay no reward, but you can replay them later to earn gems. Earned bonus gems are counted once, saved and persist across relaunches.
 
-A temporary **Developer** button is available in the footer, the Store, and the full-game paywall. It opens Developer Mode for testing the five-level trial, the Store, and Levels 6–100.
+The first five pull-the-pin puzzles **plus bonus Level 6** are free. The $2.99 one-time full-game unlock allows the remaining stages. Your trial uses the exact same fake, no-charge checkout as before.
 
-The development tools include:
-- Preview the full game without buying it, or return to demo mode.
-- Jump to any of the 100 levels, with permission checks.
-- View the full-game checkout screen.
-- **Reset test purchases** — remove full-game unlock and all test gem-pack purchases, retain level progress and cosmetics bought/earned with gems. If purchased gems have already been spent, the remaining gem balance may fall to zero.
-- **Reset game progress** — erase completed levels, hints and cosmetic unlocks, but retain the simulated full-game purchase and purchased gem packs.
-- **Reset purchases + progress** — return to brand-new-install state.
+## Five different musical locations
 
-Resets ask for confirmation. Fake receipts are intentionally stored separately from game progress so these resets can be independent.
+The Castle retains its original castle-caper WAV soundtrack. The Wizard's Tower, Clockwork Citadel, Moonlit Conservatory, and Ghostlight Theatre each have an original synthesized musical theme that starts upon entering that chapter. Each bonus mini-game plays a slight variation of its location's motif: upbeat for Match, clockwork/rhythmic for Pipes, and mysterious/soft for Detective. Returning to normal puzzle levels restores the main chapter loop. Music on/off remains saved.
 
-## Tests and release blockers
+## Playing and testing on iPhone
 
-Run `npm test` for puzzle and gem-store regressions. The `npm run release:check` command **intentionally fails** while the developer tools, simulated checkout and local fake receipts are present.
+Open https://feed-the-wolf.onrender.com or your existing home-screen web app (the service worker cache is updated to v12). Tap **Developer** to jump directly to **any stage 1–115** or enable full-game preview, and to reset game progress or simulated purchases independently.
 
-**Before selling the game**, remove all simulator code and developer access. Build/sign the native iPhone app, configure the full-game non-consumable and gem-pack consumables in App Store Connect, verify server/client entitlement and gem crediting, test purchases/restore/refunds/reinstalls in StoreKit sandbox, and perform actual iPhone gameplay and accessibility tests. The StoreKit files in `ios/` currently cover the full-game entitlement only: real gem-pack StoreKit purchases are **not yet implemented**. This is a playtest beta, not the App Store release.
+The Store remains gem-only for cosmetics. The only test-money purchases are $2.99 full game, and repeatable 50/$0.99, 150/$1.99 and 400/$3.99 gem packs. All cash prices are **simulated, no real money is charged**.
+
+## Developer/release safeguards
+
+Run `npm test` to verify all 100 original puzzles, 100 Hard variants, 15 bonus-stage IDs, game rules, music WAV generation and app integration. `npm run release:check` **intentionally fails** while mock payment/developer bypasses remain. Before an App Store launch, remove test checkout and developer controls, integrate actual verified StoreKit 2 consumables and non-consumable and test on signed iPhones. The current browser build is a playtest only.
