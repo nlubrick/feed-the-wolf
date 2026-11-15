@@ -27,7 +27,8 @@ const palettes=[
 ["#241a3a","#55345a","#b98191","#e9c49b"]];
 function scene(chapter,found){
  const [wall,edge,wood,light]=palettes[chapter];
- let s='<svg class="fw-detective-scene" viewBox="0 0 700 460" role="group" aria-label="Illustrated room with hidden objects" xmlns="http://www.w3.org/2000/svg">'+
+ const room=root.FTWBonusThemes?root.FTWBonusThemes.room(chapter):null;
+ let s=room?'<svg class="fw-detective-scene" viewBox="0 0 700 460" role="group" aria-label="Illustrated room with hidden objects" xmlns="http://www.w3.org/2000/svg">'+room.art():'<svg class="fw-detective-scene" viewBox="0 0 700 460" role="group" aria-label="Illustrated room with hidden objects" xmlns="http://www.w3.org/2000/svg">'+
  '<defs><linearGradient id="fwwall" x2="0" y2="1"><stop stop-color="'+edge+'"/><stop offset="1" stop-color="'+wall+'"/></linearGradient></defs>'+
  '<rect width="700" height="460" rx="22" fill="url(#fwwall)"/>'+
  '<path d="M24 0V460 M120 0V460 M245 0V460 M372 0V460 M497 0V460 M625 0V460" stroke="#fff" stroke-opacity=".07" stroke-width="4"/>'+
@@ -46,7 +47,8 @@ function scene(chapter,found){
  '<ellipse cx="349" cy="309" rx="36" ry="9" fill="#20151d" opacity=".5"/>'+
  '<g fill="'+light+'" fill-opacity=".26"><circle cx="59" cy="35" r="6"/><circle cx="251" cy="54" r="7"/><circle cx="641" cy="350" r="5"/></g>';
  shapes.forEach((item,i)=>{
-  const pt=coords[i],x=pt[0]+(chapter%2?(i%2?10:-10):0),y=pt[1];
+  // Each location has its own room, and things sit on that room's shelves, tables and floor.
+  const pt=room?room.spots[(i*5+chapter*3)%12]:coords[i],x=room?pt[0]:pt[0]+(chapter%2?(i%2?10:-10):0),y=pt[1];
   const complete=found.has(item.id);
   s+='<g class="fw-detective-item'+(complete?' found':'')+'" role="button" tabindex="0"'+
    ' data-object="'+item.id+'" aria-label="'+item.name+(complete?' found':'')+'" '+

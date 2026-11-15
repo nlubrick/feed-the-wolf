@@ -52,12 +52,12 @@ function tileSVG(m,flowing){
  for(let i=0;i<4;i++)if(m&(1<<i)){
   const [x,y]=[[32,3],[61,32],[32,61],[3,32]][i];
   arms+='<path d="M32 32 L'+x+' '+y+'" fill="none" stroke="'+
-   (flowing?"#8be3b5":"#c2a27e")+'" stroke-width="20" stroke-linecap="round"/>'+
+   (flowing?"#8be3b5":"#c2a27e")+'" style="stroke:var('+(flowing?"--fw-flow-out":"--fw-pipe")+')" stroke-width="20" stroke-linecap="round"/>'+
    '<path d="M32 32 L'+x+' '+y+'" fill="none" stroke="'+
-   (flowing?"#65c9e4":"#4b4d74")+'" stroke-width="12" stroke-linecap="round"/>';
+   (flowing?"#65c9e4":"#4b4d74")+'" style="stroke:var('+(flowing?"--fw-flow":"--fw-pipe-in")+')" stroke-width="12" stroke-linecap="round"/>';
  }
  return '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'+
-  '<rect x="1" y="1" width="62" height="62" rx="13" fill="#252039" stroke="#846986" stroke-width="2"/>'+
+  '<rect x="1" y="1" width="62" height="62" rx="13" fill="#252039" stroke="#846986" style="fill:var(--fw-pipe-bg);stroke:var(--fw-accent-dark)" stroke-width="2"/>'+
   arms+'<circle cx="32" cy="32" r="10" fill="'+(flowing?"#c9fbed":"#e0c298")+
   '" stroke="#68566d" stroke-width="3"/></svg>';
 }
@@ -70,11 +70,14 @@ function mount(api){
   if(!alive)return;
   api.hud.innerHTML='<span><b>Rotations: '+turns+'</b></span>'+
    '<button type="button" class="fw-pipe-test" data-flow-test>Test Flow</button>';
-  api.play.innerHTML='<div class="fw-pipe-labels"><span>SOUP POT</span><span>WOLF\'S BOWL</span></div>'+
+  const ends=root.FTWBonusThemes?root.FTWBonusThemes.pipes(api.stage.chapter):null;
+  api.play.innerHTML='<div class="fw-pipe-labels"><span>'+(ends?ends.from.toUpperCase():"SOUP POT")+' \u25B6</span><span>\u25B6 WOLF\'S BOWL</span></div>'+
+   '<div class="fw-pipe-wrap'+(ends?' fw-pipe-ends':'')+'">'+(ends?'<div class="fw-pipe-end">'+ends.pot+'</div>':'')+
    '<div class="fw-pipe-grid" role="grid" aria-label="Five by five rotating pipe puzzle">'+
    grid.map((m,i)=>'<button type="button" class="fw-pipe-tile'+(lit.includes(i)?' flowing':'')+
    '" data-pipe="'+i+'" aria-label="Rotate pipe row '+(Math.floor(i/5)+1)+
    ' column '+(i%5+1)+'">'+tileSVG(m,lit.includes(i))+'</button>').join('')+'</div>'+
+   (ends?'<div class="fw-pipe-end">'+ends.bowl+'</div>':'')+'</div>'+
    '<p class="fw-pipe-caption">The entire soup route must connect from the left pot to the right bowl. Every tap rotates one joint.</p>';
  }
  function click(e){

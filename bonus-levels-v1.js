@@ -104,7 +104,9 @@ class Controller{
  start(stage){
   if(!stage||stage.type!=="bonus"||!registered[stage.mode])throw Error("Bonus level not available");
   this.stop();this.stage=stage;
-  this.node.innerHTML='<div class="fw-bonus fw-world-'+stage.chapter+' fw-'+stage.mode+'">'+
+  const themes=root.FTWBonusThemes;
+  this.node.innerHTML='<div class="fw-bonus fw-world-'+stage.chapter+' fw-'+stage.mode+(themes?' fw-themed':'')+'">'+
+   (themes?'<div class="fw-banner" aria-hidden="true">'+themes.banner(stage.chapter)+'</div>':'')+
    '<header class="fw-bonus-header"><div><p class="fw-bonus-kicker">BONUS LEVEL '+stage.number+
    ' OF 115 · '+chapters[stage.chapter]+'</p><h1>'+stage.title+'</h1><p>'+
    modesTitle[stage.mode]+'</p></div><div class="fw-bonus-reward">✦ +'+stage.reward+' gems</div></header>'+

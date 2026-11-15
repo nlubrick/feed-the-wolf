@@ -2,7 +2,7 @@
 const test=require("node:test"),assert=require("node:assert/strict");
 const fs=require("node:fs"),path=require("node:path"),vm=require("node:vm");
 const root=path.resolve(__dirname,".."),page=fs.readFileSync(path.join(root,"index.html"),"utf8");
-const sources=["bonus-levels-v1.js","bonus-match-v1.js","bonus-pipes-v1.js","bonus-hidden-v1.js","world-music-v1.js"];
+const sources=["bonus-themes-v1.js","bonus-levels-v1.js","bonus-match-v1.js","bonus-pipes-v1.js","bonus-hidden-v1.js","world-music-v1.js"];
 function setup(){
  const window={};
  for(const file of sources)vm.runInNewContext(fs.readFileSync(path.join(root,file),"utf8"),{window});
@@ -86,7 +86,26 @@ test("Browser integrates play, skip, saved bonus status and five-level demo",()=
 });
 test("The PWA app shell caches each mode, music and its responsive layout",()=>{
  const sw=fs.readFileSync(path.join(root,"service-worker.js"),"utf8");
- for(const f of sources.concat("bonus-style-v1.css"))assert.ok(sw.includes(f),f+" missing from cache");
- assert.match(sw,/ftw-install-v12/);
+ for(const f of sources.concat("bonus-style-v1.css","bonus-themes-v1.css"))assert.ok(sw.includes(f),f+" missing from cache");
+ assert.match(sw,/ftw-install-v13/);
  assert.match(page,/id="bonus-root"/);
+});
+
+test("Every location has its own banner, seek-and-find room and pipe ends",()=>{
+ const {FTWBonusThemes:t,FTWHiddenRules:h,FTWBonus}=setup();
+ assert.equal(t.count,5);
+ const banners=new Set(),rooms=new Set();
+ for(let c=0;c<5;c++){
+  const b=t.banner(c),r=t.room(c);
+  assert.doesNotMatch(b+r.art(),/NaN|undefined/);
+  banners.add(b);rooms.add(r.art());
+  assert.equal(r.spots.length,12);
+  assert.equal(new Set(r.spots.map(p=>p.join())).size,12,"objects must not share a spot");
+  for(const [x,y] of r.spots)assert.ok(x>=40&&x<=660&&y>=60&&y<=430,"spot inside the room");
+  const svg=h.scene(c,new Set());
+  for(const [x,y] of r.spots)assert.ok(svg.includes('translate('+x+' '+y+')'));
+  assert.ok(t.pipes(c).pot.includes("<svg")&&t.pipes(c).bowl.includes("<svg"));
+ }
+ assert.equal(banners.size,5);assert.equal(rooms.size,5);
+ assert.match(page,/bonus-themes-v1\.css/);assert.match(page,/bonus-themes-v1\.js/);
 });
