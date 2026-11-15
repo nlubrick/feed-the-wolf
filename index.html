@@ -352,6 +352,9 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
     <li><b>Spring:</b> anything that lands on it bounces through the gap into the next cell, boulders included.</li>
     <li><b>Portals</b> (from level 21): whatever drops into the glowing ring on a floor comes out of the matching ring in a ceiling. That includes lava, water, boulders, dinner and the wolf.</li>
     <li><b>Ghosts</b> (from level 26) drift to the wolf and scare him off once they share a floor. Lava and boulders pass through them. Water gets rid of them.</li>
+    <li><b>Pressure gears</b> (from level 41) spin when a boulder lands, opening a linked gate.</li>
+    <li><b>Magic blooms</b> (from level 61) flower when water reaches them and open living gates.</li>
+    <li><b>Light beacons</b> (from level 81) ignite when lava reaches them and open glowing gates.</li>
     <li><b>Daily puzzle:</b> a different castle each day, worth 5 gems the first time you solve it.</li>
     <li><b>Caged wolves</b> turn up in hard mode. Walk the wolf to the cage, or break it open with a boulder or a blast. Everyone has to be out before dinner counts, and lava must never reach a cage.</li>
     <li><b>Undo</b> takes back your last pull. <b>Hint</b> costs a gem and lights up a pin that still leads to a win.</li>
@@ -426,7 +429,7 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
    to dinner when they share a floor (freeing any caged wolf on that floor first), and neither can cross a hole. Anything that lands on a spring bounces into the cell beside it. */
 function prep(lv){
   if (lv._p) return lv._p;
-  const p = {by:{}, at:{}, weak:lv.weak || [], saw:lv.saw || [], spring:lv.spring || [], portal:lv.portal || [], pmap:{}};
+  const p = {by:{}, at:{}, weak:lv.weak || [], saw:lv.saw || [], spring:lv.spring || [], portal:lv.portal || [], gadgets:lv.gadgets || [], pmap:{}};
   for (const q of p.portal) p.pmap[q.c] = q.to;
   for (const r of lv.rooms){ p.by[r.id] = r; p.at[r.x + "," + r.y] = r.id; }
   Object.defineProperty(lv, "_p", {value:p, enumerable:false});
@@ -434,7 +437,7 @@ function prep(lv){
 }
 function newState(lv){
   const p = prep(lv);
-  const s = {pulled:lv.pins.map(() => false), broken:p.weak.map(() => false), sawUsed:p.saw.map(() => false),
+  const s = {pulled:lv.pins.map(() => false), broken:p.weak.map(() => false), sawUsed:p.saw.map(() => false), gates:p.gadgets.map(() => false),
     parent:{}, down:{}, ents:[], pools:[], status:"play", why:"", lost:"", path:{}, ev:[]};
   for (const r of lv.rooms){
     s.parent[r.id] = r.id;
@@ -457,6 +460,16 @@ function settle(s,lv){
   const step = (e,c,how) => { const i = idx(e); (s.path[i] = s.path[i] || []).push({c:c, how:how}); e.c = c; n++; };
   const lose = why => { if (!s.lost) s.lost = why; };
   const out = (e,t,why) => { e.gone = true; n++; s.ev.push({t:t, e:idx(e), why:why}); };
+  const activate = (c,kind) => {
+    p.gadgets.forEach((g,j) => {
+      if (g.c !== c || g.kind !== kind || s.gates[j]) return;
+      s.gates[j] = true;
+      const ra=find(s,g.a), rb=find(s,g.b);
+      if (ra !== rb) s.parent[ra] = rb;
+      s.ev.push({t:"gadget",j:j});
+      n++;
+    });
+  };
   const crack = c => { p.weak.forEach((w,j) => { if (!s.broken[j] && w.a === c){ s.broken[j] = true; s.down[w.a] = w.b; n++; s.ev.push({t:"break", j:j}); } }); };
   const boom = t => {
     if (t.gone || t.wet) return;
@@ -471,6 +484,7 @@ function settle(s,lv){
     crack(t.c);
   };
   const scorch = (q,c) => {          // lava reaches a cell; false once the lava is used up
+    activate(c,"beacon");
     for (const e of inCell(c)) if (e.k === "ice"){ out(e,"melt"); q.n--; if (q.n <= 0) return false; }
     for (const e of inCell(c)){
       if (e.gone) continue;
@@ -482,7 +496,7 @@ function settle(s,lv){
     }
     return true;
   };
-  const soak = c => { for (const e of inCell(c)){
+  const soak = c => { activate(c,"bloom"); for (const e of inCell(c)){
     if (e.k === "tnt" && !e.wet){ e.wet = true; n++; s.ev.push({t:"wet", e:idx(e)}); }
     else if (e.k === "ghost") out(e,"flee","water");                          // water is the only thing a ghost minds
   } };
@@ -508,6 +522,7 @@ function settle(s,lv){
       const there = inCell(to);
       for (const e of fall){ step(e,to0,p.pmap[r.id] ? "port" : "fall"); if (sp) step(e,to,"spring"); }
       if (!fall.some(e => e.k === "boulder")) continue;
+      activate(to,"gear");
       const j = p.saw.findIndex((w,k) => w.c === to && !s.sawUsed[k]);
       if (j >= 0){ s.sawUsed[j] = true; s.ev.push({t:"fling", j:j}); for (const e of there) if (e.k !== "boulder") step(e,p.saw[j].to,"fling"); continue; }
       for (const e of there){
@@ -906,6 +921,12 @@ function rebuildGeometry(){
     if (p.dir === "v") floorGap(b);
     else { const X = Math.max(a.x,b.x)*U, y = a.y*U; fr.push({x0:X-5-2*R-3, x1:X+5+2*R+3, y0:y+24, y1:y+95}); clipPath.rect(X-7, y+24, 14, 71); }
   });
+  P.gadgets.forEach((g,j) => {
+    if (!s.gates[j]) return;
+    const a=P.by[g.a], b=P.by[g.b], X=Math.max(a.x,b.x)*U, y=a.y*U;
+    fr.push({x0:X-5-2*R-3,x1:X+5+2*R+3,y0:y+24,y1:y+95});
+    clipPath.rect(X-7,y+24,14,71);
+  });
   P.weak.forEach((w,j) => { if (wOpened[j]) floorGap(P.by[w.b]); });
   P.saw.concat(P.spring).forEach(w => { const X = Math.max(P.by[w.c].x, P.by[w.to].x)*U, y = P.by[w.c].y*U; clipPath.rect(X-7, y+9, 14, 40); });   // the gap things fly through; fluids never get up there
   freeIn = fr.map(f => {
@@ -965,6 +986,12 @@ function renderBg(){
     const a = P.by[p.a], b = P.by[p.b];
     if (p.dir === "v") interior(b.x*U+16, b.y*U-7, 68, 14, 1, false);
     else { const X = Math.max(a.x,b.x)*U, y = a.y*U; interior(X-7, y+24, 14, 71, 1, false); slab(X-7, y+88, 14); }
+  });
+  P.gadgets.forEach((g,j) => {
+    if (!s.gates[j]) return;
+    const a=P.by[g.a], b=P.by[g.b], X=Math.max(a.x,b.x)*U, y=a.y*U;
+    interior(X-7,y+24,14,71,1,false);
+    slab(X-7,y+88,14);
   });
   P.weak.forEach((w,j) => {                       // cracked wooden floors
     const b = P.by[w.b], x = b.x*U + 16, y = b.y*U - 7;
@@ -1801,6 +1828,11 @@ function doPull(i, btn){
     a.bounces = 0;
   }
   for (const ev of s.ev){
+    if(ev.t==="gadget"){
+      const g=P.gadgets[ev.j];
+      if(g){starBurst(midX(g.c),floorY(g.c)-22,12,5,240);sfx("boing");}
+      continue;
+    }
     if (ev.e == null) continue;
     const a = actors[ev.e]; if (!a || a.out) continue;
     if (ev.t === "wet" && a.fate) continue;
