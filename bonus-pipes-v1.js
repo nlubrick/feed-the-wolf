@@ -78,7 +78,7 @@ function mount(api){
   api.hud.innerHTML='<span><b>Turns: '+turns+(lim.turns?' / '+lim.turns:'')+'</b>'+(lim.pours?' &nbsp; <b>Pours left: '+(lim.pours-pours)+'</b>':'')+'</span>'+
    '<button type="button" class="fw-pipe-test" data-flow-test>Test Flow</button>';
   const ends=root.FTWBonusThemes?root.FTWBonusThemes.pipes(api.stage.chapter):null;
-  api.play.innerHTML='<div class="fw-pipe-labels"><span>'+(ends?ends.from.toUpperCase():"SOUP POT")+' \u25B6</span><span>\u25B6 WOLF\'S BOWL</span></div>'+
+  api.play.innerHTML=(ends?'':'<div class="fw-pipe-labels"><span>SOUP POT</span><span>WOLF\'S BOWL</span></div>')+
    '<div class="fw-pipe-wrap'+(ends?' fw-pipe-ends':'')+'">'+(ends?'<div class="fw-pipe-end fw-pipe-start"><b>START</b>'+ends.pot+'<i>\u25B6</i></div>':'')+
    '<div class="fw-pipe-grid" role="grid" aria-label="Five by five rotating pipe puzzle">'+
    grid.map((m,i)=>'<button type="button" class="fw-pipe-tile'+(lit.includes(i)?' flowing':'')+
@@ -103,9 +103,10 @@ function mount(api){
   api.tone(330+(i%5)*40,.07);api.message("Turned a pipe. Test the flow when you are ready.");
   draw();
  }
- api.play.addEventListener("click",click);draw();
- return{destroy(){alive=false;api.play.removeEventListener("click",click);},preview:()=>grid.slice()};
+ // The Test Flow button is drawn in the HUD, outside the play area, so both need the listener.
+ api.play.addEventListener("click",click);api.hud.addEventListener("click",click);draw();
+ return{destroy(){alive=false;api.play.removeEventListener("click",click);api.hud.removeEventListener("click",click);},preview:()=>grid.slice()};
 }
 root.FTWBonus.register("pipes",mount);
-root.FTWPipesRules=Object.freeze({PATHS,create,trace,mask,rotate,minTurns,limits});
+root.FTWPipesRules=Object.freeze({PATHS,create,trace,mask,rotate,minTurns,limits,mount});
 })(typeof window!=="undefined"?window:{});
