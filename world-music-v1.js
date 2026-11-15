@@ -34,9 +34,10 @@ function render(world,hard,scores){
   const motif=score.motif[i];
   const root=score.root+motif+(phrase===2?2:phrase===3?-2:0);
   if(world===1){ // Wizard's Tower: ascending arcane bells, a long hovering drone
-   if(beat%2===0)voice(root+12,step,.6,.24,"bell");
-   if(beat===0)voice(score.bass[bar%4],step,stp*8,.07,"flute");
-   if(beat===6)voice(root+19,step,.5,.10,"bell");
+   // melodies sit an octave lower than first written: the high bells were too shrill on a phone speaker
+   if(beat%2===0)voice(root,step,.6,.24,"bell");
+   if(beat===0)voice(score.bass[bar%4],step,stp*8,.09,"flute");
+   if(beat===6)voice(root+7,step,.5,.10,"bell");
   }else if(world===2){ // Clockwork: a warm, steady machine. Low round melody, soft wooden tock, no high chimes.
    if(beat%2===0)voice(root,step,.42,.2,"warm");
    if(beat===3)voice(root-5,step,.3,.07,"warm");
@@ -44,14 +45,14 @@ function render(world,hard,scores){
    if(beat===2||beat===6)tap(step,.035,"tock");
    if(beat===0||beat===4)tap(step,.08,"thump");
   }else if(world===3){ // Conservatory: flowing flute-like melody and soft bell swells
-   if(beat%2===0)voice(root+12,step,.9,.16,"flute");
-   if(beat%4===0)voice(score.bass[bar%4],step,stp*5,.08,"bell");
-   if(beat===6)voice(root+7,step,.6,.08,"bell");
+   if(beat%2===0)voice(root,step,.9,.18,"flute");
+   if(beat%4===0)voice(score.bass[bar%4],step,stp*5,.09,"bell");
+   if(beat===6)voice(root-5,step,.6,.08,"bell");
   }else{ // Ghostlight Theatre: theatrical waltz, dramatic minor brass tones
-   if(beat%2===0)voice(root+12,step,.46,.18,"brass");
+   if(beat%2===0)voice(root,step,.46,.19,"brass");
    if(beat===0||beat===3||beat===6)voice(score.bass[bar%4],step,.55,.15,"brass");
-   if(beat===2||beat===5)tap(step,.04,"clock");
-   if(beat===7)voice(root+18,step,.24,.09,"bell");
+   if(beat===2||beat===5)tap(step,.035,"tock");
+   if(beat===7)voice(root+6,step,.24,.09,"bell");
   }
   if(hard){
    if(beat===3||beat===7)tap(step,.09,"thump");

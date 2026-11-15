@@ -63,18 +63,17 @@ class Music{
   const root=score.root+score.motif[i];
   // Each bonus is a subtle arrangement of its own chapter tune, not a new song.
   if(this.mode==="match"){
-   this.note(midiHz(root+(this.chapter===2?0:12)),.18,score.color,.033);
+   this.note(midiHz(root),.18,score.color,.036);   // an octave lower than first written: the high version was shrill on a phone speaker
    if(i%4===0)this.note(midiHz(score.bass[(i>>2)%4]),.3,"triangle",.035);
-   if(i%2===0&&this.chapter!==2)this.note(1450,.025,"sine",.009);
+   if(i%4===2)this.note(294,.04,"sine",.012);
   }else if(this.mode==="pipes"){
    if(i%2===0)this.note(midiHz(root),.21,score.color,.031);
-   if(this.chapter===2){if(i%4===2)this.note(196,.06,"sine",.02);}   // Clockwork: a low soft tock, not a high tick
-   else this.note(i%2?810:1130,.045,"sine",i%4===0?.008:.004);
+   if(i%4===2)this.note(196,.06,"sine",.02);   // a low soft tock, not a high tick
    if(i%4===0)this.note(midiHz(score.bass[(i>>2)%4]),.25,"triangle",.033);
   }else{
    if(i%2===0)this.note(midiHz(root),.53,"sine",.023);
    if(i%4===0)this.note(midiHz(score.bass[(i>>2)%4]),.64,"triangle",.016);
-   if(i===7||i===15)this.note(midiHz(root+7),.62,"sine",.014);
+   if(i===7||i===15)this.note(midiHz(root-5),.62,"sine",.014);
   }
  }
  fx(ok){
