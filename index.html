@@ -2041,9 +2041,9 @@ function renderDeveloper(){
   $("dev-purchase-state").textContent = nativeStore()
     ? "Apple purchases (cannot reset here)"
     : (simulatedPurchase ? "Full game purchased" : "Demo · no full unlock") + " · " + extra + " test gems";
-  $("dev-progress-state").textContent = "Level " + (li+1) + " / " + LEVELS.length +
+  $("dev-progress-state").textContent = "Level " + campaignStage + " / 115" +
     " · " + Object.keys(cleared).filter(k => /^\d+$/.test(k)).length + " complete";
-  $("dev-level").value = String(li+1);
+  $("dev-level").value = String(campaignStage);
   $("dev-reset-purchase").disabled = !testCheckoutAvailable();
   $("dev-reset-all").disabled = !testCheckoutAvailable();
 }
@@ -2096,7 +2096,7 @@ function resetTesting(kind){
   pendingUnlockTarget=null; entitlementReturnLevel=null;
   if(kind!=="purchase"){
     try{ localStorage.removeItem("ftw-save"); }catch(e){}
-    cleared={};stars={};fails={};owned={};worn={};gemUnlocked={};hints=0;
+    cleared={};stars={};fails={};owned={};worn={};gemUnlocked={};bonusResults={};campaignStage=1;hints=0;
     hintPaid={};hintOn=false;hintKey="";dailyDone={};seen={};seq=[];
     daily=false;hardOn=false;li=0;
     syncPrizes();load(0,null,true);save();
@@ -2124,10 +2124,9 @@ $("dev-full").addEventListener("change",e=>setPreviewFull(e.target.checked));
 $("dev-jump").addEventListener("click",()=>{
   if(!developerMode)return;
   const requested=Number($("dev-level").value);
-  const level=Math.max(1,Math.min(LEVELS.length,Math.round(requested||1)));
+  const level=Math.max(1,Math.min(window.FTWBonus.stages.length,Math.round(requested||1)));
   daily=false;hardOn=false;
-  if(!canPlay(level-1,false)){openUnlock(level-1,false);return;}
-  load(level-1,null,true);show("game");
+  goToCampaignStage(level);
 });
 $("dev-level").addEventListener("keydown",e=>{if(e.key==="Enter")$("dev-jump").click();});
 $("dev-reset-purchase").addEventListener("click",()=>resetTesting("purchase"));
@@ -2336,16 +2335,18 @@ function load(index, replay, fresh){
   clearTimeout(resTimer);
   const old = board.querySelector(".result"); if (old) old.remove();
   li = index; lv = activeLevel(); P = prep(lv); s = newState(lv); seq = [];
-  if(FTW_TEST_BUILD) $("dev-level").value=String(li+1);
+  if(!daily)campaignStage=stageForPuzzle(index);
+  if(FTW_TEST_BUILD) $("dev-level").value=String(campaignStage);
   for (const i of (replay || [])){ if (pull(s, lv, i)) seq.push(i); }
   document.body.classList.toggle("hard", hardOn);
   { const T = theme(), st = document.documentElement.style; st.setProperty("--night", T.css[0]); st.setProperty("--night-2", T.css[1]); st.setProperty("--stone", T.css[2]); st.setProperty("--stone-dark", T.css[3]); st.setProperty("--edge", T.edge); }
   if (daily) $("level").innerHTML = "Daily puzzle<small>" + new Date().toLocaleDateString(undefined, {weekday:"long", month:"short", day:"numeric"}) + (dailyDone[dayNo()] ? " · solved" : "") + "</small>";
-  else $("level").innerHTML = "Level " + (li+1) + (hardOn ? "<em>HARD</em>" : "") + "<small>" + locationFor(li).name + " · " + wing(li).name + " · " + lv.name + (stars[key()] ? " · " + "★".repeat(stars[key()]) : "") + "</small>";
+  else $("level").innerHTML = "Level " + campaignStage + " / 115" + (hardOn ? "<em>HARD</em>" : "") + "<small>" + locationFor(li).name + " · Puzzle " + (li+1) + "/100 · " + lv.name + (stars[key()] ? " · " + "★".repeat(stars[key()]) : "") + "</small>";
   tipText = daily ? "A different castle every day. Solve it for 5 gems." : (hardOn && LEVELS[li].hard ? (lv.rooms.some(r => r.has && r.has.captive) ? "A friend of mine is in that cage. Get him out too. " : "Hard mode. Same castle, worse plumbing. ") : "") + (lv.hint || "");
   { const b0 = Math.floor(li / 20) * 20;               // one castle's worth of dots at a time
     $("dots").innerHTML = daily ? "" : LEVELS.slice(b0, b0 + 20).map((_,q) => { const i = b0 + q; return '<i class="' + (i === li ? "now" : cleared[i] || cleared[i + "h"] ? "done" : "") + '"></i>'; }).join(""); }
-  $("prev").disabled = daily || li === 0; $("next2").disabled = daily || li + 1 >= reached();
+  $("prev").disabled = daily || campaignStage === 1;
+  $("next2").disabled = daily || campaignStage >= 115 || (li + 1 >= reached() && !cleared[li] && !cleared[li+"h"]);
   const hb = $("hard"); hb.textContent = hasFullAccess() ? "Hard: " + (hardOn ? "on" : "off") : "Hard: full game"; hb.disabled = daily; hb.style.opacity = daily ? .4 : 1;
   $("daily").innerHTML = !hasFullAccess() ? "Daily puzzle · Full game" : daily ? "Back to level " + (li + 1) : dailyDone[dayNo()] ? "Daily puzzle: solved today" : 'Daily puzzle +<i class="gem"></i>5'; hb.setAttribute("aria-pressed", hardOn ? "true" : "false");
   castle.style.setProperty("--cols", lv.cols);
@@ -2472,12 +2473,12 @@ board.addEventListener("click", e => {
   if (t.id === "go"){ t.closest(".result").remove(); busy = false; return; }
   if (t.id === "retry"){ load(li); return; }
   if (t.id === "undo2"){ undo(); return; }
-  if (t.id === "next"){ if(daily){daily=false;load(li)} else if(li===LEVELS.length-1){showFinale()} else load(li+1); return; }
+  if (t.id === "next"){ if(daily){daily=false;load(li)} else if(li===LEVELS.length-1){showFinale()} else goToCampaignStage(stageForPuzzle(li)+1); return; }
   if (t.classList.contains("pin")) doPull(+t.dataset.i, t);
 });
 $("reset").addEventListener("click", () => load(li));
-$("prev").addEventListener("click", () => { if (li > 0) load(li - 1); });
-$("next2").addEventListener("click", () => { if (li + 1 < reached()) load(li + 1); });
+$("prev").addEventListener("click", () => {if(campaignStage>1)goToCampaignStage(campaignStage-1);});
+$("next2").addEventListener("click", () => {if(campaignStage<115)goToCampaignStage(campaignStage+1);});
 $("hard").addEventListener("click", toggleHard);
 $("daily").addEventListener("click", () => {
   if (pend) return;
@@ -2533,10 +2534,10 @@ function syncPrizes(){
     if (o.cost && owned[o.id]) g -= o.cost;
   }
   const prizeGemsSpent=Object.values(gemUnlocked).reduce((t,n)=>t+(Number.isSafeInteger(n)&&n>0?n:0),0);
-  gems = Math.max(0, g + mockGemCredits() - prizeGemsSpent - hints + 5 * Object.keys(dailyDone).length);
+  gems = Math.max(0, g + mockGemCredits() + bonusEarnedGems() - prizeGemsSpent - hints + 5 * Object.keys(dailyDone).length);
   return got;
 }
-function save(){ try { localStorage.setItem("ftw-save", JSON.stringify({cleared, stars, owned, worn, gemUnlocked, hints, hp:hintPaid, dd:dailyDone, seen, li, hard:hardOn})); } catch (e) {} }
+function save(){ try { localStorage.setItem("ftw-save", JSON.stringify({cleared, stars, owned, worn, gemUnlocked, bs:bonusResults, cs:campaignStage, hints, hp:hintPaid, dd:dailyDone, seen, li, hard:hardOn})); } catch (e) {} }
 /* Every cosmetic is available for gems. Level and Hard Mode rewards are
    also earnable for free, but can be bought early instead of waiting. */
 function gemPrice(o){
@@ -2588,7 +2589,7 @@ $("shop").addEventListener("click",e=>{
 });
 function menu(){}
 function show(name){                                // screens: the castle, the wardrobe, the rules, the finale, credits
-  for (const id of ["game","shop","help","credits","ftw-finale","unlock","developer"]) $(id).hidden = id !== name;
+  for (const id of ["game","shop","help","credits","ftw-finale","unlock","developer","bonus"]) $(id).hidden = id !== name;
   window.scrollTo(0, 0);
   if (name === "game"){ setSize(); renderBg(); }
   if (name === "shop"){renderWardrobe();renderStore();}
