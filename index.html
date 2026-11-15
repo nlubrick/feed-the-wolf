@@ -2079,67 +2079,50 @@ $("dev-reset-purchase").addEventListener("click",()=>resetTesting("purchase"));
 $("dev-reset-progress").addEventListener("click",()=>resetTesting("progress"));
 $("dev-reset-all").addEventListener("click",()=>resetTesting("all"));
 
-/* PRE-RELEASE OPTIONAL STORE. All six products use TEST ONLY fake receipts. */
-const FTW_FAKE_SHOP = FTW_TEST_BUILD ? window.FTWTestStore : null;
-let fakeStoreReceipts = FTW_FAKE_SHOP ? FTW_FAKE_SHOP.read() : {purchased:[]};
-let pendingShopProduct = null, previousCheckoutFocus = null;
-function fakeShopHasProduct(productId){
-  if(!testCheckoutAvailable() || !FTW_FAKE_SHOP)return false;
-  if(productId === FULL_UNLOCK_PRODUCT_ID) return simulatedPurchase;
-  return FTW_FAKE_SHOP.has(fakeStoreReceipts,productId);
+/* PRE-RELEASE STORE: the only money products are the full game and repeatable gem packs. */
+const FTW_FAKE_SHOP=FTW_TEST_BUILD?window.FTWTestStore:null;
+let fakeStoreReceipts=FTW_FAKE_SHOP?FTW_FAKE_SHOP.read():{purchased:[],packs:{}};
+let pendingShopProduct=null,previousCheckoutFocus=null;
+function fakeShopHasProduct(id){
+  return !!(testCheckoutAvailable()&&FTW_FAKE_SHOP&&
+    (id===FULL_UNLOCK_PRODUCT_ID?simulatedPurchase:FTW_FAKE_SHOP.has(fakeStoreReceipts,id)));
 }
-function fakeShopHasOutfit(outfitId){
-  return !!(testCheckoutAvailable() && FTW_FAKE_SHOP &&
-    FTW_FAKE_SHOP.PRODUCTS.some(p=>p.outfit===outfitId && fakeShopHasProduct(p.id)));
-}
-function grantFakeCosmetics(){
-  if(!testCheckoutAvailable() || !FTW_FAKE_SHOP)return;
-  for(const product of FTW_FAKE_SHOP.PRODUCTS){
-    if(!product.outfit || !fakeShopHasProduct(product.id))continue;
-    const item=OUTFITS.find(o=>o.id===product.outfit);
-    if(!item)continue;
-    owned[item.id]=true;
-    if(!worn[item.slot])worn[item.slot]=item.id;
-  }
+function mockGemCredits(){
+  return testCheckoutAvailable()&&FTW_FAKE_SHOP?FTW_FAKE_SHOP.gemsGranted(fakeStoreReceipts):0;
 }
 function resetFakeStore(){
   if(!FTW_FAKE_SHOP)return;
-  for(const product of FTW_FAKE_SHOP.PRODUCTS){
-    if(!product.outfit || !fakeShopHasProduct(product.id))continue;
-    const item=OUTFITS.find(o=>o.id===product.outfit);
-    if(item){
-      delete owned[item.id];
-      if(worn[item.slot]===item.id)worn[item.slot]=item.slot==="hero"?"wolf":null;
-    }
-  }
-  fakeStoreReceipts=FTW_FAKE_SHOP.reset();
-  syncPrizes();dressWolf();save();renderWardrobe();
+  try{fakeStoreReceipts=FTW_FAKE_SHOP.reset();}
+  catch(e){fakeStoreReceipts={purchased:[],packs:{}};}
 }
 function renderStore(){
   if(!FTW_FAKE_SHOP)return;
-  $("store-test-note").hidden=!testCheckoutAvailable();
+  const testing=testCheckoutAvailable();
+  $("store-test-note").hidden=!testing;
   $("store-dev").hidden=!FTW_TEST_BUILD;
-  $("store-products").innerHTML=FTW_FAKE_SHOP.PRODUCTS.map(product=>{
-    const item=product.outfit?OUTFITS.find(o=>o.id===product.outfit):null;
-    const purchased=fakeShopHasProduct(product.id);
-    const unlocked=product.outfit?!!owned[product.outfit]:(simulatedPurchase||fullGame);
-    const disabled=purchased||unlocked||!testCheckoutAvailable();
-    const image=item?thumb(item.id):heroSvg("joy",[],"wolf").src;
-    const action=disabled?(purchased?"Test purchased":unlocked?"Already unlocked":"Unavailable"):"Test purchase";
-    return '<article class="ftw-product"><img alt="" src="'+image+'"><div class="ftw-product-body">'+
-      '<small>'+product.category+'</small><b>'+product.name+'</b><p>'+product.description+'</p>'+
-      '<span class="ftw-product-price">'+product.price+'</span></div>'+
-      '<button type="button" class="go" data-test-buy="'+product.id+'"'+(disabled?" disabled":"")+'>'+action+'</button></article>';
-  }).join("");
+  $("store-products").innerHTML=FTW_FAKE_SHOP.PRODUCTS
+    .filter(p=>p.id!==FULL_UNLOCK_PRODUCT_ID||!fullGame&&!simulatedPurchase)
+    .map(p=>{
+      const full=p.id===FULL_UNLOCK_PRODUCT_ID;
+      const image=full?'<img alt="" src="'+heroSvg("joy",[],"wolf").src+'">':
+        '<div class="ftw-gem-pack-art" aria-hidden="true"><i class="gem"></i></div>';
+      const count=FTW_FAKE_SHOP.count(fakeStoreReceipts,p.id);
+      const detail=full?"Unlock all 100 levels":'+'+p.gems+' gems'+(count?" · Bought "+count+"x":"");
+      return '<article class="ftw-product">'+image+'<div class="ftw-product-body"><small>'+p.category+
+        '</small><b>'+p.name+'</b><p>'+p.description+'</p><span class="ftw-product-price">'+
+        p.price+'</span><p>'+detail+'</p></div><button type="button" class="go" data-test-buy="'+p.id+
+        '"'+(!testing?" disabled":"")+'>'+(testing?"Test purchase":"Not available in browser")+'</button></article>';
+    }).join("");
 }
-function openFakeCheckout(productId){
+function openFakeCheckout(id){
   if(!testCheckoutAvailable()||!FTW_FAKE_SHOP)return;
-  const product=FTW_FAKE_SHOP.PRODUCTS.find(p=>p.id===productId);
-  if(!product||fakeShopHasProduct(productId))return;
-  pendingShopProduct=productId;previousCheckoutFocus=document.activeElement;
+  const product=FTW_FAKE_SHOP.PRODUCTS.find(p=>p.id===id);
+  if(!product||product.id===FULL_UNLOCK_PRODUCT_ID&&fakeShopHasProduct(id))return;
+  pendingShopProduct=id;previousCheckoutFocus=document.activeElement;
   $("test-checkout-title").textContent=product.name;
   $("test-checkout-price").textContent=product.price;
-  $("test-checkout-description").textContent=product.description;
+  $("test-checkout-description").textContent=product.description+
+    " This is a simulated purchase; no money will be charged.";
   $("test-checkout").hidden=false;
   $("test-checkout-confirm").focus();
 }
@@ -2148,39 +2131,36 @@ function cancelFakeCheckout(){
   if(previousCheckoutFocus?.isConnected)previousCheckoutFocus.focus();
 }
 function confirmFakeCheckout(){
-  const product=FTW_FAKE_SHOP?.PRODUCTS.find(p=>p.id===pendingShopProduct);
-  if(!product||!testCheckoutAvailable())return;
-  try {
-    if(product.id===FULL_UNLOCK_PRODUCT_ID)localStorage.setItem(FTW_TEST_PURCHASE_KEY,"yes");
-    FTW_FAKE_SHOP.purchase(product.id);
-    fakeStoreReceipts=FTW_FAKE_SHOP.read();
-    if(!FTW_FAKE_SHOP.has(fakeStoreReceipts,product.id))throw Error("Test purchase could not be saved");
-    if(product.id===FULL_UNLOCK_PRODUCT_ID)simulatedPurchase=true;
+  const p=FTW_FAKE_SHOP?.PRODUCTS.find(p=>p.id===pendingShopProduct);
+  if(!p||!testCheckoutAvailable())return;
+  const oldCount=FTW_FAKE_SHOP.count(fakeStoreReceipts,p.id);
+  try{
+    if(p.id===FULL_UNLOCK_PRODUCT_ID)localStorage.setItem(FTW_TEST_PURCHASE_KEY,"yes");
+    fakeStoreReceipts=FTW_FAKE_SHOP.purchase(p.id);
+    const confirmed=FTW_FAKE_SHOP.read();
+    if(FTW_FAKE_SHOP.count(confirmed,p.id)<=oldCount)
+      throw new Error("The test receipt could not be saved.");
+    fakeStoreReceipts=confirmed;
+    if(p.id===FULL_UNLOCK_PRODUCT_ID)simulatedPurchase=true;
   }catch(e){
-    $("test-checkout-description").textContent="Storage is unavailable. Test purchase was not saved.";
+    $("test-checkout-description").textContent="Could not save the test purchase. Enable browser storage and try again.";
     return;
   }
   cancelFakeCheckout();
-  if(product.outfit){
-    const item=OUTFITS.find(o=>o.id===product.outfit);
-    if(item){owned[item.id]=true;worn[item.slot]=item.id;}
-  }
   syncPrizes();dressWolf();save();renderWardrobe();renderStore();renderDeveloper();updateStoreButtons();
-  if(product.id===FULL_UNLOCK_PRODUCT_ID&&pendingUnlockTarget)resumeUnlockedPlay();
-  testToast("TEST PURCHASE SUCCESSFUL · No payment taken");
+  if(p.id===FULL_UNLOCK_PRODUCT_ID&&pendingUnlockTarget)resumeUnlockedPlay();
+  testToast(p.id===FULL_UNLOCK_PRODUCT_ID
+    ?"TEST PURCHASE · Full game unlocked · No charge"
+    :"TEST PURCHASE · "+p.gems+" gems added · No charge");
 }
-$("store-open").addEventListener("click",()=>show("store"));
-$("store-back").addEventListener("click",()=>show("game"));
 $("store-dev").addEventListener("click",openDeveloper);
 $("store-products").addEventListener("click",e=>{
-  const button=e.target.closest("[data-test-buy]");
-  if(!button||button.disabled)return;
-  const id=button.dataset.testBuy;
-  if(id===FULL_UNLOCK_PRODUCT_ID){
-    openUnlock(Math.max(FREE_LEVEL_COUNT,li+1),false);
-    return;
+  const b=e.target.closest("[data-test-buy]");
+  if(!b||b.disabled)return;
+  if(b.dataset.testBuy===FULL_UNLOCK_PRODUCT_ID){
+    openUnlock(Math.max(FREE_LEVEL_COUNT,li+1),false);return;
   }
-  openFakeCheckout(id);
+  openFakeCheckout(b.dataset.testBuy);
 });
 $("test-checkout-confirm").addEventListener("click",confirmFakeCheckout);
 $("test-checkout-cancel").addEventListener("click",cancelFakeCheckout);
@@ -2188,12 +2168,9 @@ $("test-checkout").addEventListener("click",e=>{if(e.target.id==="test-checkout"
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("test-checkout").hidden)cancelFakeCheckout();});
 $("dev-view-paywall").addEventListener("click",()=>{
   if(!developerMode)return;
-  previewFull=false;
-  daily=false;hardOn=false;
-  openUnlock(FREE_LEVEL_COUNT,false);
-  renderDeveloper();
+  previewFull=false;daily=false;hardOn=false;
+  openUnlock(FREE_LEVEL_COUNT,false);renderDeveloper();
 });
-
 /* iOS host must expose window.FeedTheWolfStore: async status(id), purchase(id),
    restore(id). It must verify a StoreKit 2 entitlement before returning
    {productId:id, verified:true, entitled:true, displayPrice?}.
