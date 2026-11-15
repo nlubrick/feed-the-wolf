@@ -1,45 +1,36 @@
 # Feed the Wolf — 100-Level Beta
 
-An illustrated pull-the-pin puzzle game from Failure Entertainment.
+An illustrated pull-the-pin puzzle game by Failure Entertainment. All 100 original/expansion normal levels and 100 Hard Mode variants remain in place.
 
-## Current game
-- **100 main levels and 100 Hard Mode variants** across five 20-level locations.
-- The first 40 original puzzles are unchanged. Sixty additional solver-certified puzzles use working pressure gears, water blooms, and fire beacons.
-- Extra characters, companion pets, and wearable rewards appear greyed out until the full game is unlocked.
+## One Store
 
-## Home-screen app: purchase-flow testing
+The previous Wardrobe and separate test Store are **one Store**, opened from the wolf's Store button at the top of the game. This screen contains the current gem balance, gem packs and (only when not already owned) the full-game purchase, plus **all** playable characters, pets and costumes. There are **no individual cash cosmetics**.
 
-The PWA installed on an iPhone starts as a normal **five-level free trial**. After Level 5, choose **See the full game**, then tap **Unlock full game · $2.99 (TEST)**.
+- **Full Adventure: $2.99, one-time** — Levels 6–100, Hard Mode and daily puzzles (Levels 1–5 free).
+- **Gem Pouch: 50 gems for $0.99**
+- **Gem Chest: 150 gems for $1.99**
+- **Gem Vault: 400 gems for $3.99**
 
-**No money is charged.** This is a clearly marked simulated transaction for this beta version, not an Apple App Store purchase. The purchase button opens a no-charge confirmation before it grants test access.
+All prices above are **SIMULATED TEST CHECKOUTS ONLY** in the home-screen PWA. There is no real charge, Apple receipt, or payment processing in the browser. The gem packs can be purchased repeatedly in the test simulator. The full-game unlock is a one-time purchase.
 
-### Optional test Store items
+All cosmetic items have a **gem price**, including level rewards and Hard Mode companion prizes. A player can buy these early with gems, or earn milestone items by solving the relevant levels as before. There are no combat benefits from cosmetics. **Buying gems does not unlock the full game**; the $2.99 unlock remains separate. Gem-pack test purchases and cosmetic unlocks persist when the installed home-screen app is reopened.
 
-The **Store** button on the game's home screen opens a six-item test catalog:
-- **The Full Adventure — $2.99:** all levels, Hard Mode and daily puzzles.
-- **Copper Fox — $0.99:** optional early playable character.
-- **Moss Fox — $0.99:** optional early playable character.
-- **Firefly Companion — $0.99:** optional companion pet.
-- **Mini Phoenix — $1.49:** optional companion pet.
-- **Grand Crown — $0.99:** optional wearable.
+## Developer testing
 
-These are *fake store transactions* for experimenting with checkout, persistent ownership and the wardrobe. Players can still earn the five cosmetics through normal gameplay instead of buying them. Test cosmetics unlock in the wardrobe immediately and don't deduct in-game gems. The full game is still a single one-time unlock and no subscription is involved.
+A temporary **Developer** button is available in the footer, the Store, and the full-game paywall. It opens Developer Mode for testing the five-level trial, the Store, and Levels 6–100.
 
-**Reset test purchase** removes the simulated full-game unlock **and all five optional store purchases**, while preserving completed levels, stars and legitimately earned rewards. **Reset game progress** preserves those test purchases and re-grants purchased cosmetics. **Reset purchase + progress** clears both. The simulated unlock is stored **locally in the installed app** and stays active after closing and reopening it. Game progress/last-played level are also stored locally.
+The development tools include:
+- Preview the full game without buying it, or return to demo mode.
+- Jump to any of the 100 levels, with permission checks.
+- View the full-game checkout screen.
+- **Reset test purchases** — remove full-game unlock and all test gem-pack purchases, retain level progress and cosmetics bought/earned with gems. If purchased gems have already been spent, the remaining gem balance may fall to zero.
+- **Reset game progress** — erase completed levels, hints and cosmetic unlocks, but retain the simulated full-game purchase and purchased gem packs.
+- **Reset purchases + progress** — return to brand-new-install state.
 
-**Developer tools** are accessible from the game footer, or from the purchase screen. They include a no-purchase full-game preview, level jump, **Reset test purchase** (retains progress), **Reset game progress** (retains purchase), and **Reset purchase + progress** (fresh install state). Every reset asks for confirmation.
+Resets ask for confirmation. Fake receipts are intentionally stored separately from game progress so these resets can be independent.
 
-To test a genuine free trial from scratch: open **Developer → Reset purchase + progress**, then complete Levels 1–5 and tap the TEST purchase button. To retest the paywall with saved progress, use **Reset test purchase**.
+## Tests and release blockers
 
-If you install the PWA separately from a browser, it may have separate local storage. Reset the installed copy directly. Avoid private browsing or disabling storage.
+Run `npm test` for puzzle and gem-store regressions. The `npm run release:check` command **intentionally fails** while the developer tools, simulated checkout and local fake receipts are present.
 
-## Verification
-```bash
-npm test
-npm run release:check
-```
-
-The puzzle suite searches all 200 normal/hard levels; the purchase-flow tests cover reset and persistence. **The release guard intentionally fails** while this test checkout or Developer interface exists.
-
-## App Store release is a separate future build
-Before selling, remove the simulated purchase key and developer console, integrate the real StoreKit 2 non-consumable `feed_the_wolf_full_unlock` at an intended U.S. price of $2.99, and test a signed native app with sandbox transactions, restores, refunds, pending transactions and real iPhones. This public web beta must not be presented as a live payment system.
+**Before selling the game**, remove all simulator code and developer access. Build/sign the native iPhone app, configure the full-game non-consumable and gem-pack consumables in App Store Connect, verify server/client entitlement and gem crediting, test purchases/restore/refunds/reinstalls in StoreKit sandbox, and perform actual iPhone gameplay and accessibility tests. The StoreKit files in `ios/` currently cover the full-game entitlement only: real gem-pack StoreKit purchases are **not yet implemented**. This is a playtest beta, not the App Store release.
