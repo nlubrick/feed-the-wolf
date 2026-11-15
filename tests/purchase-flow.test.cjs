@@ -65,6 +65,7 @@ async function buy(h,id){
 }
 test("Free demo, no-charge full-game checkout and persistent re-opening",async()=>{
   const h=createHarness();assert.equal(h.api.hasFullAccess(),false);
+  h.ctx.pendingUnlockTarget={index:5,daily:false};
   await h.api.storeAction("purchase");assert.equal(h.api.hasFullAccess(),false);
   h.api.confirmFakeCheckout();
   assert.equal(h.api.hasFullAccess(),true);
