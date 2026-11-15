@@ -1080,7 +1080,7 @@ let li = 0, hardOn = false, daily = false, seq = [], s = null, lv = null, P = nu
 let cleared = {}, fails = {}, stars = {};
 let W = 300, H = 300, scale = 1;
 let opened = [], wOpened = [], sawFired = [], sawAng = [], springK = [], doors = {}, boomAt = {};
-let gems = 0, owned = {}, worn = {}, hints = 0, dailyDone = {}, seen = {};
+let gems = 0, owned = {}, worn = {}, hints = 0, dailyDone = {}, seen = {}, gemUnlocked = {};
 const pet = {x:0, y:0, on:false, hide:false};
 let freeIn = [], clipPath = null;
 let parts = [], fx = [], actors = [];
@@ -1982,10 +1982,10 @@ function renderDeveloper(){
   $("developer-from-unlock").hidden = !FTW_TEST_BUILD;
   $("dev-full").checked = developerMode && previewFull;
   $("dev-full").disabled = !testCheckoutAvailable();
-  const extra=FTW_FAKE_SHOP ? FTW_FAKE_SHOP.PRODUCTS.filter(p=>p.outfit&&fakeShopHasProduct(p.id)).length : 0;
+  const extra=mockGemCredits();
   $("dev-purchase-state").textContent = nativeStore()
     ? "Apple purchases (cannot reset here)"
-    : (simulatedPurchase ? "Full game purchased" : "Demo · no full unlock") + " · " + extra + " store items";
+    : (simulatedPurchase ? "Full game purchased" : "Demo · no full unlock") + " · " + extra + " test gems";
   $("dev-progress-state").textContent = "Level " + (li+1) + " / " + LEVELS.length +
     " · " + Object.keys(cleared).filter(k => /^\d+$/.test(k)).length + " complete";
   $("dev-level").value = String(li+1);
@@ -1994,7 +1994,7 @@ function renderDeveloper(){
 }
 function openDeveloper(){
   if (!FTW_TEST_BUILD) return;
-  developerReturnView = !$("store").hidden ? "store" : !$("unlock").hidden ? "unlock" : "game";
+  developerReturnView = !$("shop").hidden ? "shop" : !$("unlock").hidden ? "unlock" : "game";
   developerMode = true;
   renderDeveloper();
   $("dev-message").textContent = "Developer tools are active until you exit.";
@@ -2007,7 +2007,7 @@ function leaveDeveloper(exit){
   }
   renderDeveloper(); dressWolf(); renderWardrobe(); updateStoreButtons();
   if(developerReturnView === "unlock" && !hasFullAccess() && pendingUnlockTarget) show("unlock");
-  else if(developerReturnView === "store")show("store");
+  else if(developerReturnView === "shop")show("shop");
   else show("game");
 }
 function setPreviewFull(on){
@@ -2041,7 +2041,7 @@ function resetTesting(kind){
   pendingUnlockTarget=null; entitlementReturnLevel=null;
   if(kind!=="purchase"){
     try{ localStorage.removeItem("ftw-save"); }catch(e){}
-    cleared={};stars={};fails={};owned={};worn={};hints=0;
+    cleared={};stars={};fails={};owned={};worn={};gemUnlocked={};hints=0;
     hintPaid={};hintOn=false;hintKey="";dailyDone={};seen={};seq=[];
     daily=false;hardOn=false;li=0;
     syncPrizes();load(0,null,true);save();
@@ -2436,17 +2436,8 @@ window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() =
 const THUMB = {};
 function thumb(id){ const k = id + "|" + (SPECIES[id] ? "" : worn.hero); return THUMB[k] || (THUMB[k] = (PETS[id] ? petSvg(id) : SPECIES[id] ? heroSvg("idle", [], id) : heroSvg("idle", [id], worn.hero)).src); }
 function dressWolf(){                               // swap the wolf's sprites once every one of them has loaded
-  // Paid cosmetics already present in a legacy save are not shown in the demo.
-  // Preserve the saved choices: switching back to full restores them intact.
-  const outfit = {...worn};
-  if(!hasFullAccess()){
-    for(const slot of ["hero","neck","head","face","pet"]){
-      const id=outfit[slot], item=OUTFITS.find(o=>o.id===id);
-      if(!item || id==="wolf" || id==="bandana" || fakeShopHasOutfit(id))continue;
-      outfit[slot]=slot==="hero"?"wolf":null;
-    }
-    if(!outfit.hero)outfit.hero="wolf";
-  }
+  // Cosmetics bought with gems are equippable in free and full versions.
+  const outfit = worn;
   const wear = OUTFITS.filter(o => outfit[o.slot] === o.id).map(o => o.id), set = wolfSet(wear, outfit.hero), ims = Object.keys(set).map(k => set[k]);
   let left = ims.length;
   const done = () => { if (--left === 0) IMG.king = set; };
@@ -2480,19 +2471,20 @@ function syncPrizes(){
   let got = null, g = 0;
   const give = o => { if (!owned[o.id]){ owned[o.id] = true; if (!worn[o.slot]) worn[o.slot] = o.id; got = o; } };
   owned.wolf = true; if (!worn.hero || !owned[worn.hero]) worn.hero = "wolf";
-  grantFakeCosmetics(); // Test purchases survive independent progress resets.
   for (const k in stars) g += (+stars[k] || 0) * (/h$/.test(k) ? 2 : 1);
   for (const o of OUTFITS){
     if (o.level && (cleared[o.level - 1] || cleared[(o.level - 1) + "h"])){ g += 5; give(o); }
     if (o.hard && cleared[(o.hard - 1) + "h"]) give(o);
-    if (o.cost && owned[o.id] && !fakeShopHasOutfit(o.id)) g -= o.cost;
+    if (o.cost && owned[o.id]) g -= o.cost;
   }
-  gems = Math.max(0, g - hints + 5 * Object.keys(dailyDone).length);
+  const prizeGemsSpent=Object.values(gemUnlocked).reduce((t,n)=>t+(Number.isSafeInteger(n)&&n>0?n:0),0);
+  gems = Math.max(0, g + mockGemCredits() - prizeGemsSpent - hints + 5 * Object.keys(dailyDone).length);
   return got;
 }
-function save(){ try { localStorage.setItem("ftw-save", JSON.stringify({cleared, stars, owned, worn, hints, hp:hintPaid, dd:dailyDone, seen, li, hard:hardOn})); } catch (e) {} }
+function save(){ try { localStorage.setItem("ftw-save", JSON.stringify({cleared, stars, owned, worn, gemUnlocked, hints, hp:hintPaid, dd:dailyDone, seen, li, hard:hardOn})); } catch (e) {} }
 function renderWardrobe(){
   $("gems").textContent = $("gems2").textContent = gems;
+  if(!$("shop").hidden)renderStore();
   const far = reached();
   const tile = o => {
     const own = !!owned[o.id], premiumLocked = !hasFullAccess() && !fakeShopHasOutfit(o.id) && !!(o.premium || (o.from && o.from > FREE_LEVEL_COUNT) || (o.level && o.level > FREE_LEVEL_COUNT) || o.hard || (o.cost && o.id !== "wolf"));
@@ -2523,11 +2515,10 @@ $("shop").addEventListener("click", e => {
 });
 function menu(){}
 function show(name){                                // screens: the castle, the wardrobe, the rules, the finale, credits
-  for (const id of ["game","shop","help","credits","ftw-finale","unlock","developer","store"]) $(id).hidden = id !== name;
+  for (const id of ["game","shop","help","credits","ftw-finale","unlock","developer"]) $(id).hidden = id !== name;
   window.scrollTo(0, 0);
   if (name === "game"){ setSize(); renderBg(); }
-  if (name === "shop") renderWardrobe();
-  if (name === "store") renderStore();
+  if (name === "shop"){renderWardrobe();renderStore();}
 }
 $("wbtn").addEventListener("click", () => show("shop"));
 $("hbtn").addEventListener("click", () => show("help"));
@@ -2727,6 +2718,7 @@ function start(data){
   const obj=v=>v&&typeof v==="object"?v:null;
   cleared=obj(sv.cleared)||obj(data.cleared)||{};stars=obj(sv.stars)||obj(data.stars)||{};
   owned=obj(sv.owned)||obj(data.owned)||{};worn=obj(sv.worn)||obj(data.worn)||{};
+  gemUnlocked=obj(sv.gemUnlocked)||{};
   hints=+sv.hints||+data.hints||0;hintPaid=obj(sv.hp)||{};dailyDone=obj(sv.dd)||{};seen=obj(sv.seen)||{};
   const requested = Number.isInteger(sv.li)&&LEVELS[sv.li] ? sv.li :
     Number.isInteger(data.li)&&LEVELS[data.li] ? data.li : 0;
