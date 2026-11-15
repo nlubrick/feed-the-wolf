@@ -434,7 +434,7 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
         <input id="dev-level" type="number" inputmode="numeric" min="1" max="115" value="1">
         <button class="quiet" id="dev-jump" type="button">Go</button>
       </div>
-      <button class="quiet" id="dev-view-paywall" type="button">Preview the Level 6 Purchase Screen</button>
+      <button class="quiet" id="dev-view-paywall" type="button">Preview the Level 7 Purchase Screen</button>
       <div class="dev-reset-actions">
         <button class="quiet" id="dev-reset-purchase" type="button">Reset test purchase</button>
         <small>Remove the fake full-game purchase and all gem packs, but keep progress and items bought with gems.</small>
@@ -2394,7 +2394,7 @@ function load(index, replay, fresh){
 function reveal(){                                  // a moment for reaching somewhere new
   const el = document.createElement("div"), extra = [];
   if (li % 20 === 0) extra.push(locationFor(li).story);
-  for (const o of OUTFITS) if (o.from === li + 1) extra.push("The " + o.name.toLowerCase() + " is now on sale in the wardrobe.");
+  for (const o of OUTFITS) if (o.from === li + 1) extra.push("The " + o.name.toLowerCase() + " can now be unlocked in the Store.");
   el.className = "result win reveal"; el.setAttribute("role", "status");
   el.innerHTML = "<p>" + (li % 20 === 0 ? "New location" : "New wing") + "</p><h2>" + (li % 20 === 0 ? locationFor(li).name : wing(li).name) + "</h2>" + extra.map(t => "<p>" + t + "</p>").join("") + '<button class="go" id="go" type="button">In we go</button>';
   board.appendChild(el); busy = true; sfx("win");
@@ -2449,7 +2449,7 @@ function showResult(focus){
       dressWolf(); save(); renderWardrobe();
     }
     el.className = "result win";
-    el.innerHTML = '<div class="stars" role="img" aria-label="' + st + ' of 3 stars">' + "★".repeat(st) + "<i>" + "★".repeat(3 - st) + "</i></div><h2>" + (lastLv ? "All " + LEVELS.length + " cleared" : "Dinner is served") + "</h2>" +
+    el.innerHTML = '<div class="stars" role="img" aria-label="' + st + ' of 3 stars">' + "★".repeat(st) + "<i>" + "★".repeat(3 - st) + "</i></div><h2>" + (lastLv ? "The final feast!" : "Dinner is served") + "</h2>" +
       (prize ? '<div class="prize"><img alt="" src="' + thumb(prize.id) + '"><p><b>Prize: ' + prize.name + '</b><br>' + (gain ? 'Plus <i class="gem"></i>' + gain + ". " : "") + (prize.slot === "pet" ? "It is already following him." : "He is already wearing it.") + '</p></div>'
              : "<p>" + (lastLv ? (hardOn ? "On hard mode. The ad owes you an apology." : "Now try them with hard mode on.") : "Solved in " + seq.length + (seq.length === 1 ? " pull" : " pulls") + (hardOn ? ", on hard." : ".")) + "</p>" + (gain ? '<p class="gain">+<i class="gem"></i>' + gain + "</p>" : "")) +
       (!hasFullAccess() && li === FREE_LEVEL_COUNT - 1 ? '<p>Five castle puzzles down! The free bonus Level 6 is next.</p>' : "") +
