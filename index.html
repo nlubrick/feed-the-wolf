@@ -1966,7 +1966,7 @@ let fullGame = false, storeBusy = false, pendingUnlockTarget = null, entitlement
 const FTW_TEST_BUILD = true;
 const FTW_TEST_PURCHASE_KEY = "ftw-beta-simulated-unlock-v1";
 let simulatedPurchase = false;
-let developerMode = false, previewFull = false;
+let developerMode = false, previewFull = false, developerReturnView = "game";
 try { simulatedPurchase = FTW_TEST_BUILD && localStorage.getItem(FTW_TEST_PURCHASE_KEY) === "yes"; }
 catch (e) { /* local storage may be unavailable */ }
 function testCheckoutAvailable(){ return FTW_TEST_BUILD && !nativeStore(); }
@@ -1989,6 +1989,7 @@ function renderDeveloper(){
 }
 function openDeveloper(){
   if (!FTW_TEST_BUILD) return;
+  developerReturnView = $("unlock").hidden ? "game" : "unlock";
   developerMode = true;
   renderDeveloper();
   $("dev-message").textContent = "Developer tools are active until you exit.";
@@ -2000,7 +2001,8 @@ function leaveDeveloper(exit){
     daily=false; hardOn=false; load(FREE_LEVEL_COUNT-1,null,true);
   }
   renderDeveloper(); dressWolf(); renderWardrobe(); updateStoreButtons();
-  show("game");
+  if(developerReturnView === "unlock" && !hasFullAccess() && pendingUnlockTarget) show("unlock");
+  else show("game");
 }
 function setPreviewFull(on){
   if (!FTW_TEST_BUILD || !developerMode || !testCheckoutAvailable()) return;
