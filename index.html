@@ -337,6 +337,18 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 .ftw-test-checkout-card p{margin:0}
 .ftw-test-checkout-card button{min-height:50px}
 @media(max-width:520px){.ftw-products{grid-template-columns:1fr}.ftw-product{padding:13px}.ftw-product>img{width:84px;height:88px}}
+
+/* Unified Store: gem packs above all unlockable cosmetics. */
+.ftw-store-intro{max-width:560px;font-size:14px;line-height:1.5;margin:0 auto;text-align:center;color:var(--ink)}
+.ftw-store-purchase-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:4px}
+.ftw-store-purchase-head .shelf{margin:0}
+.ftw-store-purchase-head .ftw-test-checkout{font-size:10px}
+.ftw-gem-pack-art{flex:none;display:flex;align-items:center;justify-content:center;width:90px;height:92px;border-radius:14px;background:radial-gradient(circle at 50% 45%,#6acfff77,#292354 70%);border:1px solid #a8a9e5}
+.ftw-gem-pack-art span{font-size:40px;text-shadow:0 4px 8px #001e4a;transform:rotate(-12deg)}
+.ftw-product .go{width:100%}
+.tile .tile-gem-price{font-weight:800;color:#b8edff;background:#132341b0}
+.tile .tile-gem-price .gem{width:.6em;height:.6em}
+.tile.gem-unaffordable{opacity:.78}
 </style>
 <script src="./test-store.js"></script>
 <script src="./studio-boot-v2.js" defer></script>
@@ -346,7 +358,7 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
  <div id="game">
   <header>
     <h1>Feed the Wolf</h1>
-    <button class="wpill" id="wbtn" type="button"><img id="wface" alt=""><span>Wardrobe</span><span class="cnt"><i class="gem"></i><span id="gems2">0</span></span></button>
+    <button class="wpill" id="wbtn" type="button"><img id="wface" alt=""><span>Store</span><span class="cnt"><i class="gem"></i><span id="gems2">0</span></span></button>
   </header>
 
   <div class="bar">
@@ -377,7 +389,6 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
     <button class="linkish" id="hbtn" type="button">How to play</button>
     <button class="linkish" id="credits-btn" type="button">Credits</button>
     <button class="linkish" id="unlock-link" type="button">Full game</button>
-    <button class="linkish" id="store-open" type="button">Store</button>
     <button class="linkish" id="developer-open" type="button" hidden>Developer</button>
   </nav>
  </div>
@@ -397,23 +408,12 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
       <button class="quiet" id="developer-from-unlock" type="button" hidden>Developer tools</button>
     </div>
   </section>
-  <section id="store" hidden aria-label="Game store">
-    <div class="shop-top"><button class="quiet" id="store-back" type="button">&#8249; Back to the castle</button><button class="quiet" id="store-dev" type="button" hidden>Developer</button></div>
-    <div class="ftw-store-head">
-      <p class="dev-eyebrow">The Wolf's Den</p>
-      <h1>Adventure Store</h1>
-      <p>Try the full-game unlock and optional instant cosmetic unlocks. Everything can still be earned through gameplay. No subscription.</p>
-      <p class="ftw-test-checkout" id="store-test-note" hidden>SIMULATED STORE · NO REAL MONEY WILL BE CHARGED</p>
-    </div>
-    <div id="store-products" class="ftw-products"></div>
-    <p class="dev-help">Cosmetics are optional and do not give a gameplay advantage. In this test build, all purchases are simulations.</p>
-  </section>
   <section id="developer" hidden aria-label="Developer testing tools">
     <div class="shop-top"><button class="quiet" id="developer-back" type="button">&#8249; Back to game</button><span class="dev-tag">TEST BUILD</span></div>
     <div class="dev-console">
       <p class="dev-eyebrow">Failure Entertainment · Developer Lab</p>
       <h1>Test the full journey</h1>
-      <p class="dev-caption">Everything here is simulated. No money is charged, and none of these controls will ship in the paid game.</p>
+      <p class="dev-caption">Purchases are simulated. Reset gem packs, game progress, or both independently. These tools will not ship in the paid game.</p>
       <div class="dev-state">
         <span>Purchase status</span><strong id="dev-purchase-state">Not purchased</strong>
         <span>Game progress</span><strong id="dev-progress-state">Level 1 / 100</strong>
@@ -428,9 +428,9 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
       <button class="quiet" id="dev-view-paywall" type="button">Preview the Level 6 Purchase Screen</button>
       <div class="dev-reset-actions">
         <button class="quiet" id="dev-reset-purchase" type="button">Reset test purchase</button>
-        <small>Forget the fake $2.99 purchase but keep your level progress. Revisit the purchase screen.</small>
+        <small>Remove the fake full-game purchase and all gem packs, but keep progress and items bought with gems.</small>
         <button class="quiet" id="dev-reset-progress" type="button">Reset game progress</button>
-        <small>Erase levels, gems, earned items and saved progress. Keep purchase status.</small>
+        <small>Erase levels and cosmetic unlocks; keep the full-game purchase and gem packs.</small>
         <button class="quiet danger" id="dev-reset-all" type="button">Reset purchase + progress</button>
         <small>Start exactly like a brand-new download.</small>
       </div>
@@ -471,23 +471,27 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
     <li><b>Daily puzzle:</b> a different castle each day, worth 5 gems the first time you solve it.</li>
     <li><b>Caged wolves</b> turn up in hard mode. Walk the wolf to the cage, or break it open with a boulder or a blast. Everyone has to be out before dinner counts, and lava must never reach a cage.</li>
     <li><b>Undo</b> takes back your last pull. <b>Hint</b> costs a gem and lights up a pin that still leads to a win.</li>
-    <li><b>Stars:</b> clear a level with no failed tries for three. Stars are gems, and gems buy outfits and pets in the wardrobe. <b>Hard mode</b> rebuilds the level you are on.</li>
+    <li><b>Stars:</b> clear a level with no failed tries for three. Stars are gems, and gems buy all outfits and pets in the Store. <b>Hard mode</b> rebuilds the level you are on.</li>
   </ul>
  </section>
 
  <section id="shop" hidden>
   <div class="shop-top">
     <button class="quiet" id="back" type="button">&#8249; Back to the castle</button>
-    <div class="purse"><i class="gem"></i><span id="gems">0</span></div>
+    <div class="purse" aria-label="Available gems"><i class="gem"></i><span id="gems">0</span></div>
+    <button class="quiet" id="store-dev" type="button" hidden>Developer</button>
   </div>
-  <h1>Wardrobe</h1>
+  <h1>Store</h1>
+  <p class="ftw-store-intro">Earn gems by solving puzzles, or get more with test purchases. <strong>Every character, costume and pet can be unlocked with gems.</strong></p>
+  <div class="ftw-store-purchase-head"><h2 class="shelf">Gem Packs &amp; Full Game</h2><p class="ftw-test-checkout" id="store-test-note" hidden>TEST STORE · NO ACTUAL MONEY IS CHARGED</p></div>
+  <div id="store-products" class="ftw-products"></div>
+  <h2 class="shelf">Characters &amp; Companions</h2>
   <div class="mirror"><img id="petImg" alt="" hidden><img id="dress" alt="The wolf in what he is wearing now"></div>
-  <p class="hint">Each star is a gem, and hard-mode stars count double. New characters go on sale as you reach each wing of the castle. Every fifth level hands over a prize, and every fifth level cleared on hard mode sends a pet. He can wear one hat, one face piece and one neck piece, and bring one pet.</p>
-  <h2 class="shelf">Characters</h2>
+  <p class="hint">Collect gems by earning stars (double in Hard Mode) or buy gem packs during this test. Every item below has a gem price, even milestone rewards. Some rewards can still be earned for free by playing. Wear one hat, face accessory and neck accessory, with one pet at a time.</p>
   <div class="tiles" id="tilesH"></div>
   <h2 class="shelf">Prizes</h2>
   <div class="tiles" id="tilesP"></div>
-  <h2 class="shelf">Shop</h2>
+  <h2 class="shelf">Costumes &amp; Accessories</h2>
   <div class="tiles" id="tilesS"></div>
   <h2 class="shelf">Pets</h2>
   <div class="tiles" id="tilesT"></div>
