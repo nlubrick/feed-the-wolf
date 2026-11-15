@@ -84,7 +84,8 @@ test("Bought gems enter the real earned/spent-gem balance once",()=>{
     gems:0,cleared:{},stars:{0:3},dailyDone:{},hints:0,
     gemUnlocked:{bandana:19},
     OUTFITS:[{id:"wolf",free:true},{id:"party",cost:6,slot:"head"},{id:"bandana",level:5,slot:"neck"}],
-    mockGemCredits:()=>h.store.gemsGranted(h.store.read(h.storage))
+    mockGemCredits:()=>h.store.gemsGranted(h.store.read(h.storage)),
+    bonusEarnedGems:()=>0
   };
   economy(ctx)();
   assert.equal(ctx.gems,28); // 3 earned + 50 pack - 6 outfit - 19 milestone buy
@@ -101,7 +102,7 @@ test("Progress reset preserves purchased gems; purchase reset preserves level pr
   h.store.reset(h.storage); // purchase-only reset
   assert.equal(h.store.gemsGranted(h.store.read(h.storage)),0);
   assert.equal(JSON.parse(h.saved.get("ftw-save")).li,15);
-  assert.match(html,/gemUnlocked=\{\};hints=0/);
+  assert.match(html,/gemUnlocked=\{\};bonusResults=\{\};campaignStage=1;hints=0/);
   assert.match(html,/gemUnlocked, hints/);
 });
 test("Test controls must be stripped for App Store release",()=>{
