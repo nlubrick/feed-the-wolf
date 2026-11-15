@@ -6,7 +6,7 @@ const path=require("node:path");
 const vm=require("node:vm");
 const root=path.resolve(__dirname,"..");
 const html=fs.readFileSync(path.join(root,"index.html"),"utf8");
-const code=fs.readFileSync(path.join(root,"test-store.js"),"utf8");
+const code=fs.readFileSync(path.join(root,"test-store-v2.js"),"utf8");
 function harness(saved=new Map()){
   const storage={getItem:k=>saved.has(k)?saved.get(k):null,
     setItem:(k,v)=>saved.set(k,String(v)),removeItem:k=>saved.delete(k)};
