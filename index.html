@@ -1796,9 +1796,12 @@ $("finish-daily").addEventListener("click",()=>{daily=true;load(li,null,true);sh
 $("finish-replay").addEventListener("click",()=>{daily=false;hardOn=false;load(0,null,true);show("game");});
 $("finish-return").addEventListener("click",()=>show("game"));
 function showFinale(){
- $("fe-finale-heading").textContent=hardOn?"Hard Mode Conquered":"The Castle Is Yours";
- $("fe-finale-description").textContent=hardOn?"All 40 hard-mode castles completed. The wolf has earned a nap.":"You finished all 40 castles. The wolf is finally fed. Mostly.";
- $("fe-finale-next").textContent=hardOn?"The daily puzzle and your wardrobe are still waiting.":"There are 40 harder versions of these castles, plus a new daily puzzle every day.";
+ const solvedNormal=LEVELS.filter((_,i)=>!!cleared[i]).length;
+ const solvedHard=LEVELS.filter((_,i)=>!!cleared[i+"h"]).length;
+ const uniqueSolved=LEVELS.filter((_,i)=>!!cleared[i]||!!cleared[i+"h"]).length;
+ $("fe-finale-heading").textContent=hardOn?(solvedHard===LEVELS.length?"Hard Mode Conquered":"The Final Hard Castle"):"The Castle Is Yours";
+ $("fe-finale-description").textContent="You finished Level 40, the final castle. The wolf is fed. Mostly.";
+ $("fe-finale-next").textContent=uniqueSolved+" of 40 castles cleared; "+solvedNormal+" normal and "+solvedHard+" hard variants solved. The daily puzzle and your wardrobe are still waiting.";
  $("finish-hard").hidden=hardOn;
  show("ftw-finale");
 }
