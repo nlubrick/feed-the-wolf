@@ -4,7 +4,7 @@
   "version": "0.2.0",
   "description": "Failure Entertainment 100-level puzzle game",
   "scripts": {
-    "test": "node --test tests/*.test.cjs",
+    "test": "node --test tests/*.test.cjs && node tests/verify-levels.cjs",
     "release:check": "node scripts/check-release.cjs"
   },
   "engines": {
