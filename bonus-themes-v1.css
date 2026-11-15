@@ -1,0 +1,107 @@
+/* Feed the Wolf bonus-arcade scenery: each of the five locations gets its own banner, colours,
+   board texture, tile set and pipe metal. Loaded after bonus-style-v1.css. */
+.fw-themed{overflow:hidden;--fw-pipe:#c2a27e;--fw-pipe-in:#4b4d74;--fw-pipe-bg:#252039;--fw-flow:#65c9e4;--fw-flow-out:#8be3b5}
+.fw-themed>*{position:relative;z-index:1}
+.fw-themed>.fw-banner{position:absolute;z-index:0;inset:0 0 auto 0;height:168px;-webkit-mask-image:linear-gradient(#000 62%,transparent);mask-image:linear-gradient(#000 62%,transparent)}
+.fw-banner-art{width:100%;height:100%;display:block}
+.fw-themed .fw-bonus-header{padding-top:82px;text-shadow:0 2px 3px #000,0 0 14px #000}
+.fw-themed .fw-bonus-header h1{text-shadow:0 2px 0 #000,0 0 16px #000c}
+.fw-themed .fw-bonus-kicker{background:#0009;display:inline-block;padding:3px 8px;border-radius:999px}
+.fw-themed .fw-bonus-reward{background:#000a}
+.fw-themed .fw-bonus-instructions{font-size:12.5px}
+.fw-themed .fw-bonus-play{box-shadow:inset 0 0 0 3px #0005,inset 0 0 40px #0006,0 6px 16px #0006}
+
+/* 0 The Castle: torchlit stone */
+.fw-themed.fw-world-0{background:linear-gradient(170deg,#34304f,#1d1b33 60%,#121022);border-color:#8d8aa6;--fw-accent:#ffc66b;--fw-accent-dark:#7a5a3a;--fw-pipe:#e9b45a;--fw-pipe-in:#3a3550;--fw-pipe-bg:#211f38;--fw-flow:#ff8a1a;--fw-flow-out:#ffe08a}
+.fw-themed.fw-world-0 .fw-bonus-play{background:
+ linear-gradient(#0000 47px,#1a1930 47px 50px),
+ linear-gradient(90deg,#0000 77px,#1a1930 77px 80px),#3a3758;background-size:100% 50px,80px 100%}
+.fw-themed.fw-world-0 .fw-food-tile{background:linear-gradient(145deg,#6f6a8c,#3f3b5c);border-color:#a39fc0;border-bottom-color:#ffc66b}
+/* 1 The Wizard's Tower: starlight and spellwork */
+.fw-themed.fw-world-1{background:linear-gradient(170deg,#33208a,#1a1150 60%,#0d0828);border-color:#b79cff;--fw-accent:#d6c2ff;--fw-accent-dark:#6a4fc0;--fw-pipe:#b48cff;--fw-pipe-in:#241766;--fw-pipe-bg:#150e40;--fw-flow:#2bff9a;--fw-flow-out:#d8fff0}
+.fw-themed.fw-world-1 .fw-bonus-play{background:
+ radial-gradient(circle at 12% 18%,#fff 0 1.2px,#0000 2px),radial-gradient(circle at 78% 30%,#ffe9a6 0 1.4px,#0000 2.2px),
+ radial-gradient(circle at 40% 72%,#fff 0 1px,#0000 1.8px),radial-gradient(circle at 88% 84%,#d6c2ff 0 1.4px,#0000 2.2px),
+ radial-gradient(circle at 50% 0%,#5a3bc0,#1a1150 70%);background-size:140px 140px,190px 170px,120px 150px,170px 130px,100% 100%}
+.fw-themed.fw-world-1 .fw-food-tile{background:linear-gradient(145deg,#6a4fc0,#2e2168);border-color:#b79cff;border-bottom-color:#ffe9a6;border-radius:50% 50% 14px 14px/22% 22% 14px 14px}
+/* 2 Clockwork Citadel: brass and rivets */
+.fw-themed.fw-world-2{background:linear-gradient(170deg,#5a3d22,#33200f 60%,#1c1108);border-color:#d39a45;--fw-accent:#ffd08a;--fw-accent-dark:#8a5a24;--fw-pipe:#ffb53a;--fw-pipe-in:#5a3010;--fw-pipe-bg:#2a1a0c;--fw-flow:#ffe14a;--fw-flow-out:#fff6c0}
+.fw-themed.fw-world-2 .fw-bonus-play{background:
+ radial-gradient(circle,#f0c070 0 2.5px,#5a3414 3px 4.5px,#0000 5px),
+ repeating-linear-gradient(90deg,#0000 0 58px,#00000030 58px 60px),linear-gradient(#7a5226,#4a2e14);background-size:60px 60px,100% 100%,100% 100%;background-position:30px 30px,0 0,0 0}
+.fw-themed.fw-world-2 .fw-food-tile{background:linear-gradient(145deg,#d39a45,#7a4d1c);border-color:#f0c070;border-bottom-color:#3b2414;border-radius:8px;box-shadow:inset 0 0 0 2px #3b241455,inset 0 1px 6px #fff5,0 3px 2px #0006}
+/* 3 Moonlit Conservatory: glass and leaves */
+.fw-themed.fw-world-3{background:linear-gradient(170deg,#1c5a5c,#0f3438 60%,#081d20);border-color:#9fd8c2;--fw-accent:#c4ffe0;--fw-accent-dark:#3f8a6a;--fw-pipe:#5fe0a8;--fw-pipe-in:#14503c;--fw-pipe-bg:#0b2a2c;--fw-flow:#2fd0ff;--fw-flow-out:#e2f8ff}
+.fw-themed.fw-world-3 .fw-bonus-play{background:
+ linear-gradient(#0000 calc(50% - 2px),#9fd8c244 calc(50% - 2px) calc(50% + 2px),#0000 calc(50% + 2px)),
+ repeating-linear-gradient(90deg,#0000 0 78px,#9fd8c244 78px 82px),radial-gradient(circle at 80% 10%,#3f9a8a,#0f3438 75%)}
+.fw-themed.fw-world-3 .fw-food-tile{background:linear-gradient(145deg,#4fae82,#1f5a48);border-color:#c4ffe0;border-bottom-color:#f7b6e0;border-radius:16px 4px 16px 4px}
+/* 4 Ghostlight Theatre: velvet and gold */
+.fw-themed.fw-world-4{background:linear-gradient(170deg,#4a1730,#280d28 60%,#150818);border-color:#e8b84a;--fw-accent:#ffd98a;--fw-accent-dark:#8a2a40;--fw-pipe:#ffc93a;--fw-pipe-in:#5a1426;--fw-pipe-bg:#260a20;--fw-flow:#ff6ad0;--fw-flow-out:#ffe6f8}
+.fw-themed.fw-world-4 .fw-bonus-play{background:repeating-linear-gradient(90deg,#7a1a2e 0 22px,#5c1222 22px 44px);border-color:#e8b84a}
+.fw-themed.fw-world-4 .fw-food-tile{background:linear-gradient(145deg,#2a1836,#150818);border-color:#e8b84a;border-bottom-color:#ffd98a;box-shadow:inset 0 0 12px #ffe9b033,0 3px 2px #0006}
+.fw-themed .fw-food-tile.selected{outline-color:var(--fw-accent)}
+
+/* the player's wolf, watching from the banner and dreaming of what this stage is about */
+.fw-themed>.fw-bonus-wolf{position:absolute;z-index:1;left:8px;top:2px;height:92px;width:auto;filter:drop-shadow(0 4px 4px #000a);animation:fw-bob 2.4s ease-in-out infinite;pointer-events:none}
+.fw-themed>.fw-wolf-bubble{position:absolute;z-index:1;left:84px;top:4px;width:46px;height:46px;border-radius:50%;background:#fff;border:3px solid #17121f;padding:5px;box-shadow:0 3px 0 #0006;animation:fw-bob 2.4s ease-in-out -.6s infinite;pointer-events:none}
+.fw-wolf-bubble::before,.fw-wolf-bubble::after{content:"";position:absolute;background:#fff;border:3px solid #17121f;border-radius:50%}
+.fw-wolf-bubble::before{width:11px;height:11px;left:-9px;bottom:-3px}.fw-wolf-bubble::after{width:6px;height:6px;left:-17px;bottom:-11px}
+.fw-wolf-bubble svg{width:100%;height:100%;display:block}
+@keyframes fw-hop{30%{transform:translateY(-16px) rotate(-6deg)}60%{transform:translateY(0) rotate(4deg)}}
+.fw-themed>.fw-bonus-wolf.fw-hop{animation:fw-hop .55s ease-out 2}
+
+/* food: dark glossy tiles with a glow in each food's own colour, so the icons carry the colour */
+.fw-themed .fw-food-tile{padding:1px;background:radial-gradient(circle at 50% 45%,var(--k,#fff3) 0,#0000 68%),linear-gradient(160deg,#ffffff1f,#0000 45%),var(--fw-tile,#17131f) !important;box-shadow:inset 0 2px 0 #ffffff2e,inset 0 -3px 0 #0007,0 3px 3px #0008}
+.fw-themed .fw-food-tile svg{max-width:none;filter:drop-shadow(0 3px 2px #000b)}
+.fw-kind-0{--k:#ff6a0088}.fw-kind-1{--k:#ffd50088}.fw-kind-2{--k:#ff123888}.fw-kind-3{--k:#00bfff88}.fw-kind-4{--k:#ff2fa688}.fw-kind-5{--k:#7a2cff99}
+.fw-themed.fw-world-0{--fw-tile:#1b1930}.fw-themed.fw-world-1{--fw-tile:#130c33}.fw-themed.fw-world-2{--fw-tile:#2a1a0c}.fw-themed.fw-world-3{--fw-tile:#0a2327}.fw-themed.fw-world-4{--fw-tile:#1a0b22}
+.fw-themed .fw-food-tile.selected{transform:scale(1.1);outline-width:4px;box-shadow:0 0 18px var(--fw-accent)}
+/* seek-and-find: things start in plain sight in the Castle and are faded into the room by the Theatre */
+.fw-themed .fw-detective-art{filter:drop-shadow(0 2px 1px #0009)}
+.fw-camo-1 .fw-detective-item:not(.found) .fw-detective-art{filter:saturate(.8) brightness(.92);opacity:.96}
+.fw-camo-2 .fw-detective-item:not(.found) .fw-detective-art{filter:saturate(.62) brightness(.84);opacity:.92}
+.fw-camo-3 .fw-detective-item:not(.found) .fw-detective-art{filter:saturate(.48) brightness(.78) hue-rotate(-12deg);opacity:.88}
+.fw-camo-4 .fw-detective-item:not(.found) .fw-detective-art{filter:saturate(.38) brightness(.7) sepia(.25);opacity:.84}
+.fw-themed .fw-detective-item:hover,.fw-themed .fw-detective-item:focus{filter:none}
+.fw-themed .fw-detective-item.found{opacity:1}
+.fw-detective-clock{font:900 15px var(--body);color:#17121f;background:var(--fw-accent);padding:6px 10px;border-radius:999px;min-width:52px;text-align:center}
+.fw-detective-hint{margin-left:auto;border:1px solid var(--fw-accent);border-radius:999px;background:#0009;color:var(--fw-accent);padding:7px 11px;font:800 12px var(--body);cursor:pointer}
+@keyframes fw-hint{50%{filter:drop-shadow(0 0 10px #fff) drop-shadow(0 0 18px #ffe14a);transform:scale(1.5)}}
+.fw-detective-item.fw-hinted .fw-detective-art{opacity:1!important;animation:fw-hint .6s ease-in-out 3;transform-box:fill-box;transform-origin:center}
+.fw-detective-clock.low{background:#ff3b3b;color:#fff;animation:fw-flick .4s ease-in-out infinite alternate}
+@keyframes fw-miss{20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+.fw-detective-scene.fw-miss{animation:fw-miss .3s}
+
+/* pipes: the pot and the bowl sit on the row the liquid enters and leaves */
+.fw-pipe-wrap.fw-pipe-ends{display:grid;grid-template-columns:54px minmax(0,1fr) 54px;align-items:center;gap:2px;max-width:600px;margin:0 auto}
+.fw-pipe-end{display:flex;flex-direction:column;align-items:center;gap:2px;position:relative}
+.fw-pipe-end svg{width:100%;display:block;filter:drop-shadow(0 3px 3px #000a)}
+.fw-pipe-end b{font:900 10px/1 var(--body);letter-spacing:1px;color:#17121f;background:var(--fw-flow);padding:3px 5px;border-radius:6px;box-shadow:0 2px 0 #0007}
+.fw-pipe-end i{position:absolute;top:50%;font:900 15px/1 var(--body);font-style:normal;color:var(--fw-flow);text-shadow:0 0 6px var(--fw-flow),0 1px 0 #000;animation:fw-nudge .8s ease-in-out infinite alternate;z-index:2}
+.fw-pipe-start i{right:-9px;margin-top:-2px}.fw-pipe-finish i{left:-9px;margin-top:-2px}
+@keyframes fw-nudge{to{transform:translateX(4px)}}
+.fw-pipe-wolf{width:112%;margin-bottom:-13px;filter:drop-shadow(0 3px 3px #000a);position:relative;z-index:1}
+.fw-pipe-finish svg{position:relative;z-index:2}
+.fw-pipe-ends .fw-pipe-grid{width:100%;max-width:none;margin:0}
+.fw-themed .fw-pipe-tile[data-pipe="10"]{box-shadow:inset 5px 0 0 var(--fw-flow),-3px 0 10px var(--fw-flow)}
+.fw-themed .fw-pipe-tile[data-pipe="14"]{box-shadow:inset -5px 0 0 var(--fw-flow),3px 0 10px var(--fw-flow)}
+.fw-themed .fw-pipe-tile{background:var(--fw-pipe-bg);border-color:var(--fw-accent-dark)}
+.fw-themed .fw-pipe-tile.flowing{border-color:var(--fw-flow);box-shadow:0 0 12px var(--fw-flow)}
+.fw-themed .fw-pipe-labels{text-shadow:0 1px 2px #000}
+.fw-themed .fw-pipe-caption{background:#0008;border-radius:8px;padding:5px 8px}
+.fw-themed .fw-detective-scene{border-radius:12px}
+
+/* small movements in the banners */
+@keyframes fw-tw{50%{opacity:.25}}@keyframes fw-flick{50%{opacity:.5}}@keyframes fw-flame{50%{transform:scale(.9,1.12)}}
+@keyframes fw-bob{50%{transform:translateY(-5px)}}@keyframes fw-spin{to{transform:rotate(360deg)}}@keyframes fw-spin-r{to{transform:rotate(-360deg)}}
+@keyframes fw-steam{from{transform:translateY(6px);opacity:1}to{transform:translateY(-14px);opacity:0}}
+@keyframes fw-fly{25%{transform:translate(9px,-7px)}50%{transform:translate(-4px,-13px);opacity:.3}75%{transform:translate(-10px,-4px)}}
+@keyframes fw-beam{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
+.fw-tw{animation:fw-tw 2.6s ease-in-out infinite}.fw-flick{animation:fw-flick .5s ease-in-out infinite alternate}
+.fw-flame{transform-box:fill-box;transform-origin:50% 100%;animation:fw-flame .34s ease-in-out infinite}
+.fw-bob{animation:fw-bob 3s ease-in-out infinite}.fw-spin{animation:fw-spin 9s linear infinite}.fw-spin-r{animation:fw-spin-r 7s linear infinite}
+.fw-hand{animation:fw-spin 12s steps(60) infinite}.fw-steam{animation:fw-steam 2.4s ease-out infinite}.fw-fly{animation:fw-fly 5s ease-in-out infinite}
+.fw-beam{animation:fw-beam 5s ease-in-out infinite alternate}.fw-beam-r{animation:fw-beam 6s ease-in-out infinite alternate-reverse}
+@media(max-width:460px){.fw-themed .fw-bonus-header{padding-top:74px}.fw-pipe-wrap.fw-pipe-ends{grid-template-columns:48px minmax(0,1fr) 48px;gap:1px}.fw-themed>.fw-bonus-wolf{height:84px}.fw-themed>.fw-wolf-bubble{left:76px}.fw-themed.fw-pipes .fw-bonus-play{padding:6px 3px}}
+@media(prefers-reduced-motion:reduce){.fw-tw,.fw-flick,.fw-flame,.fw-bob,.fw-spin,.fw-spin-r,.fw-hand,.fw-steam,.fw-fly,.fw-beam,.fw-beam-r,.fw-bonus-wolf,.fw-wolf-bubble,.fw-pipe-end i{animation:none}}

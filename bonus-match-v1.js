@@ -10,7 +10,8 @@ const DRAW=[
  '<path d="M9 34 C4 9 60 9 56 34 Q44 41 35 35 L35 50 Q30 60 25 50 L25 35 Q14 39 9 34Z" fill="#e5b27e" stroke="#8d5b3e" stroke-width="3"/><path d="M11 31 Q15 9 33 16 Q47 14 54 31Z" fill="#d85d66"/><circle cx="20" cy="26" r="3" fill="#fff0d8"/><circle cx="38" cy="23" r="4" fill="#fff0d8"/><circle cx="45" cy="30" r="3" fill="#fff0d8"/>',
  '<circle cx="30" cy="37" r="19" fill="#9460cb" stroke="#603783" stroke-width="3"/><circle cx="20" cy="31" r="8" fill="#b688ed"/><circle cx="40" cy="36" r="9" fill="#7b48a7"/><path d="M30 21 Q30 9 37 9 M28 18 Q20 6 12 14" stroke="#6daf62" stroke-width="4" fill="none"/><circle cx="22" cy="29" r="3" fill="#fff" opacity=".7"/>'
 ];
-const SVG=DRAW.map(s=>'<svg viewBox="0 0 64 64" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">'+s+'</svg>');
+const IDS=["roast","cheese","apple","fish","mushroom","berries"];
+const SVG=DRAW.map((s,i)=>(root.FTWBonusThemes&&root.FTWBonusThemes.icon(IDS[i]))||'<svg viewBox="0 0 64 64" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">'+s+'</svg>');
 function rng(seed){let x=seed>>>0;return()=>{x=(Math.imul(x,1664525)+1013904223)>>>0;return x/4294967296;};}
 function find(grid){
  const matches=new Set(),runs=[];
@@ -51,10 +52,13 @@ function makeGrid(seed){
  }
  throw Error("No possible Feast Match starting board");
 }
+/* [foods to serve, moves]. Every swap clears at least three, so a goal above three per move needs combos and
+   Wolf Howls. Tuned by simulation: a player who always takes the biggest match wins about 100, 95, 82, 76 and 60%. */
+const GOALS=[[36,13],[52,14],[70,16],[78,17],[90,18]];
 function mount(api){
  const chapter=api.stage.chapter,random=rng(49000+chapter*501);
- let grid=makeGrid(5541+chapter*743),selected=null,turns=26+chapter*3,
-  target=12+chapter*4,score=0,busy=false,alive=true,powers=new Set();
+ let grid=makeGrid(5541+chapter*743),selected=null,turns=GOALS[chapter][1],
+  target=GOALS[chapter][0],score=0,busy=false,alive=true,powers=new Set();
  api.instructions("Swap neighboring foods to match three or more. Four in a row creates a Wolf Howl that clears nine spaces!");
  api.message("Match the wolf's favorite foods. Bigger combos fill his dinner tray faster.");
  const draw=()=>{
@@ -62,7 +66,7 @@ function mount(api){
   api.hud.innerHTML='<span><strong>Dinner tray: '+score+' / '+target+'</strong></span><span><strong>Moves: '+turns+'</strong></span>';
   api.play.innerHTML='<div class="fw-food-grid" role="grid" aria-label="Six-by-six food matching grid">'+
    grid.map((food,i)=>'<button type="button" class="fw-food-tile'+(selected===i?' selected':'')+
-    (powers.has(i)?' power':'')+'" data-food="'+i+'" aria-label="Row '+(Math.floor(i/6)+1)+
+    (powers.has(i)?' power':'')+(food>=0?' fw-kind-'+food:'')+'" data-food="'+i+'" aria-label="Row '+(Math.floor(i/6)+1)+
     ', column '+(i%6+1)+': '+(food>=0?NAMES[food]:'Empty')+'">'+
     (food>=0?SVG[food]:'')+(powers.has(i)?'<span class="fw-howl">HOWL</span>':'')+
     '</button>').join('')+'</div>';
@@ -88,7 +92,7 @@ function mount(api){
   }
   if(!alive)return;
   if(score>=target){api.win();return;}
-  if(turns<=0){api.lose("The dinner tray is not full yet. Try a new strategy, or skip this bonus.");return;}
+  if(turns<=0){api.lose("The tray was "+(target-score)+" short. Line up four in a row for a Wolf Howl, and look for matches that set off another.");return;}
   if(!possible(grid)&&!powers.size){
    grid=makeGrid(97000+Math.floor(random()*100000));api.message("New ingredients shuffled into the kitchen!");
   }
@@ -123,5 +127,5 @@ function mount(api){
  return{destroy(){alive=false;api.play.removeEventListener("click",click);},preview:()=>({grid:grid.slice(),score,turns})};
 }
 root.FTWBonus.register("match",mount);
-root.FTWMatchRules=Object.freeze({find,possible,makeGrid});
+root.FTWMatchRules=Object.freeze({find,possible,makeGrid,GOALS});
 })(typeof window!=="undefined"?window:{});

@@ -15,9 +15,15 @@ const shapes=[
 {id:"lantern",name:"Lantern",shape:'<path d="M24 15 Q21 0 33 2 Q46 3 41 15" fill="none" stroke="#cda05c" stroke-width="4"/><path d="M22 19 L42 19 L51 51 L13 51Z" fill="#ffce79" fill-opacity=".7" stroke="#ae8145" stroke-width="4"/><path d="M22 25 H42 M14 52 H50" stroke="#e9b864" stroke-width="5"/><path d="M33 45 Q22 37 32 25 Q40 34 33 45" fill="#fff2ae"/>'},
 {id:"mask",name:"Theatre mask",shape:'<path d="M9 15 Q32 2 55 15 L51 45 Q32 60 18 46Z" fill="#e7dbf1" stroke="#886daf" stroke-width="3"/><ellipse cx="23" cy="29" rx="8" ry="5" fill="#32274b"/><ellipse cx="43" cy="29" rx="8" ry="5" fill="#32274b"/><path d="M23 42 Q32 51 42 42" fill="none" stroke="#886daf" stroke-width="3"/>'}
 ];
+/* What to find in each location: four things in the Castle, eight in the Theatre. */
 const targets=[
-["roast","cheese","key"],["scroll","berries","mushroom"],["gear","fish","lantern"],
-["flower","apple","berries"],["mask","lantern","roast"]];
+["roast","cheese","key","apple"],
+["scroll","berries","mushroom","key","fish"],
+["gear","fish","lantern","cheese","mask","apple"],
+["flower","apple","berries","scroll","gear","roast","key"],
+["mask","lantern","roast","flower","mushroom","cheese","scroll","fish"]];
+/* Seconds on the clock, and how well things are hidden (0 = plain sight, 4 = small, faded, tucked behind clutter). */
+const SECONDS=[100,90,80,75,70],MISS_COST=5,HINT_COST=10;
 const coords=[[85,110],[198,148],[345,100],[543,143],[111,274],[249,294],[414,246],[555,313],[334,327],[471,360],[619,235],[175,366]];
 const palettes=[
 ["#393258","#5d4e79","#a98263","#eaba88"],
@@ -27,7 +33,10 @@ const palettes=[
 ["#241a3a","#55345a","#b98191","#e9c49b"]];
 function scene(chapter,found){
  const [wall,edge,wood,light]=palettes[chapter];
- let s='<svg class="fw-detective-scene" viewBox="0 0 700 460" role="group" aria-label="Illustrated room with hidden objects" xmlns="http://www.w3.org/2000/svg">'+
+ const room=root.FTWBonusThemes?root.FTWBonusThemes.room(chapter):null;
+ const clutter=room&&root.FTWBonusThemes.clutter?root.FTWBonusThemes.clutter(chapter):{back:"",front:""};
+ let s=room?'<svg class="fw-detective-scene fw-camo-'+chapter+'" viewBox="0 0 700 460" role="group" aria-label="Illustrated room with hidden objects" xmlns="http://www.w3.org/2000/svg">'+
+  (room.photo?'<image href="'+room.photo+'" width="700" height="460" preserveAspectRatio="xMidYMid slice"/>':room.art())+clutter.back:'<svg class="fw-detective-scene" viewBox="0 0 700 460" role="group" aria-label="Illustrated room with hidden objects" xmlns="http://www.w3.org/2000/svg">'+
  '<defs><linearGradient id="fwwall" x2="0" y2="1"><stop stop-color="'+edge+'"/><stop offset="1" stop-color="'+wall+'"/></linearGradient></defs>'+
  '<rect width="700" height="460" rx="22" fill="url(#fwwall)"/>'+
  '<path d="M24 0V460 M120 0V460 M245 0V460 M372 0V460 M497 0V460 M625 0V460" stroke="#fff" stroke-opacity=".07" stroke-width="4"/>'+
@@ -46,54 +55,67 @@ function scene(chapter,found){
  '<ellipse cx="349" cy="309" rx="36" ry="9" fill="#20151d" opacity=".5"/>'+
  '<g fill="'+light+'" fill-opacity=".26"><circle cx="59" cy="35" r="6"/><circle cx="251" cy="54" r="7"/><circle cx="641" cy="350" r="5"/></g>';
  shapes.forEach((item,i)=>{
-  const pt=coords[i],x=pt[0]+(chapter%2?(i%2?10:-10):0),y=pt[1];
+  // Each location has its own room, and things sit on that room's shelves, tables and floor.
+  const pt=room?room.spots[(i*5+chapter*3)%12]:coords[i],x=room?pt[0]:pt[0]+(chapter%2?(i%2?10:-10):0),y=pt[1];
   const complete=found.has(item.id);
   s+='<g class="fw-detective-item'+(complete?' found':'')+'" role="button" tabindex="0"'+
    ' data-object="'+item.id+'" aria-label="'+item.name+(complete?' found':'')+'" '+
    'transform="translate('+x+' '+y+')">'+
-   '<circle r="39" fill="transparent" class="fw-detective-hit"/>'+
-   '<g transform="translate(-27 -27) scale(.85)">'+item.shape+'</g>'+
+   '<circle r="'+(room?30:39)+'" fill="transparent" class="fw-detective-hit"/>'+
+   '<g class="fw-detective-art" transform="'+(room?'translate(0 '+(27-27*(.8-chapter*.05)).toFixed(1)+') rotate('+(((i*37+chapter*53)%50)-25)+') scale('+(.8-chapter*.05).toFixed(2)+') ':'')+'translate(-27 -27) scale(.85)">'+((root.FTWBonusThemes&&root.FTWBonusThemes.iconBody(item.id))||item.shape)+'</g>'+
    (complete?'<circle r="32" fill="none" stroke="#9bf6ba" stroke-width="5" stroke-dasharray="6 5"/>':'')+
    '</g>';
  });
- return s+'</svg>';
+ return s+(clutter.front?'<g pointer-events="none">'+clutter.front+'</g>':'')+'</svg>';
 }
 function mount(api){
  const c=api.stage.chapter,find=targets[c],found=new Set();
- let wrong=0,alive=true;
- api.instructions("Search the illustrated room for the three missing objects. Tap what you see; check off each item on the list.");
- api.message("The wolf is missing dinner ingredients. Find three things in this room!");
+ let wrong=0,alive=true,left=SECONDS[c],over=false;
+ api.instructions("Find everything on the list before the clock runs out. Things are tucked in among the clutter. A wrong tap costs "+MISS_COST+" seconds.");
+ api.message("The wolf has lost "+find.length+" things in this room. Look closely!");
+ const clock=()=>{const el=api.hud.querySelector("[data-clock]");if(el){el.textContent=Math.max(0,Math.ceil(left))+"s";el.classList.toggle("low",left<=15);}};
+ const timer=setInterval(()=>{if(!alive||over)return;left-=.25;clock();if(left<=0){over=true;api.sound(false);api.lose("Time ran out with "+(find.length-found.size)+" still hidden. They are smaller and duller than you expect: check behind the jars and boxes.");}},250);
+ function miss(text){wrong++;left-=MISS_COST;clock();api.message(text);api.sound(false);const sc=api.play.querySelector("svg");if(sc){sc.classList.remove("fw-miss");void sc.getBoundingClientRect();sc.classList.add("fw-miss");}}
  function draw(){
   if(!alive)return;
-  api.hud.innerHTML='<div class="fw-detective-list"><b>Find:</b> '+find.map(id=>{
+  api.hud.innerHTML='<div class="fw-detective-list"><b class="fw-detective-clock" data-clock></b> '+find.map(id=>{
    const obj=shapes.find(o=>o.id===id);
    return '<span class="'+(found.has(id)?' done':'')+'">'+obj.name+(found.has(id)?' ✓':'')+'</span>';
-  }).join('')+'</div>';
-  api.play.innerHTML=scene(c,found);
+  }).join('')+'<button type="button" class="fw-detective-hint" data-hint>Hint \u2212'+HINT_COST+'s</button></div>';
+  api.play.innerHTML=scene(c,found);clock();
  }
  function choose(id){
-  if(!alive||found.has(id))return;
+  if(!alive||over||found.has(id))return;
   const obj=shapes.find(o=>o.id===id);if(!obj)return;
-  if(!find.includes(id)){
-   wrong++;api.message("That's "+obj.name.toLowerCase()+", but the wolf needs something else. Keep looking!");
-   api.sound(false);return;
-  }
+  if(!find.includes(id)){miss("That's the "+obj.name.toLowerCase()+". Not on the list: "+MISS_COST+" seconds lost.");return;}
   found.add(id);api.sound(true);
-  api.message("Found "+obj.name+"! "+(3-found.size)+" more to go.");
+  api.message("Found the "+obj.name.toLowerCase()+"! "+(find.length-found.size)+" more to go.");
   draw();
-  if(found.size===3)api.win();
+  if(found.size===find.length){over=true;api.win();}
  }
- function click(e){const item=e.target.closest("[data-object]");if(item)choose(item.dataset.object);}
+ function hint(){
+  if(!alive||over)return;
+  const id=find.find(t=>!found.has(t)),el=id&&api.play.querySelector('[data-object="'+id+'"]');if(!el)return;
+  left-=HINT_COST;clock();el.classList.add("fw-hinted");api.tone(880,.2);
+  api.message("Look where it is glowing. "+HINT_COST+" seconds spent.");
+  setTimeout(()=>el.classList.remove("fw-hinted"),1800);
+ }
+ function click(e){
+  const item=e.target.closest("[data-object]");
+  if(e.target.closest("[data-hint]")){hint();return;}
+  if(item)choose(item.dataset.object);
+  else if(!over&&e.target.closest(".fw-detective-scene"))miss("Nothing there. "+MISS_COST+" seconds lost.");
+ }
  function key(e){
   if(e.key!=="Enter"&&e.key!==" ")return;
   const item=e.target.closest("[data-object]");if(!item)return;
   e.preventDefault();choose(item.dataset.object);
  }
- api.play.addEventListener("click",click);api.play.addEventListener("keydown",key);
+ api.play.addEventListener("click",click);api.play.addEventListener("keydown",key);api.hud.addEventListener("click",click);
  draw();
- return{destroy(){alive=false;api.play.removeEventListener("click",click);api.play.removeEventListener("keydown",key);},
-  preview:()=>({targets:find.slice(),found:Array.from(found),wrong})};
+ return{destroy(){alive=false;clearInterval(timer);api.hud.removeEventListener("click",click);api.play.removeEventListener("click",click);api.play.removeEventListener("keydown",key);},
+  preview:()=>({targets:find.slice(),found:Array.from(found),wrong,left})};
 }
 root.FTWBonus.register("hidden",mount);
-root.FTWHiddenRules=Object.freeze({shapes,targets,scene});
+root.FTWHiddenRules=Object.freeze({shapes,targets,scene,SECONDS,MISS_COST});
 })(typeof window!=="undefined"?window:{});

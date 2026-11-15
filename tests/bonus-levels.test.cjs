@@ -2,7 +2,7 @@
 const test=require("node:test"),assert=require("node:assert/strict");
 const fs=require("node:fs"),path=require("node:path"),vm=require("node:vm");
 const root=path.resolve(__dirname,".."),page=fs.readFileSync(path.join(root,"index.html"),"utf8");
-const sources=["bonus-levels-v1.js","bonus-match-v1.js","bonus-pipes-v1.js","bonus-hidden-v1.js","world-music-v1.js"];
+const sources=["bonus-themes-v1.js","bonus-levels-v1.js","bonus-match-v1.js","bonus-pipes-v1.js","bonus-hidden-v1.js","world-music-v1.js"];
 function setup(){
  const window={};
  for(const file of sources)vm.runInNewContext(fs.readFileSync(path.join(root,file),"utf8"),{window});
@@ -50,16 +50,31 @@ test("Every Pantry Panic route has a correct solution and rotated opening pieces
   assert.equal(r.trace(grid).win,true,"Pipe chapter "+chapter+" must be solvable");
  }
 });
-test("Each Dinner Detective chapter has three accessible drawn targets",()=>{
+test("Dinner Detective asks for more in each location, and every target is drawn and reachable",()=>{
  const {FTWHiddenRules:r}=setup();
+ assert.deepEqual(Array.from(r.targets,t=>t.length),[4,5,6,7,8]);
  for(let chapter=0;chapter<5;chapter++){
-  const targets=r.targets[chapter];assert.equal(targets.length,3);
-  assert.equal(new Set(targets).size,3);
+  const targets=r.targets[chapter];
+  assert.equal(new Set(targets).size,targets.length);
   const svg=r.scene(chapter,new Set());
   for(const id of targets)assert.ok(svg.includes('data-object="'+id+'"'));
   assert.equal((svg.match(/data-object="/g)||[]).length,12);
   assert.match(svg,/role="button" tabindex="0"/);
+  assert.doesNotMatch(svg,/NaN|undefined/);
+  if(chapter)assert.ok(r.SECONDS[chapter]<r.SECONDS[chapter-1]);
  }
+});
+test("Feast Match goals rise faster than the moves allowed",()=>{
+ const {FTWMatchRules:r}=setup();
+ assert.equal(r.GOALS.length,5);
+ for(let c=1;c<5;c++)assert.ok(r.GOALS[c][0]/r.GOALS[c][1]>r.GOALS[c-1][0]/r.GOALS[c-1][1]);
+ assert.ok(r.GOALS[0][0]/r.GOALS[0][1]<3,"the first one must be winnable with plain matches");
+});
+test("Pantry Panic limits tighten but always leave room to solve",()=>{
+ const {FTWPipesRules:r}=setup();
+ assert.equal(r.limits(0).turns,0);assert.equal(r.limits(0).pours,0);
+ for(let c=1;c<5;c++){const l=r.limits(c);assert.ok(l.turns>=l.min+2,"chapter "+c);assert.ok(l.pours>=3);}
+ for(let c=2;c<5;c++)assert.ok(r.limits(c).turns/r.limits(c).min<r.limits(c-1).turns/r.limits(c-1).min);
 });
 test("Five chapter motifs exist; four new WAV scores are valid PCM files",()=>{
  const {FTWBonus,FTWWorldMusic}=setup();
@@ -86,7 +101,26 @@ test("Browser integrates play, skip, saved bonus status and five-level demo",()=
 });
 test("The PWA app shell caches each mode, music and its responsive layout",()=>{
  const sw=fs.readFileSync(path.join(root,"service-worker.js"),"utf8");
- for(const f of sources.concat("bonus-style-v1.css"))assert.ok(sw.includes(f),f+" missing from cache");
- assert.match(sw,/ftw-install-v12/);
+ for(const f of sources.concat("bonus-style-v1.css","bonus-themes-v1.css"))assert.ok(sw.includes(f),f+" missing from cache");
+ assert.match(sw,/ftw-install-v13/);
  assert.match(page,/id="bonus-root"/);
+});
+
+test("Every location has its own banner, seek-and-find room and pipe ends",()=>{
+ const {FTWBonusThemes:t,FTWHiddenRules:h,FTWBonus}=setup();
+ assert.equal(t.count,5);
+ const banners=new Set(),rooms=new Set();
+ for(let c=0;c<5;c++){
+  const b=t.banner(c),r=t.room(c);
+  assert.doesNotMatch(b+r.art(),/NaN|undefined/);
+  banners.add(b);rooms.add(r.art());
+  assert.equal(r.spots.length,12);
+  assert.equal(new Set(r.spots.map(p=>p.join())).size,12,"objects must not share a spot");
+  for(const [x,y] of r.spots)assert.ok(x>=40&&x<=660&&y>=60&&y<=430,"spot inside the room");
+  const svg=h.scene(c,new Set());
+  for(const [x,y] of r.spots)assert.ok(svg.includes('translate('+x+' '+y+')'));
+  assert.ok(t.pipes(c).pot.includes("<svg")&&t.pipes(c).bowl.includes("<svg"));
+ }
+ assert.equal(banners.size,5);assert.equal(rooms.size,5);
+ assert.match(page,/bonus-themes-v1\.css/);assert.match(page,/bonus-themes-v1\.js/);
 });
