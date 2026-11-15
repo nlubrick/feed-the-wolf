@@ -1833,12 +1833,10 @@ function setPreviewFull(on){
   if(!DEV_PREVIEW)return;
   previewFull=!!on;
   $("dev-full").checked=previewFull;
-  if(!previewFull){
-    const target=Math.min(li,FREE_LEVEL_COUNT-1);
-    const reset=li!==target||daily||hardOn;
-    daily=false;hardOn=false;
-    if(reset){show("game");load(target,null,true);}
-  }
+  if(!previewFull){daily=false;hardOn=false;}
+  const target=previewFull?li:Math.min(li,FREE_LEVEL_COUNT-1);
+  show("game");
+  load(target,null,true); // Repaint level labels and locked controls immediately.
   dressWolf();renderWardrobe();updateStoreButtons();
 }
 $("dev-full").addEventListener("change",e=>setPreviewFull(e.target.checked));
@@ -1960,6 +1958,7 @@ function load(index, replay, fresh){
   clearTimeout(resTimer);
   const old = board.querySelector(".result"); if (old) old.remove();
   li = index; lv = activeLevel(); P = prep(lv); s = newState(lv); seq = [];
+  if(DEV_PREVIEW) $("dev-level").value=String(li+1);
   for (const i of (replay || [])){ if (pull(s, lv, i)) seq.push(i); }
   document.body.classList.toggle("hard", hardOn);
   { const T = theme(), st = document.documentElement.style; st.setProperty("--night", T.css[0]); st.setProperty("--night-2", T.css[1]); st.setProperty("--stone", T.css[2]); st.setProperty("--stone-dark", T.css[3]); st.setProperty("--edge", T.edge); }
