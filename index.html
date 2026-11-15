@@ -1808,7 +1808,7 @@ $("finish-credits").addEventListener("click",()=>openCredits("ftw-finale"));
 $("finish-hard").addEventListener("click",()=>{hardOn=true;daily=false;load(0,null,true);show("game");});
 $("finish-daily").addEventListener("click",()=>{daily=true;load(li,null,true);show("game");});
 $("finish-replay").addEventListener("click",()=>{daily=false;hardOn=false;load(0,null,true);show("game");});
-$("finish-return").addEventListener("click",()=>show("game"));
+$("finish-return").addEventListener("click",()=>{load(li,null,true);show("game");});
 function showFinale(){
  const solvedNormal=LEVELS.filter((_,i)=>!!cleared[i]).length;
  const solvedHard=LEVELS.filter((_,i)=>!!cleared[i+"h"]).length;
