@@ -103,7 +103,7 @@ test("Progress reset preserves purchased gems; purchase reset preserves level pr
   assert.equal(h.store.gemsGranted(h.store.read(h.storage)),0);
   assert.equal(JSON.parse(h.saved.get("ftw-save")).li,15);
   assert.match(html,/gemUnlocked=\{\};bonusResults=\{\};campaignStage=1;hints=0/);
-  assert.match(html,/gemUnlocked, hints/);
+  assert.match(html,/gemUnlocked, bs:bonusResults, cs:campaignStage, hints/);
 });
 test("Test controls must be stripped for App Store release",()=>{
   const guard=fs.readFileSync(path.join(root,"scripts","check-release.cjs"),"utf8");
