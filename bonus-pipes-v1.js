@@ -64,27 +64,28 @@ function tileSVG(m,flowing){
 function mount(api){
  const config=create(api.stage.chapter),grid=config.initial.slice();
  let turns=0,lit=[],alive=true,passed=false;
- api.instructions("Rotate the pipes to deliver a warm bowl of soup. Tap any piece to turn it 90 degrees; press Test Flow to pour.");
- api.message("Start at the pot on the left. Reach the wolf's bowl on the right!");
+ const theme=root.FTWBonusThemes?root.FTWBonusThemes.pipes(api.stage.chapter):null,liquid=theme?theme.liquid:"soup",say=t=>t.replace(/soup/g,liquid);
+ api.instructions("Rotate the pipes to carry the "+liquid+" from START to the wolf at END. Tap a piece to turn it; press Test Flow to pour.");
+ api.message("The "+liquid+" comes in on the left at START. Get it to the wolf's bowl on the right!");
  function draw(){
   if(!alive)return;
   api.hud.innerHTML='<span><b>Rotations: '+turns+'</b></span>'+
    '<button type="button" class="fw-pipe-test" data-flow-test>Test Flow</button>';
   const ends=root.FTWBonusThemes?root.FTWBonusThemes.pipes(api.stage.chapter):null;
   api.play.innerHTML='<div class="fw-pipe-labels"><span>'+(ends?ends.from.toUpperCase():"SOUP POT")+' \u25B6</span><span>\u25B6 WOLF\'S BOWL</span></div>'+
-   '<div class="fw-pipe-wrap'+(ends?' fw-pipe-ends':'')+'">'+(ends?'<div class="fw-pipe-end">'+ends.pot+'</div>':'')+
+   '<div class="fw-pipe-wrap'+(ends?' fw-pipe-ends':'')+'">'+(ends?'<div class="fw-pipe-end fw-pipe-start"><b>START</b>'+ends.pot+'<i>\u25B6</i></div>':'')+
    '<div class="fw-pipe-grid" role="grid" aria-label="Five by five rotating pipe puzzle">'+
    grid.map((m,i)=>'<button type="button" class="fw-pipe-tile'+(lit.includes(i)?' flowing':'')+
    '" data-pipe="'+i+'" aria-label="Rotate pipe row '+(Math.floor(i/5)+1)+
    ' column '+(i%5+1)+'">'+tileSVG(m,lit.includes(i))+'</button>').join('')+'</div>'+
-   (ends?'<div class="fw-pipe-end">'+ends.bowl+'</div>':'')+'</div>'+
-   '<p class="fw-pipe-caption">The entire soup route must connect from the left pot to the right bowl. Every tap rotates one joint.</p>';
+   (ends?'<div class="fw-pipe-end fw-pipe-finish"><i>\u25B6</i>'+(api.wolf?'<img class="fw-pipe-wolf" alt="" src="'+api.wolf(passed?"joy":"idle")+'">':'')+ends.bowl+'<b>END</b></div>':'')+'</div>'+
+   '<p class="fw-pipe-caption">'+say("The whole soup route must connect from START to END. Every tap turns one joint.")+'</p>';
  }
  function click(e){
   if(passed)return;
   const btn=e.target.closest("[data-flow-test]");
   if(btn){
-   const result=trace(grid);lit=result.trail;api.message(result.reason);draw();
+   const result=trace(grid);lit=result.trail;api.message(say(result.reason));if(result.win)passed=true;draw();
    if(result.win){passed=true;api.sound(true);api.win();}
    else api.sound(false);
    return;

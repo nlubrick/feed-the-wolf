@@ -10,7 +10,8 @@ const DRAW=[
  '<path d="M9 34 C4 9 60 9 56 34 Q44 41 35 35 L35 50 Q30 60 25 50 L25 35 Q14 39 9 34Z" fill="#e5b27e" stroke="#8d5b3e" stroke-width="3"/><path d="M11 31 Q15 9 33 16 Q47 14 54 31Z" fill="#d85d66"/><circle cx="20" cy="26" r="3" fill="#fff0d8"/><circle cx="38" cy="23" r="4" fill="#fff0d8"/><circle cx="45" cy="30" r="3" fill="#fff0d8"/>',
  '<circle cx="30" cy="37" r="19" fill="#9460cb" stroke="#603783" stroke-width="3"/><circle cx="20" cy="31" r="8" fill="#b688ed"/><circle cx="40" cy="36" r="9" fill="#7b48a7"/><path d="M30 21 Q30 9 37 9 M28 18 Q20 6 12 14" stroke="#6daf62" stroke-width="4" fill="none"/><circle cx="22" cy="29" r="3" fill="#fff" opacity=".7"/>'
 ];
-const SVG=DRAW.map(s=>'<svg viewBox="0 0 64 64" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">'+s+'</svg>');
+const IDS=["roast","cheese","apple","fish","mushroom","berries"];
+const SVG=DRAW.map((s,i)=>(root.FTWBonusThemes&&root.FTWBonusThemes.icon(IDS[i]))||'<svg viewBox="0 0 64 64" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">'+s+'</svg>');
 function rng(seed){let x=seed>>>0;return()=>{x=(Math.imul(x,1664525)+1013904223)>>>0;return x/4294967296;};}
 function find(grid){
  const matches=new Set(),runs=[];
@@ -62,7 +63,7 @@ function mount(api){
   api.hud.innerHTML='<span><strong>Dinner tray: '+score+' / '+target+'</strong></span><span><strong>Moves: '+turns+'</strong></span>';
   api.play.innerHTML='<div class="fw-food-grid" role="grid" aria-label="Six-by-six food matching grid">'+
    grid.map((food,i)=>'<button type="button" class="fw-food-tile'+(selected===i?' selected':'')+
-    (powers.has(i)?' power':'')+'" data-food="'+i+'" aria-label="Row '+(Math.floor(i/6)+1)+
+    (powers.has(i)?' power':'')+(food>=0?' fw-kind-'+food:'')+'" data-food="'+i+'" aria-label="Row '+(Math.floor(i/6)+1)+
     ', column '+(i%6+1)+': '+(food>=0?NAMES[food]:'Empty')+'">'+
     (food>=0?SVG[food]:'')+(powers.has(i)?'<span class="fw-howl">HOWL</span>':'')+
     '</button>').join('')+'</div>';

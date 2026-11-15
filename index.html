@@ -2032,6 +2032,7 @@ function goToCampaignStage(number){
 }
 const bonusController=window.FTWBonus.mount($("bonus-root"),{
  finish:finishBonusStage,back:stage=>goToCampaignStage(Math.max(1,stage.number-1)),
+ wolf:mood=>heroSvg(mood,OUTFITS.filter(o=>worn[o.slot]===o.id).map(o=>o.id),worn.hero).src,   // the player's own dressed wolf, for the mini-game banner
  musicEnabled:()=>musicOn,
  toggleMusic:()=>{
   musicOn=!musicOn;

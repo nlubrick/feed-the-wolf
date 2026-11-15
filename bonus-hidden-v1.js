@@ -54,7 +54,7 @@ function scene(chapter,found){
    ' data-object="'+item.id+'" aria-label="'+item.name+(complete?' found':'')+'" '+
    'transform="translate('+x+' '+y+')">'+
    '<circle r="39" fill="transparent" class="fw-detective-hit"/>'+
-   '<g transform="translate(-27 -27) scale(.85)">'+item.shape+'</g>'+
+   '<g transform="translate(-27 -27) scale(.85)">'+((root.FTWBonusThemes&&root.FTWBonusThemes.iconBody(item.id))||item.shape)+'</g>'+
    (complete?'<circle r="32" fill="none" stroke="#9bf6ba" stroke-width="5" stroke-dasharray="6 5"/>':'')+
    '</g>';
  });

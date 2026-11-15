@@ -107,6 +107,7 @@ class Controller{
   const themes=root.FTWBonusThemes;
   this.node.innerHTML='<div class="fw-bonus fw-world-'+stage.chapter+' fw-'+stage.mode+(themes?' fw-themed':'')+'">'+
    (themes?'<div class="fw-banner" aria-hidden="true">'+themes.banner(stage.chapter)+'</div>':'')+
+   (themes&&this.cb.wolf?'<img class="fw-bonus-wolf" id="fw-bonus-wolf" alt="" src="'+this.cb.wolf("idle")+'"><div class="fw-wolf-bubble" aria-hidden="true">'+themes.icon({match:"roast",pipes:"mushroom",hidden:"key"}[stage.mode])+'</div>':'')+
    '<header class="fw-bonus-header"><div><p class="fw-bonus-kicker">BONUS LEVEL '+stage.number+
    ' OF 115 · '+chapters[stage.chapter]+'</p><h1>'+stage.title+'</h1><p>'+
    modesTitle[stage.mode]+'</p></div><div class="fw-bonus-reward">✦ +'+stage.reward+' gems</div></header>'+
@@ -123,17 +124,24 @@ class Controller{
   const opts={stage,play:this.node.querySelector("#fw-bonus-play"),hud:this.node.querySelector("#fw-bonus-hud"),
    message:(t)=>{const el=this.node.querySelector("#fw-bonus-message");if(el)el.textContent=t;},
    instructions:(t)=>{this.node.querySelector("#fw-bonus-instructions").textContent=t;},
-   win:()=>this.won(),lose:(msg)=>this.lost(msg),sound:(ok)=>this.music.fx(ok),
+   win:()=>this.won(),lose:(msg)=>this.lost(msg),sound:(ok)=>{this.music.fx(ok);this.react(ok?"joy":"scared",ok?900:700);},
+   wolf:this.cb.wolf||null,
    tone:(f,d=.12)=>this.music.note(f,d)};
   this.mode=registered[stage.mode](opts);
   this.music.start(stage.mode,stage.chapter,this.cb.musicEnabled());
  }
- stop(){if(this.mode?.destroy)this.mode.destroy();this.mode=null;this.music.stop();}
+ /* The player's own wolf watches from the banner and reacts to how the game is going. */
+ react(mood,ms){
+  const el=this.node.querySelector("#fw-bonus-wolf");if(!el||!this.cb.wolf)return;
+  clearTimeout(this.moodTimer);el.src=this.cb.wolf(mood);el.classList.remove("fw-hop");void el.offsetWidth;if(mood==="joy")el.classList.add("fw-hop");
+  if(ms)this.moodTimer=setTimeout(()=>{const e=this.node.querySelector("#fw-bonus-wolf");if(e)e.src=this.cb.wolf("idle");},ms);
+ }
+ stop(){clearTimeout(this.moodTimer);if(this.mode?.destroy)this.mode.destroy();this.mode=null;this.music.stop();}
  close(){this.stop();this.stage=null;this.node.innerHTML="";}
  won(){
   const overlay=this.node.querySelector("#fw-bonus-overlay");
   if(!overlay||!overlay.hidden)return;
-  this.music.fx(true);
+  this.music.fx(true);this.react("joy",0);
   overlay.hidden=false;
   overlay.innerHTML='<div class="fw-bonus-end"><span>✦ ✦ ✦</span><h2>Dinner saved!</h2>'+
    '<p>Bonus level '+this.stage.number+' complete. Earn <b>+'+this.stage.reward+
@@ -143,6 +151,7 @@ class Controller{
  lost(message){
   const overlay=this.node.querySelector("#fw-bonus-overlay");
   if(!overlay||!overlay.hidden)return;
+  this.react("sad",0);
   overlay.hidden=false;
   overlay.innerHTML='<div class="fw-bonus-end"><h2>One more try?</h2><p>'+
    (message||"Give the puzzle another shot, or skip it.")+'</p>'+
