@@ -1962,6 +1962,7 @@ function resolve(){
   resTimer = setTimeout(showResult, s.status === "win" ? 1400 : s.why === "stuck" ? 300 : 900, true);
 }
 function frame(ts){
+ if($("game").hidden){last=ts/1000;requestAnimationFrame(frame);return;}
   const now = ts / 1000; const dt = Math.min(.034, Math.max(.001, now - last)); last = now; clock = now;
   const sub = dt > .024 ? 3 : 2;
   frameNo++; avgDt += (dt - avgDt) * .05; slow = avgDt > .026;
@@ -2017,7 +2018,10 @@ function goToCampaignStage(number){
  const stage=window.FTWBonus.at(number);if(!stage)return false;
  if(stage.type==="bonus")return enterBonusStage(stage);
  campaignStage=number;
- if(!canPlay(stage.puzzleIndex,false)){save();openUnlock(stage.puzzleIndex,false);return false;}
+ if(!canPlay(stage.puzzleIndex,false)){
+  if(bonusController.stage)bonusController.close();
+  save();openUnlock(stage.puzzleIndex,false);return false;
+ }
  if(bonusController.stage)bonusController.close();
  daily=false;show("game");
  const ok=load(stage.puzzleIndex,null,true);
@@ -2261,6 +2265,7 @@ function updateStoreButtons(){
 function openUnlock(index,isDaily){
   pendingUnlockTarget = {index:Number.isInteger(index) && index >= 0 && index < LEVELS.length ? index : Math.max(li,0),daily:!!isDaily};
   $("unlock-wolf").src = heroSvg("joy", OUTFITS.filter(o => worn[o.slot] === o.id).map(o => o.id), worn.hero || "wolf").src;
+  if(bonusController.stage)bonusController.music.stop();
   updateStoreButtons(); show("unlock");
 }
 function acceptEntitlement(result){
@@ -2315,7 +2320,10 @@ async function storeAction(action){
 }
 $("unlock-buy").addEventListener("click",()=>storeAction("purchase"));
 $("unlock-restore").addEventListener("click",()=>storeAction("restore"));
-$("unlock-back").addEventListener("click",()=>show("game"));
+$("unlock-back").addEventListener("click",()=>{
+ if(!hasFullAccess()&&campaignStage===7&&li===4)goToCampaignStage(6);
+ else{show("game");campaignStage=stageForPuzzle(li);musicStart();}
+});
 $("unlock-link").addEventListener("click",()=>openUnlock(Math.max(FREE_LEVEL_COUNT,li+1),false));
 window.addEventListener("pageshow",()=>refreshStoreEntitlement());
 /* ---------- level flow ---------- */
