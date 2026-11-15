@@ -1990,6 +1990,7 @@ const hot = window.claude && window.claude.hot;
 if (hot && hot.snapshot) hot.snapshot(() => ({li:li, seq:seq, cleared:cleared, stars:stars, hard:hardOn, owned:owned, worn:worn, hints:hints}));
 if (hot && hot.ready) hot.ready(start); else start((hot && hot.data) || {});
 if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(()=>{}));}
+if(new URLSearchParams(location.search).has("credits"))show("credits");
 </script>
 </body>
 </html>
