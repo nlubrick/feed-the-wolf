@@ -12,9 +12,9 @@ An illustrated pull-the-pin puzzle game from Failure Entertainment.
 
 ## Demo and purchases
 
-The game is free to start: **levels 1–5 are playable**, then the full edition is planned as a **$2.99 one-time App Store non-consumable** `feed_the_wolf_full_unlock`. The web/PWA is a demo; no web checkout or fake purchase. The iOS StoreKit 2 bridge lives in `ios/`.
+The game is free to start: **levels 1–5 are playable**, then the full edition is planned as a **$2.99 one-time App Store non-consumable** `feed_the_wolf_full_unlock`. The web/PWA is a demo; no web checkout or fake purchase. Example native StoreKit 2 integration source lives in `ios/`; the iPhone application itself is not built yet.
 
-**Development branch only:** the `QA: Demo → Full` toggle temporarily previews premium content without a purchase. This must be **removed** before launching or merging a production release. It is not an entitlement.
+**Development branch only:** append `?dev=1` to the URL for the temporary **DEVELOPER PREVIEW** panel. Toggle **Preview FULL game** to inspect all 100 levels, Hard Mode and premium collectibles; toggle it off to test the five-level demo and greyed-out wardrobe. Use **Jump** to inspect any level. This test bypass is **not a purchase** and must be removed before any public release.
 
 ## Running and verification
 
@@ -29,3 +29,5 @@ npm run release:check
 The first command searches for solutions for all **200 normal/hard puzzles** and verifies the first 40's source fingerprint. The release check intentionally **fails** while the QA preview switch remains; see `ios/README.md`.
 
 The prototype is not App Store ready until the native app is built and its StoreKit transactions, restore, iPhone layout and performance are tested.
+
+The preview branch is intentionally not merged into the public release while its developer unlock switch is present. The release check must fail until the switch has been removed.
