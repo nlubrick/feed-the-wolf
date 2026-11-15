@@ -238,6 +238,30 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 .fe-credits-buttons{display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 8px 22px;flex-wrap:wrap}
 .fe-credits-buttons .quiet{min-height:40px;min-width:80px}
 /* Rolling credits remain scrollable with Reduce Motion enabled; Pause is always available. */
+
+/* iPhone portrait layout: keep the entire normal two-row castle screen and
+   both information links visible, without reducing pin hit targets. More
+   complex tall castles can still scroll instead of becoming too tiny. */
+.footer-links{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap}
+.footer-links .linkish{min-height:44px;min-width:110px;padding:7px 10px}
+@media (max-width:520px) and (orientation:portrait){
+  .wrap{padding:12px 14px max(14px,env(safe-area-inset-bottom));gap:10px}
+  #game{gap:9px}
+  #game>header{gap:2px}
+  #game>header h1{font-size:clamp(36px,10vw,43px);line-height:1}
+  #game .wpill{margin-top:4px}
+  #game .crenel{height:12px}
+  #game .btns{gap:7px}
+  #game .footer-links{gap:16px}
+  #game .footer-links .linkish{font-size:14px}
+}
+@media (max-width:520px) and (orientation:portrait) and (max-height:740px){
+  .wrap{padding-top:8px}
+  #game{gap:7px}
+  #game .wpill{margin-top:2px}
+  #game .crenel{height:10px}
+}
+
 </style>
 <script src="./studio-boot-v2.js" defer></script>
 </head>
@@ -273,8 +297,10 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
     <button class="quiet danger" id="hard" type="button" aria-pressed="false">Hard: off</button>
   </div>
   <button class="quiet wide" id="daily" type="button">Daily puzzle</button>
-  <button class="linkish" id="hbtn" type="button">How to play</button>
-  <button class="linkish" id="credits-btn" type="button">Credits</button>
+  <nav class="footer-links" aria-label="Game information">
+    <button class="linkish" id="hbtn" type="button">How to play</button>
+    <button class="linkish" id="credits-btn" type="button">Credits</button>
+  </nav>
  </div>
 
  <section id="help" hidden>
