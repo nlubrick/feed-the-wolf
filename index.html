@@ -1985,6 +1985,53 @@ function testCheckoutAvailable(){ return FTW_TEST_BUILD && !nativeStore(); }
 function hasFullAccess(){
   return fullGame || (testCheckoutAvailable() && (simulatedPurchase || (developerMode && previewFull)));
 }
+/* 115-stage campaign wrapper. The 100 original puzzle IDs never change. */
+let campaignStage=1,bonusResults={};
+function stageForPuzzle(index){return window.FTWBonus.puzzleStage(index).number;}
+function bonusEarnedGems(){
+ return Object.entries(bonusResults).reduce((total,[number,result])=>{
+  const stage=window.FTWBonus.at(Number(number));
+  return total+(stage?.type==="bonus"&&result==="win"?stage.reward:0);
+ },0);
+}
+function canEnterBonus(stage){return stage.number===6||hasFullAccess();}
+function finishBonusStage(stage,won){
+ if(!stage||stage.type!=="bonus")return;
+ if(won)bonusResults[stage.number]="win";
+ else if(!bonusResults[stage.number])bonusResults[stage.number]="skip";
+ syncPrizes();save();renderWardrobe();
+ if(won)sfx("coin");
+ goToCampaignStage(stage.number+1);
+}
+function enterBonusStage(stage){
+ if(!stage||stage.type!=="bonus")return false;
+ if(!canEnterBonus(stage)){openUnlock(stage.afterPuzzleIndex+1,false);return false;}
+ daily=false;clearTimeout(resTimer);
+ campaignStage=stage.number;
+ show("bonus");musicStop();
+ bonusController.start(stage);
+ save();return true;
+}
+function goToCampaignStage(number){
+ const stage=window.FTWBonus.at(number);if(!stage)return false;
+ if(stage.type==="bonus")return enterBonusStage(stage);
+ campaignStage=number;
+ if(!canPlay(stage.puzzleIndex,false)){save();openUnlock(stage.puzzleIndex,false);return false;}
+ if(bonusController.stage)bonusController.close();
+ daily=false;show("game");
+ const ok=load(stage.puzzleIndex,null,true);
+ if(ok)save();
+ return ok;
+}
+const bonusController=window.FTWBonus.mount($("bonus-root"),{
+ finish:finishBonusStage,back:stage=>goToCampaignStage(Math.max(1,stage.number-1)),
+ musicEnabled:()=>musicOn,
+ toggleMusic:()=>{
+  musicOn=!musicOn;
+  try{localStorage.setItem("ftw-music",musicOn?"on":"off");}catch(e){}
+  musicLabel();if(!musicOn)musicStop();
+ }
+});
 function renderDeveloper(){
   $("developer-open").hidden = !FTW_TEST_BUILD;
   $("developer-from-unlock").hidden = !FTW_TEST_BUILD;
