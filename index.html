@@ -282,6 +282,11 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 .unlock-note{font-size:13px;min-height:2.6em;color:var(--muted);margin:12px 0 0}
 @keyframes unlock-float{50%{transform:translateY(-6px) rotate(-2deg)}}
 @media(prefers-reduced-motion:reduce){.unlock-card img{animation:none}}
+/* Full-game collection is visible, but silhouettes are unavailable in the demo. */
+.tile.premium-locked{opacity:.76;background:#171425;border-color:#665974}
+.tile.premium-locked img{filter:grayscale(1) brightness(.42);opacity:.73}
+.tile.premium-locked span{color:#d1a76a}
+#qa-toggle{color:#ffe9a1;border:1px dashed #bd965c;border-radius:7px;background:#322544}
 </style>
 <script src="./studio-boot-v2.js" defer></script>
 </head>
@@ -321,6 +326,7 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
     <button class="linkish" id="hbtn" type="button">How to play</button>
     <button class="linkish" id="credits-btn" type="button">Credits</button>
     <button class="linkish" id="unlock-link" type="button">Full game</button>
+    <button class="linkish" id="qa-toggle" type="button" hidden aria-label="Development preview: change access mode">QA: Demo</button>
   </nav>
  </div>
 
@@ -1797,6 +1803,35 @@ function frame(ts){
 const FREE_LEVEL_COUNT = 5;
 const FULL_UNLOCK_PRODUCT_ID = "feed_the_wolf_full_unlock";
 let fullGame = false, storeBusy = false, pendingUnlockTarget = null, entitlementReturnLevel = null;
+/* DEVELOPMENT ONLY. Must be false and removed before a production build.
+   This is a QA preview, NOT a store entitlement or payment bypass for release. */
+const FTW_QA_PREVIEW = true;
+let qaFull = false, storeEntitled = false, qaReturn = null;
+function updateQaLabel(){
+  const b = $("qa-toggle");
+  b.hidden = !FTW_QA_PREVIEW;
+  if(FTW_QA_PREVIEW) b.textContent = qaFull ? "QA: Full → Demo" : "QA: Demo → Full";
+}
+function toggleQaMode(){
+  if(!FTW_QA_PREVIEW) return;
+  qaFull = !qaFull;
+  fullGame = storeEntitled || qaFull;
+  if(!fullGame && (li >= FREE_LEVEL_COUNT || daily)){
+    qaReturn = {index:li,daily:daily};
+    daily = false;
+    load(FREE_LEVEL_COUNT-1,null,true);
+    show("game");
+  }else if(fullGame){
+    if(pendingUnlockTarget) resumeUnlockedPlay();
+    else if(qaReturn){
+      const target=qaReturn;qaReturn=null;
+      daily=target.daily;load(target.index,null,true);show("game");
+    }
+  }
+  updateQaLabel();updateStoreButtons();renderWardrobe();
+}
+$("qa-toggle").addEventListener("click",toggleQaMode);
+updateQaLabel();
 /* iOS host must expose window.FeedTheWolfStore: async status(id), purchase(id),
    restore(id). It must verify a StoreKit 2 entitlement before returning
    {productId:id, verified:true, entitled:true, displayPrice?}.
@@ -1824,6 +1859,7 @@ function openUnlock(index,isDaily){
 }
 function acceptEntitlement(result){
   if (!result || result.productId !== FULL_UNLOCK_PRODUCT_ID || result.verified !== true || result.entitled !== true) return false;
+  storeEntitled = true;
   fullGame = true;
   if (typeof result.displayPrice === "string" && result.displayPrice.length < 48) $("unlock-price").textContent = result.displayPrice;
   updateStoreButtons(); return true;
@@ -2074,10 +2110,13 @@ function renderWardrobe(){
   $("gems").textContent = $("gems2").textContent = gems;
   const far = reached();
   const tile = o => {
-    const own = !!owned[o.id], on = own && worn[o.slot] === o.id, prize = o.level || o.hard, shut = !own && o.from && far < o.from, can = own || (!prize && !shut && gems >= o.cost);
-    const status = on ? (o.slot === "pet" ? "With him" : o.slot === "hero" ? "Playing" : "Wearing") : own ? (o.slot === "pet" ? "Bring along" : o.slot === "hero" ? "Play as" : "Put on")
+    const own = !!owned[o.id], premiumLocked = !fullGame && !!(o.premium || (o.from && o.from > FREE_LEVEL_COUNT) || (o.level && o.level > FREE_LEVEL_COUNT) || o.hard);
+    const on = own && worn[o.slot] === o.id && !premiumLocked;
+    const prize = o.level || o.hard, shut = !own && o.from && far < o.from;
+    const can = !premiumLocked && (own || (!prize && !shut && gems >= o.cost));
+    const status = premiumLocked ? "Full game only" : on ? (o.slot === "pet" ? "With him" : o.slot === "hero" ? "Playing" : "Wearing") : own ? (o.slot === "pet" ? "Bring along" : o.slot === "hero" ? "Play as" : "Put on")
       : o.level ? "Clear level " + o.level : o.hard ? "Hard level " + o.hard : shut ? (o.from > LEVELS.length ? "Clear level " + LEVELS.length : "Reach level " + o.from) : '<i class="gem"></i>' + o.cost;
-    return '<button type="button" class="tile' + (on ? " on" : "") + (!own && (prize || shut) ? " locked" : "") + (!own && !prize && can ? " buy" : "") + '" style="--c:' + o.c + '" data-id="' + o.id + '"' + (can ? "" : ' aria-disabled="true"') + '><img alt="" src="' + thumb(o.id) + '"><b>' + o.name + "</b><span>" + status + "</span></button>";
+    return '<button type="button" class="tile' + (on ? " on" : "") + (premiumLocked ? " premium-locked locked" : (!own && (prize || shut) ? " locked" : "")) + (!premiumLocked && !own && !prize && can ? " buy" : "") + '" style="--c:' + o.c + '" data-id="' + o.id + '"' + (can ? "" : ' aria-disabled="true"') + '><img alt="" src="' + thumb(o.id) + '"><b>' + o.name + "</b><span>" + status + "</span></button>";
   };
   $("tilesH").innerHTML = OUTFITS.filter(o => o.slot === "hero").map(tile).join("");
   $("tilesP").innerHTML = OUTFITS.filter(o => o.level).map(tile).join("");
@@ -2087,6 +2126,8 @@ function renderWardrobe(){
 $("shop").addEventListener("click", e => {
   const t = e.target.closest(".tile"); if (!t) return;
   const o = OUTFITS.find(q => q.id === t.dataset.id); if (!o) return;
+  if(!fullGame && (o.premium || (o.from && o.from > FREE_LEVEL_COUNT) ||
+      (o.level && o.level > FREE_LEVEL_COUNT) || o.hard)) return;
   if (owned[o.id]) worn[o.slot] = worn[o.slot] === o.id && o.slot !== "hero" ? null : o.id;
   else if (o.cost && gems >= o.cost && !(o.from && reached() < o.from)){ owned[o.id] = true; worn[o.slot] = o.id; sfx("coin"); }
   else return;
