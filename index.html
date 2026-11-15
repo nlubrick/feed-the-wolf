@@ -1279,6 +1279,7 @@ function landed(a, g){
   a.vy = 0; a.vr = 0; a.bounces = 0; a.seg = null;
 }
 function reached(){                                 // every level up to the furthest one reached can be revisited
+  if (DEV_PREVIEW && previewFull) return LEVELS.length;
   let m = 0;
   for (let i = 0; i < LEVELS.length; i++) if (cleared[i] || cleared[i + "h"]) m = i + 1;
   return Math.min(LEVELS.length, m + 1);
@@ -1888,14 +1889,15 @@ function nativeStore(){
   return b && ["status","purchase","restore"].every(m=>typeof b[m] === "function") ? b : null;
 }
 function canPlay(index,isDaily){
-  return fullGame || (!isDaily && Number.isInteger(index) && index >= 0 && index < FREE_LEVEL_COUNT);
+  return hasFullAccess() || (!isDaily && Number.isInteger(index) && index >= 0 && index < FREE_LEVEL_COUNT);
 }
 function updateStoreButtons(){
   const native = nativeStore();
-  $("unlock-buy").disabled = !native || storeBusy || fullGame;
+  $("unlock-buy").disabled = !native || storeBusy || hasFullAccess();
   $("unlock-restore").disabled = !native || storeBusy;
-  $("unlock-buy").textContent = storeBusy ? "Checking purchase…" : fullGame ? "Full game unlocked" : "Unlock the full game";
-  if (fullGame) $("unlock-status").textContent = "Full game unlocked. Thanks for feeding the wolf!";
+  $("unlock-buy").textContent = storeBusy ? "Checking purchase…" : hasFullAccess() ? "Full game unlocked" : "Unlock the full game";
+  if (DEV_PREVIEW && previewFull) $("unlock-status").textContent = "Developer full-game preview — no purchase was made.";
+  else if (fullGame) $("unlock-status").textContent = "Full game unlocked. Thanks for feeding the wolf!";
   else if (!native) $("unlock-status").textContent = "The browser demo is free. Purchases are only available in the iPhone app.";
   else if (!storeBusy) $("unlock-status").textContent = "One App Store purchase. Every level. No subscription.";
 }
@@ -1912,14 +1914,14 @@ function acceptEntitlement(result){
   updateStoreButtons(); return true;
 }
 function resumeUnlockedPlay(){
-  if (!fullGame) return;
+  if (!hasFullAccess()) return;
   const target = pendingUnlockTarget || (entitlementReturnLevel == null ? null : {index:entitlementReturnLevel,daily:false});
   pendingUnlockTarget = null; entitlementReturnLevel = null;
   if (target){ daily = target.daily; show("game"); load(target.index,null,true); }
 }
 async function refreshStoreEntitlement(){
   const native = nativeStore();
-  if (!native || fullGame) return;
+  if (!native || hasFullAccess()) return;
   try { if (acceptEntitlement(await native.status(FULL_UNLOCK_PRODUCT_ID))) resumeUnlockedPlay(); }
   catch(e){ /* No verified entitlement means no paid access. */ }
 }
@@ -1967,8 +1969,8 @@ function load(index, replay, fresh){
   { const b0 = Math.floor(li / 20) * 20;               // one castle's worth of dots at a time
     $("dots").innerHTML = daily ? "" : LEVELS.slice(b0, b0 + 20).map((_,q) => { const i = b0 + q; return '<i class="' + (i === li ? "now" : cleared[i] || cleared[i + "h"] ? "done" : "") + '"></i>'; }).join(""); }
   $("prev").disabled = daily || li === 0; $("next2").disabled = daily || li + 1 >= reached();
-  const hb = $("hard"); hb.textContent = "Hard: " + (hardOn ? "on" : "off"); hb.disabled = daily; hb.style.opacity = daily ? .4 : 1;
-  $("daily").innerHTML = daily ? "Back to level " + (li + 1) : dailyDone[dayNo()] ? "Daily puzzle: solved today" : 'Daily puzzle +<i class="gem"></i>5'; hb.setAttribute("aria-pressed", hardOn ? "true" : "false");
+  const hb = $("hard"); hb.textContent = hasFullAccess() ? "Hard: " + (hardOn ? "on" : "off") : "Hard: full game"; hb.disabled = daily; hb.style.opacity = daily ? .4 : 1;
+  $("daily").innerHTML = !hasFullAccess() ? "Daily puzzle · Full game" : daily ? "Back to level " + (li + 1) : dailyDone[dayNo()] ? "Daily puzzle: solved today" : 'Daily puzzle +<i class="gem"></i>5'; hb.setAttribute("aria-pressed", hardOn ? "true" : "false");
   castle.style.setProperty("--cols", lv.cols);
   board.style.aspectRatio = lv.cols + " / " + lv.rows;
   setSize();
@@ -2061,8 +2063,8 @@ function showResult(focus){
     el.innerHTML = '<div class="stars" role="img" aria-label="' + st + ' of 3 stars">' + "★".repeat(st) + "<i>" + "★".repeat(3 - st) + "</i></div><h2>" + (lastLv ? "All " + LEVELS.length + " cleared" : "Dinner is served") + "</h2>" +
       (prize ? '<div class="prize"><img alt="" src="' + thumb(prize.id) + '"><p><b>Prize: ' + prize.name + '</b><br>' + (gain ? 'Plus <i class="gem"></i>' + gain + ". " : "") + (prize.slot === "pet" ? "It is already following him." : "He is already wearing it.") + '</p></div>'
              : "<p>" + (lastLv ? (hardOn ? "On hard mode. The ad owes you an apology." : "Now try them with hard mode on.") : "Solved in " + seq.length + (seq.length === 1 ? " pull" : " pulls") + (hardOn ? ", on hard." : ".")) + "</p>" + (gain ? '<p class="gain">+<i class="gem"></i>' + gain + "</p>" : "")) +
-      (!fullGame && li === FREE_LEVEL_COUNT - 1 ? '<p>Five castles down. Ninety-five more await beyond the gates!</p>' : "") +
-      '<button class="go" id="next" type="button">' + (lastLv ? "Finish" : (!fullGame && li === FREE_LEVEL_COUNT - 1 ? "See the full game" : "Next level")) + "</button>";
+      (!hasFullAccess() && li === FREE_LEVEL_COUNT - 1 ? '<p>Five castles down. Ninety-five more await beyond the gates!</p>' : "") +
+      '<button class="go" id="next" type="button">' + (lastLv ? "Finish" : (!hasFullAccess() && li === FREE_LEVEL_COUNT - 1 ? "See the full game" : "Next level")) + "</button>";
     if(lastLv && focus){showFinale();return;}
   } else if (s.status === "lose"){
     const w = WHY[s.why] || WHY.stuck;
@@ -2075,6 +2077,7 @@ function showResult(focus){
   if (focus){ const b = el.querySelector("button"); if (b) b.focus({preventScroll:true}); }
 }
 function toggleHard(){
+  if (!hasFullAccess()){openUnlock(li,false);return;}
   if (daily || !LEVELS[li].hard) return;
   hardOn = !hardOn; busy = true; menu(false); musicStart(); sfx("morph");
   if (!reduce){ board.classList.remove("morph"); void board.offsetWidth; board.classList.add("morph"); }
@@ -2100,7 +2103,7 @@ $("next2").addEventListener("click", () => { if (li + 1 < reached()) load(li + 1
 $("hard").addEventListener("click", toggleHard);
 $("daily").addEventListener("click", () => {
   if (pend) return;
-  if (!daily && !fullGame){ openUnlock(li,true); return; }
+  if (!daily && !hasFullAccess()){ openUnlock(li,true); return; }
   daily = !daily; load(li,null,true);
 });
 let rz = 0;
@@ -2196,7 +2199,7 @@ for(const id of ["back-credits","back-credits-bottom"])$(id).addEventListener("c
 $("finish-credits").addEventListener("click",()=>openCredits("ftw-finale"));
 $("finish-hard").addEventListener("click",()=>{hardOn=true;daily=false;load(0,null,true);show("game");});
 $("finish-daily").addEventListener("click",()=>{
-  if(!fullGame){openUnlock(li,true);return;}
+  if(!hasFullAccess()){openUnlock(li,true);return;}
   daily=true;load(li,null,true);show("game");
 });
 $("finish-replay").addEventListener("click",()=>{daily=false;hardOn=false;load(0,null,true);show("game");});
@@ -2385,7 +2388,7 @@ function start(data){
   const obj = v => v && typeof v === "object" ? v : null;
   cleared = obj(sv.cleared) || obj(data.cleared) || {}; stars = obj(sv.stars) || obj(data.stars) || {};
   owned = obj(sv.owned) || obj(data.owned) || {}; worn = obj(sv.worn) || obj(data.worn) || {};
-  hardOn = !!data.hard; hints = +sv.hints || +data.hints || 0; hintPaid = obj(sv.hp) || {}; dailyDone = obj(sv.dd) || {}; seen = obj(sv.seen) || {};
+  hardOn = hasFullAccess() && !!data.hard; hints = +sv.hints || +data.hints || 0; hintPaid = obj(sv.hp) || {}; dailyDone = obj(sv.dd) || {}; seen = obj(sv.seen) || {};
   for (let i = 5; i < reached() - 1; i += 5) seen[i] = true;   // no fanfare for places already visited
   syncPrizes(); dressWolf(); save(); renderWardrobe();
   const idx = Number.isInteger(data.li) && LEVELS[data.li] ? data.li : 0;
