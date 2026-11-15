@@ -2482,36 +2482,54 @@ function syncPrizes(){
   return got;
 }
 function save(){ try { localStorage.setItem("ftw-save", JSON.stringify({cleared, stars, owned, worn, gemUnlocked, hints, hp:hintPaid, dd:dailyDone, seen, li, hard:hardOn})); } catch (e) {} }
-function renderWardrobe(){
-  $("gems").textContent = $("gems2").textContent = gems;
-  if(!$("shop").hidden)renderStore();
-  const far = reached();
-  const tile = o => {
-    const own = !!owned[o.id], premiumLocked = !hasFullAccess() && !fakeShopHasOutfit(o.id) && !!(o.premium || (o.from && o.from > FREE_LEVEL_COUNT) || (o.level && o.level > FREE_LEVEL_COUNT) || o.hard || (o.cost && o.id !== "wolf"));
-    const on = own && worn[o.slot] === o.id && !premiumLocked;
-    const prize = o.level || o.hard, shut = !own && o.from && far < o.from;
-    const can = !premiumLocked && (own || (!prize && !shut && gems >= o.cost));
-    const status = premiumLocked ? "Full game only" : on ? (o.slot === "pet" ? "With him" : o.slot === "hero" ? "Playing" : "Wearing") : own ? (o.slot === "pet" ? "Bring along" : o.slot === "hero" ? "Play as" : "Put on")
-      : o.level ? "Clear level " + o.level : o.hard ? "Hard level " + o.hard : shut ? (o.from > LEVELS.length ? "Clear level " + LEVELS.length : "Reach level " + o.from) : '<i class="gem"></i>' + o.cost;
-    return '<button type="button" class="tile' + (on ? " on" : "") + (premiumLocked ? " premium-locked locked" : (!own && (prize || shut) ? " locked" : "")) + (!premiumLocked && !own && !prize && can ? " buy" : "") + '" style="--c:' + o.c + '" data-id="' + o.id + '"' + (can ? "" : ' aria-disabled="true"') + '><img alt="" src="' + thumb(o.id) + '"><b>' + o.name + "</b><span>" + status + "</span></button>";
-  };
-  $("tilesH").innerHTML = OUTFITS.filter(o => o.slot === "hero").map(tile).join("");
-  $("tilesP").innerHTML = OUTFITS.filter(o => o.level).map(tile).join("");
-  $("tilesS").innerHTML = OUTFITS.filter(o => o.cost && o.slot !== "pet" && o.slot !== "hero").map(tile).join("");
-  $("tilesT").innerHTML = OUTFITS.filter(o => o.slot === "pet").map(tile).join("");
+/* Every cosmetic is available for gems. Level and Hard Mode rewards are
+   also earnable for free, but can be bought early instead of waiting. */
+function gemPrice(o){
+  if(o.free)return 0;
+  if(Number.isSafeInteger(o.cost)&&o.cost>0)return o.cost;
+  const milestone=Math.max(1,Number(o.level||o.hard||o.from||1));
+  const base=o.slot==="hero"?28:o.slot==="pet"?18:15;
+  return Math.min(120,base+Math.ceil(milestone/10)*4);
 }
-$("shop").addEventListener("click", e => {
-  const t = e.target.closest(".tile"); if (!t) return;
-  const o = OUTFITS.find(q => q.id === t.dataset.id); if (!o) return;
-  if(!hasFullAccess() && !fakeShopHasOutfit(o.id) && (o.premium || (o.from && o.from > FREE_LEVEL_COUNT) ||
-      (o.level && o.level > FREE_LEVEL_COUNT) || o.hard || (o.cost && o.id !== "wolf"))){
-    openUnlock(Math.max(li+1,FREE_LEVEL_COUNT),false);
-    return;
+function renderWardrobe(){
+  $("gems").textContent=$("gems2").textContent=gems;
+  if(!$("shop").hidden)renderStore();
+  const tile=o=>{
+    const own=!!owned[o.id],price=gemPrice(o),on=own&&worn[o.slot]===o.id;
+    const canAfford=own||gems>=price;
+    const status=on?(o.slot==="pet"?"With him":o.slot==="hero"?"Playing":"Wearing")
+      :own?(o.slot==="pet"?"Bring along":o.slot==="hero"?"Play as":"Put on")
+      :'<i class="gem"></i>'+price;
+    const action=own?"Choose "+o.name:"Unlock "+o.name+" for "+price+" gems";
+    return '<button type="button" class="tile'+(on?" on":"")+
+      (!canAfford?" gem-unaffordable":"")+'" style="--c:'+o.c+'" data-id="'+o.id+
+      '" aria-label="'+action+'"><img alt="" src="'+thumb(o.id)+'"><b>'+o.name+
+      '</b><span class="tile-gem-price">'+status+'</span></button>';
+  };
+  $("tilesH").innerHTML=OUTFITS.filter(o=>o.slot==="hero").map(tile).join("");
+  $("tilesP").innerHTML=OUTFITS.filter(o=>o.level).map(tile).join("");
+  $("tilesS").innerHTML=OUTFITS.filter(o=>o.cost&&o.slot!=="pet"&&o.slot!=="hero").map(tile).join("");
+  $("tilesT").innerHTML=OUTFITS.filter(o=>o.slot==="pet").map(tile).join("");
+}
+$("shop").addEventListener("click",e=>{
+  const button=e.target.closest(".tile");if(!button)return;
+  const o=OUTFITS.find(q=>q.id===button.dataset.id);if(!o)return;
+  if(owned[o.id]){
+    worn[o.slot]=worn[o.slot]===o.id&&o.slot!=="hero"?null:o.id;
+  }else{
+    const price=gemPrice(o);
+    if(gems<price){
+      testToast("You need "+(price-gems)+" more gems for "+o.name);
+      $("store-products").scrollIntoView?.({behavior:"smooth",block:"start"});
+      return;
+    }
+    if(!window.confirm("Unlock "+o.name+" for "+price+" gems?"))return;
+    owned[o.id]=true;
+    if(!o.cost)gemUnlocked[o.id]=price; // Original cost items are already debited in syncPrizes.
+    worn[o.slot]=o.id;
+    sfx("coin");
   }
-  if (owned[o.id]) worn[o.slot] = worn[o.slot] === o.id && o.slot !== "hero" ? null : o.id;
-  else if (o.cost && gems >= o.cost && !(o.from && reached() < o.from)){ owned[o.id] = true; worn[o.slot] = o.id; sfx("coin"); }
-  else return;
-  syncPrizes(); dressWolf(); save(); renderWardrobe();
+  syncPrizes();dressWolf();save();renderWardrobe();
 });
 function menu(){}
 function show(name){                                // screens: the castle, the wardrobe, the rules, the finale, credits
