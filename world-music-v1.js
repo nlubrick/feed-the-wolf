@@ -6,18 +6,24 @@
 function render(world,hard,scores){
  const score=scores[world];if(!score||world<1||world>4)throw Error("Unknown chapter soundtrack");
  const sr=22050,stp=(world===1?.28:world===2?.225:world===3?.32:.26)*(hard?.87:1);
- const steps=128,n=Math.round(sr*steps*stp),buf=new Float32Array(n);
+ const steps=world===4?144:128,n=Math.round(sr*steps*stp),buf=new Float32Array(n);
  const freq=m=>440*Math.pow(2,(m-69)/12);
+ let lcg=20261115;
  const voice=(m,step,len,vol,shape)=>{
-  const f=freq(m),start=Math.floor(step*stp*sr),end=Math.floor(len*sr),lenSafe=Math.max(1,end);
+  // no two calliope pipes are quite in tune: each note sits up to 12 cents off
+  const f=freq(m)*(shape==="calliope"?Math.pow(2,(((step*7919+m*104729)%25)-12)/1200):1),start=Math.floor(step*stp*sr),end=Math.floor(len*sr),lenSafe=Math.max(1,end);
   for(let i=0;i<lenSafe;i++){
    const t=i/sr,ph=t*f*6.2831853;
    let wave;
-   if(shape==="bell")wave=Math.sin(ph)+.31*Math.sin(ph*2.03)*Math.exp(-t*4);
+   if(shape==="calliope"){   // steam organ: a breathy whistle, a little wobble, a puff of air as each pipe opens
+    const wob=ph+1.6*Math.sin(t*34.5);
+    lcg=(Math.imul(lcg,1664525)+1013904223)>>>0;
+    wave=Math.sin(wob)+.24*Math.sin(wob*2)+.09*Math.sin(wob*3)+(lcg/2147483648-1)*.5*Math.exp(-t*26);
+   }else if(shape==="bell")wave=Math.sin(ph)+.31*Math.sin(ph*2.03)*Math.exp(-t*4);
    else if(shape==="gear")wave=.65*Math.sin(ph)+.35*Math.sin(ph*3);
    else if(shape==="flute")wave=Math.sin(ph)+.13*Math.sin(ph*2);
    else wave=Math.sin(ph)+.18*Math.sin(ph*2.01)+.06*Math.sin(ph*3);
-   const env=Math.min(1,t/.025)*Math.pow(Math.max(0,1-t/(lenSafe/sr)),shape==="gear"?2.9:1.3);
+   const env=Math.min(1,t/.025)*Math.pow(Math.max(0,1-t/(lenSafe/sr)),shape==="gear"?2.9:shape==="calliope"?.28:1.3);
    buf[(start+i)%n]+=wave*vol*env;
   }
  };
@@ -48,11 +54,12 @@ function render(world,hard,scores){
    if(beat%2===0)voice(root,step,.9,.18,"flute");
    if(beat%4===0)voice(score.bass[bar%4],step,stp*5,.09,"bell");
    if(beat===6)voice(root-5,step,.6,.08,"bell");
-  }else{ // Ghostlight Theatre: theatrical waltz, dramatic minor brass tones
-   if(beat%2===0)voice(root,step,.46,.19,"brass");
-   if(beat===0||beat===3||beat===6)voice(score.bass[bar%4],step,.55,.15,"brass");
-   if(beat===2||beat===5)tap(step,.035,"tock");
-   if(beat===7)voice(root+6,step,.24,.09,"bell");
+  }else{ // Ghostlight Theatre: a wheezy carnival calliope playing a slow waltz to an empty house, kept low
+   const b6=step%6,wbar=Math.floor(step/6),low=score.bass[wbar%4];
+   if(step%2===0)voice(root,step,stp*1.9,.17,"calliope");
+   if(b6===0)voice(low,step,stp*1.8,.17,"calliope");                                    // oom
+   if(b6===2||b6===4){voice(low+12,step,stp*.8,.065,"calliope");voice(low+19,step,stp*.8,.05,"calliope");}   // pah, pah
+   if(b6===5&&wbar%4===3)voice(root+3,step,stp*.9,.07,"calliope");                       // a little turn into the next phrase
   }
   if(hard){
    if(beat===3||beat===7)tap(step,.09,"thump");

@@ -61,6 +61,14 @@ class Music{
  tick(){
   const i=this.step++%16,score=worldScores[this.chapter];
   const root=score.root+score.motif[i];
+  if(this.chapter===4){   // Ghostlight Theatre: the same tune on a soft calliope (a whistle plus a quiet octave, slightly flat)
+   const pipe=(m,d,v)=>{this.note(midiHz(m)*.994,d,"sine",v);this.note(midiHz(m+12)*1.004,d,"sine",v*.22);};
+   const gap=this.mode==="hidden"?4:2;
+   if(i%gap===0)pipe(root,this.mode==="hidden"?.6:.3,.03);
+   if(i%4===0)pipe(score.bass[(i>>2)%4],.34,.03);
+   if(i%4===2)pipe(score.bass[(i>>2)%4]+12,.14,.012);
+   return;
+  }
   // Each bonus is a subtle arrangement of its own chapter tune, not a new song.
   if(this.mode==="match"){
    this.note(midiHz(root),.18,score.color,.036);   // an octave lower than first written: the high version was shrill on a phone speaker
