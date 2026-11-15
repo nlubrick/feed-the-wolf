@@ -351,6 +351,11 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 .tile.gem-unaffordable{opacity:.78}
 </style>
 <script src="./test-store-v2.js"></script>
+<link rel="stylesheet" href="./bonus-style-v1.css">
+<script src="./bonus-levels-v1.js"></script>
+<script src="./bonus-match-v1.js"></script>
+<script src="./bonus-pipes-v1.js"></script>
+<script src="./bonus-hidden-v1.js"></script>
 <script src="./studio-boot-v2.js" defer></script>
 </head>
 <body>
@@ -393,13 +398,16 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
   </nav>
  </div>
 
+ <section id="bonus" hidden aria-label="Bonus mini-game levels">
+   <div id="bonus-root"></div>
+ </section>
  <section id="unlock" hidden aria-label="Unlock the full game">
     <div class="shop-top"><button class="quiet" id="unlock-back" type="button">&#8249; Back to the castle</button></div>
     <div class="unlock-card">
       <p class="unlock-kicker">The next wing awaits</p><img id="unlock-wolf" alt="The wolf is ready for his next adventure">
       <h1>Still hungry?</h1>
-      <p class="unlock-body">The first five castles are free. Unlock the remaining 95 levels, Hard Mode, and daily challenges in five locations.</p>
-      <div class="unlock-perks"><span>100 main levels</span><span>Hard Mode</span><span>Daily puzzles</span><span>No ads</span></div>
+      <p class="unlock-body">The first five castle puzzles plus one bonus game are free. Unlock all 115 story levels, Hard Mode, and daily challenges across five locations.</p>
+      <div class="unlock-perks"><span>115 story levels</span><span>Hard Mode</span><span>Daily puzzles</span><span>No ads</span></div>
       <div class="unlock-price"><span id="unlock-price">$2.99</span><small>One-time purchase · No subscription</small></div>
       <button class="go" id="unlock-buy" type="button" disabled>Unlock the full game</button>
       <button class="quiet" id="unlock-restore" type="button" disabled>Restore purchases</button>
@@ -419,10 +427,10 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
         <span>Game progress</span><strong id="dev-progress-state">Level 1 / 100</strong>
       </div>
       <label class="dev-option" for="dev-full"><input type="checkbox" id="dev-full"> Preview full game without purchasing</label>
-      <p class="dev-help">Turn this on to browse any level. Turn it off to test the real five-level gate and fake checkout.</p>
+      <p class="dev-help">Browse levels 1–115, including optional mini-games. The first bonus level is free. Turn off preview to test the purchase gate.</p>
       <div class="dev-level-row">
         <label for="dev-level">Jump to level</label>
-        <input id="dev-level" type="number" inputmode="numeric" min="1" max="100" value="1">
+        <input id="dev-level" type="number" inputmode="numeric" min="1" max="115" value="1">
         <button class="quiet" id="dev-jump" type="button">Go</button>
       </div>
       <button class="quiet" id="dev-view-paywall" type="button">Preview the Level 6 Purchase Screen</button>
@@ -482,7 +490,7 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
     <button class="quiet" id="store-dev" type="button" hidden>Developer</button>
   </div>
   <h1>Store</h1>
-  <p class="ftw-store-intro">Earn gems by solving puzzles, or get more with test purchases. <strong>Every character, costume and pet can be unlocked with gems.</strong></p>
+  <p class="ftw-store-intro">Earn gems from puzzle wins and optional bonus games, or get more with test purchases. <strong>Every character, costume and pet can be unlocked with gems.</strong></p>
   <div class="ftw-store-purchase-head"><h2 class="shelf">Gem Packs &amp; Full Game</h2><p class="ftw-test-checkout" id="store-test-note" hidden>TEST STORE · NO ACTUAL MONEY IS CHARGED</p></div>
   <div id="store-products" class="ftw-products"></div>
   <h2 class="shelf">Characters &amp; Companions</h2>
@@ -524,14 +532,14 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
    <p class="fe-eyebrow">Failure Entertainment Presents</p>
    <div class="fe-finale-mark">★ ★ ★</div>
    <h1 id="fe-finale-heading">The Castle Is Yours</h1>
-   <p id="fe-finale-description">All 100 levels complete. The wolf is finally fed.</p>
+   <p id="fe-finale-description">All 115 levels complete. The wolf is finally fed.</p>
    <p id="fe-finale-next">Try Hard Mode challenges, or return for tomorrow's daily puzzle.</p>
    <div class="fe-finale-actions">
     <button class="go" id="finish-hard" type="button">Try Hard Mode</button>
     <button class="quiet" id="finish-daily" type="button">Daily Puzzle</button>
     <button class="quiet" id="finish-credits" type="button">Watch Credits</button>
     <button class="quiet" id="finish-replay" type="button">Replay from Level 1</button>
-    <button class="quiet" id="finish-return" type="button">Back to Level 100</button>
+    <button class="quiet" id="finish-return" type="button">Back to Level 115</button>
    </div>
    <p class="fe-credits-sub">6/10. Good enough.</p>
   </div>
