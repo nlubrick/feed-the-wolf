@@ -262,6 +262,25 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
   #game .crenel{height:10px}
 }
 
+
+/* Full-game storefront. Purchases require a native iPhone StoreKit bridge. */
+#unlock{display:flex;flex-direction:column;gap:15px}
+.unlock-card{max-width:480px;margin:0 auto;padding:24px 18px;text-align:center;border:2px solid #d7a94b;border-radius:22px;background:radial-gradient(ellipse at 50% 12%,#ffc23d28,transparent 60%),linear-gradient(160deg,#30234f,#17112b);box-shadow:0 14px 40px #0005}
+.unlock-card img{display:block;width:116px;height:128px;object-fit:contain;margin:4px auto 0;filter:drop-shadow(0 5px 10px #0008);animation:unlock-float 3.7s ease-in-out infinite}
+.unlock-card h1{font:400 clamp(30px,9vw,43px)/1.1 var(--display);margin:0 0 8px;color:var(--brass)}
+.unlock-kicker{font:800 12px var(--body);letter-spacing:2px;text-transform:uppercase;color:var(--brass)}
+.unlock-card p{line-height:1.45}
+.unlock-body{max-width:33ch;margin:0 auto 17px}
+.unlock-perks{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin:12px 0}
+.unlock-perks span{border:1px solid #9b7b56;border-radius:999px;padding:5px 10px;font-size:12px}
+.unlock-price{font:400 38px var(--display);color:#fff;margin:12px 0}
+.unlock-price small{display:block;font:700 13px var(--body);color:var(--muted);margin:3px 0}
+.unlock-card .go{display:block;width:100%;min-height:52px}
+.unlock-card .quiet{width:100%;margin-top:10px}
+.unlock-card button:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
+.unlock-note{font-size:13px;min-height:2.6em;color:var(--muted);margin:12px 0 0}
+@keyframes unlock-float{50%{transform:translateY(-6px) rotate(-2deg)}}
+@media(prefers-reduced-motion:reduce){.unlock-card img{animation:none}}
 </style>
 <script src="./studio-boot-v2.js" defer></script>
 </head>
@@ -300,10 +319,24 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
   <nav class="footer-links" aria-label="Game information">
     <button class="linkish" id="hbtn" type="button">How to play</button>
     <button class="linkish" id="credits-btn" type="button">Credits</button>
+    <button class="linkish" id="unlock-link" type="button">Full game</button>
   </nav>
  </div>
 
- <section id="help" hidden>
+ <section id="unlock" hidden aria-label="Unlock the full game">
+    <div class="shop-top"><button class="quiet" id="unlock-back" type="button">&#8249; Back to the castle</button></div>
+    <div class="unlock-card">
+      <p class="unlock-kicker">The next wing awaits</p><img id="unlock-wolf" alt="The wolf is ready for his next adventure">
+      <h1>Still hungry?</h1>
+      <p class="unlock-body">The first five castles are free. Unlock the remaining 35 castles, their Hard Mode puzzles, and daily challenges.</p>
+      <div class="unlock-perks"><span>40 main levels</span><span>Hard Mode</span><span>Daily puzzles</span><span>No ads</span></div>
+      <div class="unlock-price"><span id="unlock-price">$2.99</span><small>One-time purchase · No subscription</small></div>
+      <button class="go" id="unlock-buy" type="button" disabled>Unlock the full game</button>
+      <button class="quiet" id="unlock-restore" type="button" disabled>Restore purchases</button>
+      <p class="unlock-note" id="unlock-status" role="status" aria-live="polite">This browser demo cannot process purchases.</p>
+    </div>
+  </section>
+  <section id="help" hidden>
   <div class="shop-top"><button class="quiet" id="back3" type="button">&#8249; Back to the castle</button></div>
   <h1>How to play</h1>
   <ul class="rules">
@@ -1619,6 +1652,70 @@ function frame(ts){
   requestAnimationFrame(frame);
 }
 
+/* ---------- five-level demo and verified native StoreKit entitlement ---------- */
+const FREE_LEVEL_COUNT = 5;
+const FULL_UNLOCK_PRODUCT_ID = "feed_the_wolf_full_unlock";
+let fullGame = false, storeBusy = false, pendingUnlockTarget = null, entitlementReturnLevel = null;
+/* iOS host must expose window.FeedTheWolfStore: async status(id), purchase(id),
+   restore(id). It must verify a StoreKit 2 entitlement before returning
+   {productId:id, verified:true, entitled:true, displayPrice?}.
+   Never grant full access from localStorage, URL params, or test toggles. */
+function nativeStore(){
+  const b = window.FeedTheWolfStore;
+  return b && ["status","purchase","restore"].every(m=>typeof b[m] === "function") ? b : null;
+}
+function canPlay(index,isDaily){
+  return fullGame || (!isDaily && Number.isInteger(index) && index >= 0 && index < FREE_LEVEL_COUNT);
+}
+function updateStoreButtons(){
+  const native = nativeStore();
+  $("unlock-buy").disabled = !native || storeBusy || fullGame;
+  $("unlock-restore").disabled = !native || storeBusy;
+  $("unlock-buy").textContent = storeBusy ? "Checking purchase…" : fullGame ? "Full game unlocked" : "Unlock the full game";
+  if (fullGame) $("unlock-status").textContent = "Full game unlocked. Thanks for feeding the wolf!";
+  else if (!native) $("unlock-status").textContent = "The browser demo is free. Purchases are only available in the iPhone app.";
+  else if (!storeBusy) $("unlock-status").textContent = "One App Store purchase. Every level. No subscription.";
+}
+function openUnlock(index,isDaily){
+  pendingUnlockTarget = {index:Number.isInteger(index) && index >= 0 && index < LEVELS.length ? index : Math.max(li,0),daily:!!isDaily};
+  $("unlock-wolf").src = heroSvg("joy", OUTFITS.filter(o => worn[o.slot] === o.id).map(o => o.id), worn.hero || "wolf").src;
+  updateStoreButtons(); show("unlock");
+}
+function acceptEntitlement(result){
+  if (!result || result.productId !== FULL_UNLOCK_PRODUCT_ID || result.verified !== true || result.entitled !== true) return false;
+  fullGame = true;
+  if (typeof result.displayPrice === "string" && result.displayPrice.length < 48) $("unlock-price").textContent = result.displayPrice;
+  updateStoreButtons(); return true;
+}
+function resumeUnlockedPlay(){
+  if (!fullGame) return;
+  const target = pendingUnlockTarget || (entitlementReturnLevel == null ? null : {index:entitlementReturnLevel,daily:false});
+  pendingUnlockTarget = null; entitlementReturnLevel = null;
+  if (target){ daily = target.daily; show("game"); load(target.index,null,true); }
+}
+async function refreshStoreEntitlement(){
+  const native = nativeStore();
+  if (!native || fullGame) return;
+  try { if (acceptEntitlement(await native.status(FULL_UNLOCK_PRODUCT_ID))) resumeUnlockedPlay(); }
+  catch(e){ /* No verified entitlement means no paid access. */ }
+}
+async function storeAction(action){
+  const native = nativeStore();
+  if (!native || storeBusy || !["purchase","restore"].includes(action)) return;
+  storeBusy = true;
+  $("unlock-status").textContent = action === "purchase" ? "Opening App Store purchase…" : "Restoring your purchase…";
+  updateStoreButtons();
+  try {
+    if (acceptEntitlement(await native[action](FULL_UNLOCK_PRODUCT_ID))){ resumeUnlockedPlay(); return; }
+    $("unlock-status").textContent = action === "restore" ? "No verified purchase found for this Apple Account." : "Purchase not completed. Your five free levels are still here.";
+  } catch(e){ $("unlock-status").textContent = "App Store unavailable. Please try again."; }
+  finally { storeBusy = false; updateStoreButtons(); }
+}
+$("unlock-buy").addEventListener("click",()=>storeAction("purchase"));
+$("unlock-restore").addEventListener("click",()=>storeAction("restore"));
+$("unlock-back").addEventListener("click",()=>show("game"));
+$("unlock-link").addEventListener("click",()=>openUnlock(Math.max(FREE_LEVEL_COUNT,li+1),false));
+window.addEventListener("pageshow",()=>refreshStoreEntitlement());
 /* ---------- level flow ---------- */
 function pct(n, d){ return (n / d * 100) + "%"; }
 function buildPins(fresh){
@@ -1633,6 +1730,7 @@ function buildPins(fresh){
   pinsEl.innerHTML = html;
 }
 function load(index, replay, fresh){
+  if (!canPlay(index,daily)){ openUnlock(index,daily); return false; }
   clearTimeout(resTimer);
   const old = board.querySelector(".result"); if (old) old.remove();
   li = index; lv = activeLevel(); P = prep(lv); s = newState(lv); seq = [];
@@ -1665,7 +1763,14 @@ function load(index, replay, fresh){
   rebuildGeometry();
   for (let i = 0; i < 150; i++) step(1/120, true);
   buildPins(fresh);
-  if (hintOn && hintKey === key() && s.status === "play") applyHint(); else { hintOn = false; $("coach").hidden = true; $("hint").textContent = ""; }
+  if (hintOn && hintKey === key() && s.status === "play") applyHint(); else {
+    hintOn = false; $("coach").hidden = true; $("hint").textContent = "";
+    // Gentle first-session guidance; unlike a paid hint, no winning pin is highlighted.
+    if (!daily && !hardOn && !replay && !cleared[li] && li < 2 && s.status === "play"){
+      $("coach").hidden = false;
+      $("hint").textContent = li === 0 ? "I'm hungry! Tap the gold pin to bring me dinner." : "Lava is hot. Water cools it. Which pin should you pull first?";
+    }
+  }
   hintLabel();
   calm = 0;
   if (s.status !== "play"){ busy = true; showResult(false); }
@@ -1727,7 +1832,8 @@ function showResult(focus){
     el.innerHTML = '<div class="stars" role="img" aria-label="' + st + ' of 3 stars">' + "★".repeat(st) + "<i>" + "★".repeat(3 - st) + "</i></div><h2>" + (lastLv ? "All " + LEVELS.length + " cleared" : "Dinner is served") + "</h2>" +
       (prize ? '<div class="prize"><img alt="" src="' + thumb(prize.id) + '"><p><b>Prize: ' + prize.name + '</b><br>' + (gain ? 'Plus <i class="gem"></i>' + gain + ". " : "") + (prize.slot === "pet" ? "It is already following him." : "He is already wearing it.") + '</p></div>'
              : "<p>" + (lastLv ? (hardOn ? "On hard mode. The ad owes you an apology." : "Now try them with hard mode on.") : "Solved in " + seq.length + (seq.length === 1 ? " pull" : " pulls") + (hardOn ? ", on hard." : ".")) + "</p>" + (gain ? '<p class="gain">+<i class="gem"></i>' + gain + "</p>" : "")) +
-      '<button class="go" id="next" type="button">' + (lastLv ? "Finish" : "Next level") + "</button>";
+      (!fullGame && li === FREE_LEVEL_COUNT - 1 ? '<p>Five castles down. A new wing and 35 more await!</p>' : "") +
+      '<button class="go" id="next" type="button">' + (lastLv ? "Finish" : (!fullGame && li === FREE_LEVEL_COUNT - 1 ? "See the full game" : "Next level")) + "</button>";
     if(lastLv && focus){showFinale();return;}
   } else if (s.status === "lose"){
     const w = WHY[s.why] || WHY.stuck;
@@ -1763,7 +1869,11 @@ $("reset").addEventListener("click", () => load(li));
 $("prev").addEventListener("click", () => { if (li > 0) load(li - 1); });
 $("next2").addEventListener("click", () => { if (li + 1 < reached()) load(li + 1); });
 $("hard").addEventListener("click", toggleHard);
-$("daily").addEventListener("click", () => { if (pend) return; daily = !daily; load(li, null, true); });
+$("daily").addEventListener("click", () => {
+  if (pend) return;
+  if (!daily && !fullGame){ openUnlock(li,true); return; }
+  daily = !daily; load(li,null,true);
+});
 let rz = 0;
 window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (!lv) return; setSize(); renderBg(); }, 120); });
 
@@ -1838,7 +1948,7 @@ $("shop").addEventListener("click", e => {
 });
 function menu(){}
 function show(name){                                // screens: the castle, the wardrobe, the rules, the finale, credits
-  for (const id of ["game","shop","help","credits","ftw-finale"]) $(id).hidden = id !== name;
+  for (const id of ["game","shop","help","credits","ftw-finale","unlock"]) $(id).hidden = id !== name;
   window.scrollTo(0, 0);
   if (name === "game"){ setSize(); renderBg(); }
   if (name === "shop") renderWardrobe();
@@ -1851,7 +1961,10 @@ $("credits-btn").addEventListener("click",()=>openCredits("game"));
 for(const id of ["back-credits","back-credits-bottom"])$(id).addEventListener("click",()=>show(creditsReturn));
 $("finish-credits").addEventListener("click",()=>openCredits("ftw-finale"));
 $("finish-hard").addEventListener("click",()=>{hardOn=true;daily=false;load(0,null,true);show("game");});
-$("finish-daily").addEventListener("click",()=>{daily=true;load(li,null,true);show("game");});
+$("finish-daily").addEventListener("click",()=>{
+  if(!fullGame){openUnlock(li,true);return;}
+  daily=true;load(li,null,true);show("game");
+});
 $("finish-replay").addEventListener("click",()=>{daily=false;hardOn=false;load(0,null,true);show("game");});
 $("finish-return").addEventListener("click",()=>{load(li,null,true);show("game");});
 function showFinale(){
@@ -2042,7 +2155,9 @@ function start(data){
   for (let i = 5; i < reached() - 1; i += 5) seen[i] = true;   // no fanfare for places already visited
   syncPrizes(); dressWolf(); save(); renderWardrobe();
   const idx = Number.isInteger(data.li) && LEVELS[data.li] ? data.li : 0;
-  load(idx, data.seq);
+  if(idx >= FREE_LEVEL_COUNT) entitlementReturnLevel = idx;
+  load(Math.min(idx,FREE_LEVEL_COUNT-1),idx < FREE_LEVEL_COUNT ? data.seq : null);
+  refreshStoreEntitlement();
   requestAnimationFrame(ts => { last = ts/1000; clock = last; requestAnimationFrame(frame); });
 }
 const hot = window.claude && window.claude.hot;
