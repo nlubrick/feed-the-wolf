@@ -67,7 +67,10 @@ for(const [index,normal] of all.entries()){
 assert(source.includes('const FREE_LEVEL_COUNT = 5'));
 assert(source.includes('return hasFullAccess() ||'));
 assert(source.includes('id="unlock-restore"'));
-assert(source.includes('id="dev-preview"'));
+assert(source.includes('id="developer"'));
+assert(source.includes('id="dev-reset-purchase"'));
+assert(source.includes('id="dev-reset-progress"'));
+assert(source.includes('FTW_TEST_BUILD = true'));
 if(process.argv.includes("--release")){
   assert.fail("Release blocked: remove the development preview and integrate verified native StoreKit 2 before release.");
 }
