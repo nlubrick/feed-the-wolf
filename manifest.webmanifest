@@ -1,0 +1,23 @@
+{
+  "name": "Feed the Wolf · Failure Entertainment",
+  "short_name": "Feed the Wolf",
+  "description": "Forty mischievous pull-the-pin puzzles, hard-mode challenges, and a daily castle. A game by Failure Entertainment.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "standalone"
+  ],
+  "orientation": "portrait",
+  "background_color": "#1b1640",
+  "theme_color": "#1b1640",
+  "icons": [
+    {
+      "src": "./feed-the-wolf-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
