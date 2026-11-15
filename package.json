@@ -1,0 +1,13 @@
+{
+  "name": "feed-the-wolf",
+  "private": true,
+  "version": "0.2.0",
+  "description": "Failure Entertainment 100-level puzzle game",
+  "scripts": {
+    "test": "node --test tests/*.test.cjs",
+    "release:check": "node scripts/check-release.cjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
