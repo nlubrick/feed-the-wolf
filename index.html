@@ -316,7 +316,29 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 .dev-reset-actions small{font:600 12px/1.45 var(--body);color:#c3b0d5;margin-bottom:12px}
 .ftw-test-checkout{font:800 11px/1.5 var(--body);letter-spacing:1px;text-align:center;color:#ffe2a7;background:#52381e;border:1px solid #d6a35c;border-radius:9px;padding:8px}
 .ftw-test-toast{position:fixed;top:max(15px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#24513f;color:#f5fff9;border:2px solid #86e5b2;border-radius:13px;box-shadow:0 8px 40px #0008;padding:13px 18px;z-index:1500;font:800 13px/1.3 var(--body);max-width:90vw;text-align:center;pointer-events:none}
+
+.ftw-store-head{text-align:center;max-width:560px;margin:0 auto}
+.ftw-store-head h1{font:400 42px var(--display);margin:6px 0;color:var(--brass)}
+.ftw-store-head p{line-height:1.5}
+.ftw-products{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.ftw-product{display:flex;gap:13px;padding:14px;border:2px solid #685187;border-radius:17px;background:radial-gradient(ellipse at 35% 0,#ffffff0a,transparent),#251b40;align-items:center;flex-wrap:wrap}
+.ftw-product>img{width:92px;height:95px;object-fit:contain;filter:drop-shadow(0 4px 7px #0008)}
+.ftw-product-body{flex:1;min-width:135px}
+.ftw-product b{font:400 23px/1.1 var(--display);color:#ffe6ad;display:block}
+.ftw-product small{font:700 11px var(--body);color:#d4bbe9}
+.ftw-product p{font:500 13px/1.45 var(--body);margin:6px 0;color:#ddd3e9}
+.ftw-product .go{width:100%;min-height:46px;font-size:14px}
+.ftw-product .go[disabled]{opacity:.55;cursor:default}
+.ftw-product-price{font:800 19px var(--body);color:#fff0c6}
+.ftw-test-checkout-overlay{position:fixed;inset:0;background:#100a21da;z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;overscroll-behavior:contain}
+.ftw-test-checkout-card{width:min(100%,420px);padding:25px 18px;border-radius:20px;background:linear-gradient(150deg,#312244,#1c1431);border:2px solid #e9b76b;box-shadow:0 20px 65px #000a;text-align:center;display:flex;flex-direction:column;gap:12px}
+.ftw-test-checkout-card h2{font:400 31px/1.15 var(--display);color:#ffdfa6;margin:0}
+.ftw-test-checkout-card strong{font:700 34px var(--body);color:#fff}
+.ftw-test-checkout-card p{margin:0}
+.ftw-test-checkout-card button{min-height:50px}
+@media(max-width:520px){.ftw-products{grid-template-columns:1fr}.ftw-product{padding:13px}.ftw-product>img{width:84px;height:88px}}
 </style>
+<script src="./test-store.js"></script>
 <script src="./studio-boot-v2.js" defer></script>
 </head>
 <body>
@@ -355,6 +377,7 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
     <button class="linkish" id="hbtn" type="button">How to play</button>
     <button class="linkish" id="credits-btn" type="button">Credits</button>
     <button class="linkish" id="unlock-link" type="button">Full game</button>
+    <button class="linkish" id="store-open" type="button">Store</button>
     <button class="linkish" id="developer-open" type="button" hidden>Developer</button>
   </nav>
  </div>
@@ -374,6 +397,17 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
       <button class="quiet" id="developer-from-unlock" type="button" hidden>Developer tools</button>
     </div>
   </section>
+  <section id="store" hidden aria-label="Game store">
+    <div class="shop-top"><button class="quiet" id="store-back" type="button">&#8249; Back to the castle</button><button class="quiet" id="store-dev" type="button" hidden>Developer</button></div>
+    <div class="ftw-store-head">
+      <p class="dev-eyebrow">The Wolf's Den</p>
+      <h1>Adventure Store</h1>
+      <p>Try the full-game unlock and optional instant cosmetic unlocks. Everything can still be earned through gameplay. No subscription.</p>
+      <p class="ftw-test-checkout" id="store-test-note" hidden>SIMULATED STORE · NO REAL MONEY WILL BE CHARGED</p>
+    </div>
+    <div id="store-products" class="ftw-products"></div>
+    <p class="dev-help">Cosmetics are optional and do not give a gameplay advantage. In this test build, all purchases are simulations.</p>
+  </section>
   <section id="developer" hidden aria-label="Developer testing tools">
     <div class="shop-top"><button class="quiet" id="developer-back" type="button">&#8249; Back to game</button><span class="dev-tag">TEST BUILD</span></div>
     <div class="dev-console">
@@ -391,6 +425,7 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
         <input id="dev-level" type="number" inputmode="numeric" min="1" max="100" value="1">
         <button class="quiet" id="dev-jump" type="button">Go</button>
       </div>
+      <button class="quiet" id="dev-view-paywall" type="button">Preview the Level 6 Purchase Screen</button>
       <div class="dev-reset-actions">
         <button class="quiet" id="dev-reset-purchase" type="button">Reset test purchase</button>
         <small>Forget the fake $2.99 purchase but keep your level progress. Revisit the purchase screen.</small>
@@ -403,6 +438,17 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
       <p id="dev-message" class="dev-help" role="status" aria-live="polite"></p>
     </div>
   </section>
+  <div id="test-checkout" class="ftw-test-checkout-overlay" role="dialog" aria-modal="true" aria-labelledby="test-checkout-title" hidden>
+    <div class="ftw-test-checkout-card">
+      <p class="dev-eyebrow">Simulated App Store checkout</p>
+      <h2 id="test-checkout-title">Confirm test purchase</h2>
+      <strong id="test-checkout-price">$2.99</strong>
+      <p id="test-checkout-description">A test purchase that does not charge you.</p>
+      <p class="ftw-test-checkout">TEST MODE · NO PAYMENT · NO APPLE CHARGE</p>
+      <button class="go" id="test-checkout-confirm" type="button">Confirm test purchase</button>
+      <button class="quiet" id="test-checkout-cancel" type="button">Cancel</button>
+    </div>
+  </div>
   <section id="help" hidden>
   <div class="shop-top"><button class="quiet" id="back3" type="button">&#8249; Back to the castle</button></div>
   <h1>How to play</h1>
