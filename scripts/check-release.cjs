@@ -4,7 +4,8 @@ const path=require("node:path");
 const root=path.resolve(__dirname,"..");
 const page=fs.readFileSync(path.join(root,"index.html"),"utf8");
 const errors=[];
-if(/const FTW_QA_PREVIEW\s*=\s*true/.test(page))errors.push("Development-only full/demo entitlement bypass is still enabled.");
+if(/const FTW_QA_PREVIEW\s*=\s*true/.test(page) || /\bDEV_PREVIEW\b/.test(page) || /\bpreviewFull\b/.test(page))
+  errors.push("Remove all QA/demo-full preview bypass code before releasing.");
 if(/id="qa-toggle"/.test(page))errors.push("Remove the old QA toggle from production HTML.");
 if(/id="dev-preview"/.test(page))errors.push("Remove the development panel and level jumper before release.");
 if(/const DEV_PREVIEW\s*=/.test(page))errors.push("Remove the ?dev=1 entitlement preview branch.");
