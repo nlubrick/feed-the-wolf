@@ -61,9 +61,9 @@ h1{
 .stage{display:flex;justify-content:center}
 .castle{width:min(100%,calc(var(--cols,3) * 136px));filter:drop-shadow(0 12px 0 rgba(0,0,0,.28))}
 .crenel{height:18px;margin:0 4px;background:repeating-linear-gradient(90deg,var(--stone) 0 30px,transparent 30px 46px);border-radius:4px 4px 0 0;transition:background .5s}
-.board{position:relative;width:100%;border-radius:6px 6px 14px 14px;box-shadow:0 0 0 4px var(--edge,#33365c);background:#35375c}
-.board canvas{display:block;width:100%;height:100%;border-radius:inherit}
-#pins{position:absolute;inset:0;pointer-events:none}
+.board{position:relative;width:100%;border-radius:6px 6px 14px 14px;box-shadow:0 0 0 4px var(--edge,#33365c);background:#35375c;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.board canvas{display:block;width:100%;height:100%;border-radius:inherit;touch-action:manipulation}
+#pins{position:absolute;inset:0;pointer-events:none;touch-action:manipulation}
 .board.shake{animation:shake .3s}
 @keyframes shake{20%{transform:translate(-5px,2px)}40%{transform:translate(5px,-2px)}60%{transform:translate(-3px,1px)}80%{transform:translate(3px,0)}}
 .board.morph{animation:morph .75s ease-in-out}
@@ -79,6 +79,7 @@ h1{
 .pin{
   position:absolute;z-index:3;background:none;border:0;padding:0;margin:0;cursor:pointer;pointer-events:auto;
   -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;-webkit-user-select:none;user-select:none;
   filter:drop-shadow(0 0 .8px #4a2a02) drop-shadow(0 3px 2px rgba(0,0,0,.55));
 }
 .pin .rod,.pin .head{position:absolute;display:block}
@@ -927,10 +928,31 @@ function renderBg(){
     c.beginPath(); c.moveTo(x+26,y+5); c.lineTo(x+36,y+3); c.stroke();
     c.fillStyle = "#d9c9a8"; for (const bx of [4,64]) for (const by of [4,10]){ c.beginPath(); c.arc(x+bx,y+by,1.2,0,6.3); c.fill(); }
   });
-  P.saw.concat(P.spring).forEach(w => {           // the gap things fly through, beside a seesaw or a spring, with a little arrow of scratches
+  P.saw.concat(P.spring).forEach(w => {           // unmistakable HALF-HEIGHT wall: open air above a short waist-high parapet
     const X = Math.max(P.by[w.c].x, P.by[w.to].x)*U, y = P.by[w.c].y*U;
-    interior(X-7, y+9, 14, 40, 5, false);
-    c.strokeStyle = "rgba(255,194,61,.5)"; c.lineWidth = 1.2; c.beginPath(); c.arc(X, y+9, 7, Math.PI, 0); c.stroke();
+    // A bright open upper passage. This is a real hole, not another full-height wall pin.
+    c.save();
+    let q = c.createLinearGradient(X-10,y+10,X+10,y+52);
+    q.addColorStop(0,"#33445b"); q.addColorStop(.6,"#172438"); q.addColorStop(1,"#0e111f");
+    c.fillStyle=q;c.beginPath();rr(c,X-10,y+8,20,49,4);c.fill();
+    c.strokeStyle="rgba(255,229,166,.72)";c.lineWidth=1.2;
+    c.beginPath();c.moveTo(X-10,y+53);c.lineTo(X-10,y+15);c.quadraticCurveTo(X,y+7,X+10,y+15);c.lineTo(X+10,y+53);c.stroke();
+    // A chunky lower wall. Heavy outlined cap and distinct brickwork read as HALF a barrier.
+    q = c.createLinearGradient(0,y+54,0,y+94);
+    q.addColorStop(0,T.slab[0]);q.addColorStop(.5,"#645879");q.addColorStop(1,T.slab[1]);
+    c.fillStyle="#201829";c.fillRect(X-11,y+53,22,42);
+    c.fillStyle=q;c.fillRect(X-9,y+58,18,35);
+    c.strokeStyle="rgba(16,13,30,.8)";c.lineWidth=1.4;
+    c.beginPath();c.moveTo(X-9,y+72);c.lineTo(X+9,y+72);c.moveTo(X,y+59);c.lineTo(X,y+72);c.moveTo(X-2,y+72);c.lineTo(X-2,y+93);c.stroke();
+    c.fillStyle="#f2d59a";c.fillRect(X-13,y+52,26,6);
+    c.fillStyle="#fff2ca";c.fillRect(X-13,y+52,26,1.5);
+    c.fillStyle="rgba(27,16,34,.65)";c.fillRect(X-13,y+58,26,2);
+    for(const bx of [-7,7]){c.fillStyle="#796143";c.beginPath();c.arc(X+bx,y+55,1.15,0,Math.PI*2);c.fill();}
+    // An overhead flight arc with a pointed tip: object goes OVER this wall.
+    c.strokeStyle="#ffe29a";c.lineWidth=1.7;c.lineCap="round";
+    c.setLineDash([2.8,3.5]);c.beginPath();c.moveTo(X-23,y+37);c.quadraticCurveTo(X,y-2,X+23,y+37);c.stroke();
+    c.setLineDash([]);c.beginPath();c.moveTo(X+23,y+37);c.lineTo(X+15,y+34);c.moveTo(X+23,y+37);c.lineTo(X+20,y+29);c.stroke();
+    c.restore();
   });
   for (const t of torches()){
     c.fillStyle = "#5a391d"; c.beginPath(); c.moveTo(t.x-3.2,t.y+6); c.lineTo(t.x+3.2,t.y+6); c.lineTo(t.x+2,t.y+26); c.lineTo(t.x-2,t.y+26); c.closePath(); c.fill();
