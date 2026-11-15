@@ -1,0 +1,26 @@
+name: Feed the Wolf puzzle checks
+
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'expansion-levels.js'
+      - 'tests/**'
+      - 'package.json'
+      - '.github/workflows/puzzle-checks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  puzzle-integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test all normal and hard level solutions
+        run: npm test
