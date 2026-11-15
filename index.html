@@ -1371,7 +1371,7 @@ function landed(a, g){
   a.vy = 0; a.vr = 0; a.bounces = 0; a.seg = null;
 }
 function reached(){                                 // every level up to the furthest one reached can be revisited
-  if (DEV_PREVIEW && previewFull) return LEVELS.length;
+  if (FTW_TEST_BUILD && developerMode && previewFull && testCheckoutAvailable()) return LEVELS.length;
   let m = 0;
   for (let i = 0; i < LEVELS.length; i++) if (cleared[i] || cleared[i + "h"]) m = i + 1;
   return Math.min(LEVELS.length, m + 1);
@@ -2034,14 +2034,25 @@ function canPlay(index,isDaily){
   return hasFullAccess() || (!isDaily && Number.isInteger(index) && index >= 0 && index < FREE_LEVEL_COUNT);
 }
 function updateStoreButtons(){
-  const native = nativeStore();
-  $("unlock-buy").disabled = !native || storeBusy || hasFullAccess();
-  $("unlock-restore").disabled = !native || storeBusy;
-  $("unlock-buy").textContent = storeBusy ? "Checking purchase…" : hasFullAccess() ? "Full game unlocked" : "Unlock the full game";
-  if (DEV_PREVIEW && previewFull) $("unlock-status").textContent = "Developer full-game preview — no purchase was made.";
-  else if (fullGame) $("unlock-status").textContent = "Full game unlocked. Thanks for feeding the wolf!";
-  else if (!native) $("unlock-status").textContent = "The browser demo is free. Purchases are only available in the iPhone app.";
-  else if (!storeBusy) $("unlock-status").textContent = "One App Store purchase. Every level. No subscription.";
+  const native = nativeStore(), testing = testCheckoutAvailable();
+  $("unlock-buy").disabled = storeBusy || hasFullAccess() || (!native && !testing);
+  $("unlock-restore").disabled = storeBusy || (!native && !testing);
+  $("unlock-buy").textContent = storeBusy ? "Checking purchase…" :
+    hasFullAccess() ? "Full game unlocked" : testing ? "Unlock full game · $2.99 (TEST)" : "Unlock the full game";
+  $("unlock-restore").textContent = testing ? "Restore test purchase" : "Restore purchases";
+  $("test-checkout-label").hidden = !testing;
+  if (testing && developerMode && previewFull){
+    $("unlock-status").textContent = "Developer full-game preview is active. No purchase was made.";
+  } else if(testing){
+    $("unlock-status").textContent = simulatedPurchase ? "Simulated purchase active — all 100 levels unlocked." :
+      "Test checkout: tap to unlock the game without paying real money.";
+  } else if (fullGame){
+    $("unlock-status").textContent = "Full game unlocked. Thanks for feeding the wolf!";
+  } else if (!native){
+    $("unlock-status").textContent = "Purchases are available only in the iPhone app.";
+  } else if (!storeBusy){
+    $("unlock-status").textContent = "One verified App Store purchase. Every level. No subscription.";
+  }
 }
 function openUnlock(index,isDaily){
   pendingUnlockTarget = {index:Number.isInteger(index) && index >= 0 && index < LEVELS.length ? index : Math.max(li,0),daily:!!isDaily};
@@ -2052,7 +2063,7 @@ function acceptEntitlement(result){
   if (!result || result.productId !== FULL_UNLOCK_PRODUCT_ID || result.verified !== true || result.entitled !== true) return false;
   fullGame = true;
   if (typeof result.displayPrice === "string" && result.displayPrice.length < 48) $("unlock-price").textContent = result.displayPrice;
-  updateStoreButtons(); return true;
+  dressWolf(); renderWardrobe(); updateStoreButtons(); return true;
 }
 function resumeUnlockedPlay(){
   if (!hasFullAccess()) return;
@@ -2067,16 +2078,46 @@ async function refreshStoreEntitlement(){
   catch(e){ /* No verified entitlement means no paid access. */ }
 }
 async function storeAction(action){
-  const native = nativeStore();
-  if (!native || storeBusy || !["purchase","restore"].includes(action)) return;
+  const native = nativeStore(), testing = testCheckoutAvailable();
+  if ((!native && !testing) || storeBusy || !["purchase","restore"].includes(action)) return;
+  if (testing){
+    if(action==="purchase"){
+      try{
+        localStorage.setItem(FTW_TEST_PURCHASE_KEY,"yes");
+        simulatedPurchase=true;
+      }catch(e){
+        $("unlock-status").textContent = "Could not save the test purchase. Enable browser storage and try again.";
+        return;
+      }
+      updateStoreButtons();
+      dressWolf(); renderWardrobe();
+      resumeUnlockedPlay();
+      testToast("TEST PURCHASE COMPLETE · No money charged · Full game unlocked");
+      return;
+    }
+    try{simulatedPurchase = localStorage.getItem(FTW_TEST_PURCHASE_KEY)==="yes";}
+    catch(e){simulatedPurchase=false;}
+    updateStoreButtons();
+    if(simulatedPurchase){
+      dressWolf();renderWardrobe();resumeUnlockedPlay();
+      testToast("Test purchase restored · No real transaction");
+    }else{
+      $("unlock-status").textContent = "No simulated purchase found. Tap TEST unlock to continue.";
+    }
+    return;
+  }
   storeBusy = true;
   $("unlock-status").textContent = action === "purchase" ? "Opening App Store purchase…" : "Restoring your purchase…";
   updateStoreButtons();
   try {
-    if (acceptEntitlement(await native[action](FULL_UNLOCK_PRODUCT_ID))){ resumeUnlockedPlay(); return; }
-    $("unlock-status").textContent = action === "restore" ? "No verified purchase found for this Apple Account." : "Purchase not completed. Your five free levels are still here.";
-  } catch(e){ $("unlock-status").textContent = "App Store unavailable. Please try again."; }
-  finally { storeBusy = false; updateStoreButtons(); }
+    if (acceptEntitlement(await native[action](FULL_UNLOCK_PRODUCT_ID))){
+      dressWolf();renderWardrobe();resumeUnlockedPlay();return;
+    }
+    $("unlock-status").textContent = action === "restore" ?
+      "No verified purchase found for this Apple Account." :
+      "Purchase not completed. Your five free levels are still here.";
+  }catch(e){$("unlock-status").textContent="App Store unavailable. Please try again.";}
+  finally{storeBusy=false;updateStoreButtons();}
 }
 $("unlock-buy").addEventListener("click",()=>storeAction("purchase"));
 $("unlock-restore").addEventListener("click",()=>storeAction("restore"));
@@ -2101,7 +2142,7 @@ function load(index, replay, fresh){
   clearTimeout(resTimer);
   const old = board.querySelector(".result"); if (old) old.remove();
   li = index; lv = activeLevel(); P = prep(lv); s = newState(lv); seq = [];
-  if(DEV_PREVIEW) $("dev-level").value=String(li+1);
+  if(FTW_TEST_BUILD) $("dev-level").value=String(li+1);
   for (const i of (replay || [])){ if (pull(s, lv, i)) seq.push(i); }
   document.body.classList.toggle("hard", hardOn);
   { const T = theme(), st = document.documentElement.style; st.setProperty("--night", T.css[0]); st.setProperty("--night-2", T.css[1]); st.setProperty("--stone", T.css[2]); st.setProperty("--stone-dark", T.css[3]); st.setProperty("--edge", T.edge); }
@@ -2140,6 +2181,7 @@ function load(index, replay, fresh){
     }
   }
   hintLabel();
+  if (!daily) save();  // Preserve current level when the home-screen app is closed.
   calm = 0;
   if (s.status !== "play"){ busy = true; showResult(false); }
   else if (!daily && !replay && li > 0 && li % 5 === 0 && !seen[li]){ seen[li] = true; save(); reveal(); }
@@ -2300,7 +2342,7 @@ function syncPrizes(){
   gems = Math.max(0, g - hints + 5 * Object.keys(dailyDone).length);
   return got;
 }
-function save(){ try { localStorage.setItem("ftw-save", JSON.stringify({cleared:cleared, stars:stars, owned:owned, worn:worn, hints:hints, hp:hintPaid, dd:dailyDone, seen:seen})); } catch (e) {} }
+function save(){ try { localStorage.setItem("ftw-save", JSON.stringify({cleared, stars, owned, worn, hints, hp:hintPaid, dd:dailyDone, seen, li, hard:hardOn})); } catch (e) {} }
 function renderWardrobe(){
   $("gems").textContent = $("gems2").textContent = gems;
   const far = reached();
@@ -2530,20 +2572,24 @@ $("music").addEventListener("click", () => {
 document.addEventListener("visibilitychange", () => { if (document.hidden) musicStop(); else if (musicOn && (tunes.n || tunes.h)) musicStart(); });
 
 function start(data){
-  data = data || {};
-  let sv = {};
-  try { sv = JSON.parse(localStorage.getItem("ftw-save") || "{}") || {}; } catch (e) {}
-  const obj = v => v && typeof v === "object" ? v : null;
-  cleared = obj(sv.cleared) || obj(data.cleared) || {}; stars = obj(sv.stars) || obj(data.stars) || {};
-  owned = obj(sv.owned) || obj(data.owned) || {}; worn = obj(sv.worn) || obj(data.worn) || {};
-  hardOn = hasFullAccess() && !!data.hard; hints = +sv.hints || +data.hints || 0; hintPaid = obj(sv.hp) || {}; dailyDone = obj(sv.dd) || {}; seen = obj(sv.seen) || {};
-  for (let i = 5; i < reached() - 1; i += 5) seen[i] = true;   // no fanfare for places already visited
-  syncPrizes(); dressWolf(); save(); renderWardrobe();
-  const idx = Number.isInteger(data.li) && LEVELS[data.li] ? data.li : 0;
-  if(idx >= FREE_LEVEL_COUNT) entitlementReturnLevel = idx;
-  load(Math.min(idx,FREE_LEVEL_COUNT-1),idx < FREE_LEVEL_COUNT ? data.seq : null);
+  data=data||{};
+  let sv={};
+  try{sv=JSON.parse(localStorage.getItem("ftw-save")||"{}")||{};}catch(e){}
+  const obj=v=>v&&typeof v==="object"?v:null;
+  cleared=obj(sv.cleared)||obj(data.cleared)||{};stars=obj(sv.stars)||obj(data.stars)||{};
+  owned=obj(sv.owned)||obj(data.owned)||{};worn=obj(sv.worn)||obj(data.worn)||{};
+  hints=+sv.hints||+data.hints||0;hintPaid=obj(sv.hp)||{};dailyDone=obj(sv.dd)||{};seen=obj(sv.seen)||{};
+  const requested = Number.isInteger(sv.li)&&LEVELS[sv.li] ? sv.li :
+    Number.isInteger(data.li)&&LEVELS[data.li] ? data.li : 0;
+  hardOn=hasFullAccess() && !!(sv.hard ?? data.hard);
+  for(let i=5;i<reached()-1;i+=5)seen[i]=true;
+  syncPrizes();dressWolf();renderWardrobe();
+  renderDeveloper();
+  if(requested>=FREE_LEVEL_COUNT&&!hasFullAccess())entitlementReturnLevel=requested;
+  const index=hasFullAccess()?requested:Math.min(requested,FREE_LEVEL_COUNT-1);
+  load(index,index===requested?data.seq:null,true);
   refreshStoreEntitlement();
-  requestAnimationFrame(ts => { last = ts/1000; clock = last; requestAnimationFrame(frame); });
+  requestAnimationFrame(ts=>{last=ts/1000;clock=last;requestAnimationFrame(frame);});
 }
 const hot = window.claude && window.claude.hot;
 if (hot && hot.snapshot) hot.snapshot(() => ({li:li, seq:seq, cleared:cleared, stars:stars, hard:hardOn, owned:owned, worn:worn, hints:hints}));
