@@ -1915,34 +1915,113 @@ function frame(ts){
 const FREE_LEVEL_COUNT = 5;
 const FULL_UNLOCK_PRODUCT_ID = "feed_the_wolf_full_unlock";
 let fullGame = false, storeBusy = false, pendingUnlockTarget = null, entitlementReturnLevel = null;
-/* PRE-RELEASE TEST ONLY. Remove this panel and its logic before App Store submission.
-   Temporary preview control enabled only with ?dev=1 on the test branch. */
-const DEV_PREVIEW = new URLSearchParams(location.search).get("dev") === "1";
-let previewFull = false;
-function hasFullAccess(){ return DEV_PREVIEW ? previewFull : fullGame; }
-$("dev-preview").hidden = !DEV_PREVIEW;
-function setPreviewFull(on){
-  if(!DEV_PREVIEW)return;
-  previewFull=!!on;
-  $("dev-full").checked=previewFull;
-  if(!previewFull){daily=false;hardOn=false;}
-  const target=previewFull?li:Math.min(li,FREE_LEVEL_COUNT-1);
-  show("game");
-  load(target,null,true); // Repaint level labels and locked controls immediately.
-  dressWolf();renderWardrobe();updateStoreButtons();
+/* BETA TEST BUILD ONLY: remove everything here and all local simulated
+   entitlement storage before selling the app. This is not StoreKit ownership. */
+const FTW_TEST_BUILD = true;
+const FTW_TEST_PURCHASE_KEY = "ftw-beta-simulated-unlock-v1";
+let simulatedPurchase = false;
+let developerMode = false, previewFull = false;
+try { simulatedPurchase = FTW_TEST_BUILD && localStorage.getItem(FTW_TEST_PURCHASE_KEY) === "yes"; }
+catch (e) { /* local storage may be unavailable */ }
+function testCheckoutAvailable(){ return FTW_TEST_BUILD && !nativeStore(); }
+function hasFullAccess(){
+  return fullGame || (testCheckoutAvailable() && (simulatedPurchase || (developerMode && previewFull)));
 }
+function renderDeveloper(){
+  $("developer-open").hidden = !FTW_TEST_BUILD;
+  $("developer-from-unlock").hidden = !FTW_TEST_BUILD;
+  $("dev-full").checked = developerMode && previewFull;
+  $("dev-full").disabled = !testCheckoutAvailable();
+  $("dev-purchase-state").textContent = nativeStore()
+    ? "Apple purchase (cannot reset here)"
+    : simulatedPurchase ? "Simulated purchase active" : "Demo · not purchased";
+  $("dev-progress-state").textContent = "Level " + (li+1) + " / " + LEVELS.length +
+    " · " + Object.keys(cleared).filter(k => /^\d+$/.test(k)).length + " complete";
+  $("dev-level").value = String(li+1);
+  $("dev-reset-purchase").disabled = !testCheckoutAvailable();
+  $("dev-reset-all").disabled = !testCheckoutAvailable();
+}
+function openDeveloper(){
+  if (!FTW_TEST_BUILD) return;
+  developerMode = true;
+  renderDeveloper();
+  $("dev-message").textContent = "Developer tools are active until you exit.";
+  show("developer");
+}
+function leaveDeveloper(exit){
+  if(exit){ developerMode=false; previewFull=false; }
+  if(!hasFullAccess() && (li >= FREE_LEVEL_COUNT || daily || hardOn)){
+    daily=false; hardOn=false; load(FREE_LEVEL_COUNT-1,null,true);
+  }
+  renderDeveloper(); dressWolf(); renderWardrobe(); updateStoreButtons();
+  show("game");
+}
+function setPreviewFull(on){
+  if (!FTW_TEST_BUILD || !developerMode || !testCheckoutAvailable()) return;
+  previewFull = !!on;
+  if(!hasFullAccess() && (li >= FREE_LEVEL_COUNT || daily || hardOn)){
+    daily=false; hardOn=false; load(FREE_LEVEL_COUNT-1,null,true);
+  }
+  renderDeveloper(); dressWolf(); renderWardrobe(); updateStoreButtons();
+  $("dev-message").textContent = previewFull ? "FULL preview active — no purchase made." : "Demo rules active. Level 6 will require a test purchase.";
+}
+function testToast(message){
+  const old=document.querySelector(".ftw-test-toast"); if(old)old.remove();
+  const el=document.createElement("div");el.className="ftw-test-toast";
+  el.setAttribute("role","status");el.textContent=message;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),3600);
+}
+function resetTesting(kind){
+  if(!FTW_TEST_BUILD || !developerMode || !["purchase","progress","all"].includes(kind))return;
+  if((kind==="purchase"||kind==="all") && !testCheckoutAvailable())return;
+  const what = kind==="all" ? "the simulated purchase AND all game progress" :
+    kind==="purchase" ? "the simulated purchase (game progress is kept)" :
+    "game progress, earned items and gems (purchase is kept)";
+  if(!window.confirm("Reset "+what+"? This cannot be undone."))return;
+  if(kind!=="progress"){
+    try{ localStorage.removeItem(FTW_TEST_PURCHASE_KEY); }catch(e){}
+    simulatedPurchase=false;
+  }
+  previewFull=false;
+  pendingUnlockTarget=null; entitlementReturnLevel=null;
+  if(kind!=="purchase"){
+    try{ localStorage.removeItem("ftw-save"); }catch(e){}
+    cleared={};stars={};fails={};owned={};worn={};hints=0;
+    hintPaid={};hintOn=false;hintKey="";dailyDone={};seen={};seq=[];
+    daily=false;hardOn=false;li=0;
+    syncPrizes();load(0,null,true);save();
+  } else {
+    daily=false;hardOn=false;
+    if(li>=FREE_LEVEL_COUNT)load(FREE_LEVEL_COUNT-1,null,true);
+    else load(Math.max(0,li),null,true);
+  }
+  dressWolf();renderWardrobe();renderDeveloper();updateStoreButtons();
+  developerMode=false;
+  show("game");
+  if(kind==="purchase" && [0,1,2,3,4].every(i=>cleared[i])){
+    openUnlock(FREE_LEVEL_COUNT,false);
+  }
+  testToast(kind==="all" ? "Fresh install test: purchase and progress reset" :
+    kind==="progress" ? "Game progress cleared · purchase retained" :
+    "Test purchase reset · purchase screen is ready");
+}
+$("developer-open").addEventListener("click",openDeveloper);
+$("developer-from-unlock").addEventListener("click",openDeveloper);
+$("developer-back").addEventListener("click",()=>leaveDeveloper(false));
+$("developer-exit").addEventListener("click",()=>leaveDeveloper(true));
 $("dev-full").addEventListener("change",e=>setPreviewFull(e.target.checked));
 $("dev-jump").addEventListener("click",()=>{
-  if(!DEV_PREVIEW)return;
+  if(!developerMode)return;
   const requested=Number($("dev-level").value);
-  const next=Math.max(1,Math.min(LEVELS.length,Math.round(requested||1)));
-  $("dev-level").value=String(next);
-  daily=false;
-  load(next-1,null,true);
+  const level=Math.max(1,Math.min(LEVELS.length,Math.round(requested||1)));
+  daily=false;hardOn=false;
+  if(!canPlay(level-1,false)){openUnlock(level-1,false);return;}
+  load(level-1,null,true);show("game");
 });
 $("dev-level").addEventListener("keydown",e=>{if(e.key==="Enter")$("dev-jump").click();});
-/* The ONLY development preview is the restricted ?dev=1 test panel above.
-   Never expose this query-triggered preview mode in a production build. */
+$("dev-reset-purchase").addEventListener("click",()=>resetTesting("purchase"));
+$("dev-reset-progress").addEventListener("click",()=>resetTesting("progress"));
+$("dev-reset-all").addEventListener("click",()=>resetTesting("all"));
 /* iOS host must expose window.FeedTheWolfStore: async status(id), purchase(id),
    restore(id). It must verify a StoreKit 2 entitlement before returning
    {productId:id, verified:true, entitled:true, displayPrice?}.
@@ -2254,7 +2333,7 @@ $("shop").addEventListener("click", e => {
 });
 function menu(){}
 function show(name){                                // screens: the castle, the wardrobe, the rules, the finale, credits
-  for (const id of ["game","shop","help","credits","ftw-finale","unlock"]) $(id).hidden = id !== name;
+  for (const id of ["game","shop","help","credits","ftw-finale","unlock","developer"]) $(id).hidden = id !== name;
   window.scrollTo(0, 0);
   if (name === "game"){ setSize(); renderBg(); }
   if (name === "shop") renderWardrobe();
