@@ -17,7 +17,7 @@ The repository contains a browser/PWA game and two Swift source files that can b
 3. Add a **blue folder reference** named `www` to Copy Bundle Resources, containing `index.html`, `expansion-levels.js`, `studio-boot-v2.js`, `studio-credits-roll-v2.js`, `failure-entertainment-intro-v2.html`, `feed-the-wolf-icon.svg`, `manifest.webmanifest`, and `service-worker.js`. The `www` files must be from the **same release commit**.
 4. Enable In-App Purchase capability and create a **non-consumable** product with exact ID `feed_the_wolf_full_unlock` in App Store Connect. Set the price tier corresponding to $2.99 in the U.S.
 5. Test with a StoreKit Configuration locally and App Store sandbox/TestFlight. Confirm purchase, cancellation, pending, offline, revoked/refunded, fresh install, and Restore Purchases. Only a current verified StoreKit transaction opens premium content.
-6. Before any production build, remove the `QA: Demo ↔ Full` switch and set `FTW_QA_PREVIEW` to false. Run `npm test` and `npm run release:check`.
+6. Before any production build, remove the `DEVELOPER PREVIEW` panel, `DEV_PREVIEW` / `previewFull` logic, and the `?dev=1` unlock mode completely. Run `npm test` and `npm run release:check`.
 
 ## Notes
 
