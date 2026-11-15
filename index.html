@@ -232,7 +232,8 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 
 /* Cinematic rolling credits, with native touch-scrolling and pause controls. */
 .fe-credits-window{height:min(65dvh,540px);min-height:175px;max-width:650px;margin:10px auto 0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#bd9859 transparent;mask-image:linear-gradient(to bottom,transparent,#000 12%,#000 88%,transparent);-webkit-mask-image:linear-gradient(to bottom,transparent,#000 12%,#000 88%,transparent)}
-.fe-credits-window .fe-credits-copy{padding-top:clamp(130px,40vh,330px);padding-bottom:clamp(100px,35vh,270px);margin:0 auto;}
+.fe-credits-window .fe-credits-copy{padding-top:clamp(70px,14dvh,130px);padding-bottom:clamp(160px,35dvh,280px);margin:0 auto;}
+.fe-studio-tagline{font-size:clamp(19px,5vw,26px);font-style:italic;margin:14px 0 8px!important;color:#d5ad77!important}
 .fe-credits-buttons{display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 8px 22px;flex-wrap:wrap}
 .fe-credits-buttons .quiet{min-height:40px;min-width:80px}
 @media(prefers-reduced-motion:reduce){.fe-credits-window .fe-credits-copy{padding-top:18px;padding-bottom:18px}}
@@ -321,8 +322,8 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
   <div class="fe-credits-window" data-fe-credits-scroll aria-label="Scrolling game credits" tabindex="0">
    <div class="fe-credits-copy">
    <p class="fe-eyebrow">A Failure Entertainment Production</p>
+   <p class="fe-credits-sub fe-studio-tagline">6/10. Good enough.</p>
    <h1>Feed the Wolf</h1>
-   <p class="fe-credits-sub">6/10. Good enough.</p>
    <h2>Credits</h2>
    <p><strong>Studio, Concept &amp; Creative Direction</strong><span>Failure Entertainment</span></p>
    <p><strong>Game Design &amp; Development</strong><span>Failure Entertainment, with AI assistance from Claude and ChatGPT</span></p>
@@ -1801,7 +1802,7 @@ function show(name){                                // screens: the castle, the 
 $("wbtn").addEventListener("click", () => show("shop"));
 $("hbtn").addEventListener("click", () => show("help"));
 let creditsReturn="game";
-function openCredits(from){ creditsReturn=from||"game"; show("credits"); }
+function openCredits(from){ creditsReturn=from||"game"; show("credits"); window.FailureCreditsRoll?.show($("credits")); }
 $("credits-btn").addEventListener("click",()=>openCredits("game"));
 for(const id of ["back-credits","back-credits-bottom"])$(id).addEventListener("click",()=>show(creditsReturn));
 $("finish-credits").addEventListener("click",()=>openCredits("ftw-finale"));
@@ -2004,7 +2005,7 @@ const hot = window.claude && window.claude.hot;
 if (hot && hot.snapshot) hot.snapshot(() => ({li:li, seq:seq, cleared:cleared, stars:stars, hard:hardOn, owned:owned, worn:worn, hints:hints}));
 if (hot && hot.ready) hot.ready(start); else start((hot && hot.data) || {});
 if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(()=>{}));}
-if(new URLSearchParams(location.search).has("credits"))show("credits");
+if(new URLSearchParams(location.search).has("credits"))openCredits("game");
 </script>
 </body>
 </html>
