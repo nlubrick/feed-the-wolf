@@ -246,7 +246,6 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
  <div id="game">
   <header>
     <h1>Feed the Wolf</h1>
-    <p class="tag">The pull-the-pin game from the ad, except real, and the wolf is the good guy.</p>
     <button class="wpill" id="wbtn" type="button"><img id="wface" alt=""><span>Wardrobe</span><span class="cnt"><i class="gem"></i><span id="gems2">0</span></span></button>
   </header>
 
@@ -327,7 +326,8 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
    <h1>Feed the Wolf</h1>
    <h2>Credits</h2>
    <p><strong>Studio, Concept &amp; Creative Direction</strong><span>Failure Entertainment</span></p>
-   <p><strong>Game Design &amp; Development</strong><span>Failure Entertainment, with AI assistance from Claude and ChatGPT</span></p>
+   <p><strong>Game Design &amp; Development</strong><span>Failure Entertainment</span></p>
+   <p><strong>Special Thanks</strong><span>Two very special helpers</span></p>
    <p><strong>Characters, Artwork &amp; Animation</strong><span>Original game art and animation</span></p>
    <p><strong>Music &amp; Sound</strong><span>Original synthesized castle-caper score and game sound effects</span></p>
    <p><strong>Typography</strong><span>Lilita One and Nunito Sans</span></p>
@@ -948,10 +948,6 @@ function renderBg(){
     c.fillStyle="#fff2ca";c.fillRect(X-13,y+52,26,1.5);
     c.fillStyle="rgba(27,16,34,.65)";c.fillRect(X-13,y+58,26,2);
     for(const bx of [-7,7]){c.fillStyle="#796143";c.beginPath();c.arc(X+bx,y+55,1.15,0,Math.PI*2);c.fill();}
-    // An overhead flight arc with a pointed tip: object goes OVER this wall.
-    c.strokeStyle="#ffe29a";c.lineWidth=1.7;c.lineCap="round";
-    c.setLineDash([2.8,3.5]);c.beginPath();c.moveTo(X-23,y+37);c.quadraticCurveTo(X,y-2,X+23,y+37);c.stroke();
-    c.setLineDash([]);c.beginPath();c.moveTo(X+23,y+37);c.lineTo(X+15,y+34);c.moveTo(X+23,y+37);c.lineTo(X+20,y+29);c.stroke();
     c.restore();
   });
   for (const t of torches()){
