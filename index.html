@@ -296,6 +296,26 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 .ftw-dev-panel p{margin:0;color:#cdbfe0;line-height:1.3}
 .tile.ftw-premium-locked{opacity:.44;filter:grayscale(.95) saturate(.35)}
 .tile.ftw-premium-locked::before{content:"FULL GAME";position:absolute;top:4px;left:4px;right:4px;z-index:2;font:bold 9px var(--body);letter-spacing:.6px;color:#fff;text-shadow:0 2px 4px #000;text-align:center}
+
+/* Temporary PWA beta tools. Delete before App Store submission. */
+#developer{display:flex;flex-direction:column;gap:16px}
+#developer .dev-console{background:linear-gradient(165deg,#302145,#161126);padding:20px 16px;border:2px solid #dcaf58;border-radius:18px;display:grid;gap:12px;max-width:600px;width:100%;margin:0 auto}
+#developer h1{font:400 clamp(30px,8vw,42px) var(--display);color:#ffe4a5;margin:0}
+.dev-tag{font:800 11px var(--body);letter-spacing:1px;border:1px solid #dcaf58;border-radius:999px;color:#ffe4a5;padding:7px 10px}
+.dev-eyebrow{font:800 11px var(--body);text-transform:uppercase;letter-spacing:1.5px;color:#ebbd7b;margin:0}
+.dev-caption,.dev-help{font:600 13px/1.5 var(--body);color:#d6c8e8;margin:0}
+.dev-state{background:#100d20aa;border:1px solid #7c6996;border-radius:12px;padding:12px;display:grid;grid-template-columns:1fr auto;gap:9px;font:700 13px var(--body);color:#d6c8e8}
+.dev-state strong{color:#ffe5a8;text-align:right}
+.dev-option{display:flex;align-items:center;gap:12px;background:#483457;border:1px solid #a28dba;border-radius:12px;padding:12px;font:800 14px var(--body);cursor:pointer}
+.dev-option input{width:23px;height:23px;accent-color:#5be08a;flex:none}
+.dev-level-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font:700 14px var(--body)}
+.dev-level-row input{width:76px;min-height:42px;border-radius:9px;background:#19142e;color:#fff;border:1px solid #9b81bc;padding:6px;font-size:17px}
+.dev-reset-actions{display:grid;gap:6px}
+.dev-reset-actions .quiet{width:100%;text-align:center;border-color:#aa86ae}
+.dev-reset-actions .danger{border-color:#f2a46c;color:#ffccae}
+.dev-reset-actions small{font:600 12px/1.45 var(--body);color:#c3b0d5;margin-bottom:12px}
+.ftw-test-checkout{font:800 11px/1.5 var(--body);letter-spacing:1px;text-align:center;color:#ffe2a7;background:#52381e;border:1px solid #d6a35c;border-radius:9px;padding:8px}
+.ftw-test-toast{position:fixed;top:max(15px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#24513f;color:#f5fff9;border:2px solid #86e5b2;border-radius:13px;box-shadow:0 8px 40px #0008;padding:13px 18px;z-index:1500;font:800 13px/1.3 var(--body);max-width:90vw;text-align:center;pointer-events:none}
 </style>
 <script src="./studio-boot-v2.js" defer></script>
 </head>
@@ -307,15 +327,6 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
     <button class="wpill" id="wbtn" type="button"><img id="wface" alt=""><span>Wardrobe</span><span class="cnt"><i class="gem"></i><span id="gems2">0</span></span></button>
   </header>
 
-  <div id="dev-preview" class="ftw-dev-panel" hidden>
-    <strong>DEVELOPER PREVIEW · REMOVE BEFORE RELEASE</strong>
-    <div class="ftw-dev-row">
-      <label for="dev-full"><input id="dev-full" type="checkbox"> Preview FULL game</label>
-      <label for="dev-level">Level <input id="dev-level" type="number" min="1" max="100" value="1"></label>
-      <button class="quiet" id="dev-jump" type="button">Jump</button>
-    </div>
-    <p>Switch OFF to see the five-level demo and locked wardrobe. Switch ON to test all 100 levels. This is not a real purchase.</p>
-  </div>
   <div class="bar">
     <div class="level" id="level"></div>
     <div class="nav"><button id="prev" type="button" aria-label="Previous level">&#8249;</button><button id="next2" type="button" aria-label="Next level">&#8250;</button></div>
@@ -344,6 +355,7 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
     <button class="linkish" id="hbtn" type="button">How to play</button>
     <button class="linkish" id="credits-btn" type="button">Credits</button>
     <button class="linkish" id="unlock-link" type="button">Full game</button>
+    <button class="linkish" id="developer-open" type="button" hidden>Developer</button>
   </nav>
  </div>
 
@@ -358,6 +370,37 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
       <button class="go" id="unlock-buy" type="button" disabled>Unlock the full game</button>
       <button class="quiet" id="unlock-restore" type="button" disabled>Restore purchases</button>
       <p class="unlock-note" id="unlock-status" role="status" aria-live="polite">This browser demo cannot process purchases.</p>
+      <p class="ftw-test-checkout" id="test-checkout-label" hidden>TEST PURCHASE ONLY · NO PAYMENT WILL BE TAKEN</p>
+      <button class="quiet" id="developer-from-unlock" type="button" hidden>Developer tools</button>
+    </div>
+  </section>
+  <section id="developer" hidden aria-label="Developer testing tools">
+    <div class="shop-top"><button class="quiet" id="developer-back" type="button">&#8249; Back to game</button><span class="dev-tag">TEST BUILD</span></div>
+    <div class="dev-console">
+      <p class="dev-eyebrow">Failure Entertainment · Developer Lab</p>
+      <h1>Test the full journey</h1>
+      <p class="dev-caption">Everything here is simulated. No money is charged, and none of these controls will ship in the paid game.</p>
+      <div class="dev-state">
+        <span>Purchase status</span><strong id="dev-purchase-state">Not purchased</strong>
+        <span>Game progress</span><strong id="dev-progress-state">Level 1 / 100</strong>
+      </div>
+      <label class="dev-option" for="dev-full"><input type="checkbox" id="dev-full"> Preview full game without purchasing</label>
+      <p class="dev-help">Turn this on to browse any level. Turn it off to test the real five-level gate and fake checkout.</p>
+      <div class="dev-level-row">
+        <label for="dev-level">Jump to level</label>
+        <input id="dev-level" type="number" inputmode="numeric" min="1" max="100" value="1">
+        <button class="quiet" id="dev-jump" type="button">Go</button>
+      </div>
+      <div class="dev-reset-actions">
+        <button class="quiet" id="dev-reset-purchase" type="button">Reset test purchase</button>
+        <small>Forget the fake $2.99 purchase but keep your level progress. Revisit the purchase screen.</small>
+        <button class="quiet" id="dev-reset-progress" type="button">Reset game progress</button>
+        <small>Erase levels, gems, earned items and saved progress. Keep purchase status.</small>
+        <button class="quiet danger" id="dev-reset-all" type="button">Reset purchase + progress</button>
+        <small>Start exactly like a brand-new download.</small>
+      </div>
+      <button class="go" id="developer-exit" type="button">Exit Developer Mode</button>
+      <p id="dev-message" class="dev-help" role="status" aria-live="polite"></p>
     </div>
   </section>
   <section id="help" hidden>
