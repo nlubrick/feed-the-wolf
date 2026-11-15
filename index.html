@@ -2247,7 +2247,7 @@ function updateStoreButtons(){
   if (testing && developerMode && previewFull){
     $("unlock-status").textContent = "Developer full-game preview is active. No purchase was made.";
   } else if(testing){
-    $("unlock-status").textContent = simulatedPurchase ? "Simulated purchase active — all 100 levels unlocked." :
+    $("unlock-status").textContent = simulatedPurchase ? "Simulated purchase active — all 115 story levels unlocked." :
       "Test checkout: tap to unlock the game without paying real money.";
   } else if (fullGame){
     $("unlock-status").textContent = "Full game unlocked. Thanks for feeding the wolf!";
@@ -2442,8 +2442,8 @@ function showResult(focus){
     el.innerHTML = '<div class="stars" role="img" aria-label="' + st + ' of 3 stars">' + "★".repeat(st) + "<i>" + "★".repeat(3 - st) + "</i></div><h2>" + (lastLv ? "All " + LEVELS.length + " cleared" : "Dinner is served") + "</h2>" +
       (prize ? '<div class="prize"><img alt="" src="' + thumb(prize.id) + '"><p><b>Prize: ' + prize.name + '</b><br>' + (gain ? 'Plus <i class="gem"></i>' + gain + ". " : "") + (prize.slot === "pet" ? "It is already following him." : "He is already wearing it.") + '</p></div>'
              : "<p>" + (lastLv ? (hardOn ? "On hard mode. The ad owes you an apology." : "Now try them with hard mode on.") : "Solved in " + seq.length + (seq.length === 1 ? " pull" : " pulls") + (hardOn ? ", on hard." : ".")) + "</p>" + (gain ? '<p class="gain">+<i class="gem"></i>' + gain + "</p>" : "")) +
-      (!hasFullAccess() && li === FREE_LEVEL_COUNT - 1 ? '<p>Five castles down. Ninety-five more await beyond the gates!</p>' : "") +
-      '<button class="go" id="next" type="button">' + (lastLv ? "Finish" : (!hasFullAccess() && li === FREE_LEVEL_COUNT - 1 ? "See the full game" : "Next level")) + "</button>";
+      (!hasFullAccess() && li === FREE_LEVEL_COUNT - 1 ? '<p>Five castle puzzles down! The free bonus Level 6 is next.</p>' : "") +
+      '<button class="go" id="next" type="button">' + (lastLv ? "Finish" : (!hasFullAccess() && li === FREE_LEVEL_COUNT - 1 ? "Try bonus Level 6" : "Next level")) + "</button>";
     if(lastLv && focus){showFinale();return;}
   } else if (s.status === "lose"){
     const w = WHY[s.why] || WHY.stuck;
@@ -2613,8 +2613,8 @@ function showFinale(){
  const solvedHard=LEVELS.filter((_,i)=>!!cleared[i+"h"]).length;
  const uniqueSolved=LEVELS.filter((_,i)=>!!cleared[i]||!!cleared[i+"h"]).length;
  $("fe-finale-heading").textContent=hardOn?(solvedHard===LEVELS.length?"Hard Mode Conquered":"The Final Hard Castle"):"The Castle Is Yours";
- $("fe-finale-description").textContent="You finished Level 100, the grand finale. The wolf is fed. Mostly.";
- $("fe-finale-next").textContent=uniqueSolved+" of 100 levels cleared; "+solvedNormal+" normal and "+solvedHard+" hard variants solved. The daily puzzle and your wardrobe are still waiting.";
+ $("fe-finale-description").textContent="You finished Level 115, the grand finale. The wolf is fed. Mostly.";
+ $("fe-finale-next").textContent=uniqueSolved+" of 100 pull-the-pin puzzles cleared and "+Object.values(bonusResults).filter(x=>x==="win").length+" of 15 bonus stages won. The Store and daily puzzle are still waiting.";
  $("finish-hard").hidden=hardOn;
  show("ftw-finale");
 }
@@ -2793,7 +2793,9 @@ function start(data){
   cleared=obj(sv.cleared)||obj(data.cleared)||{};stars=obj(sv.stars)||obj(data.stars)||{};
   owned=obj(sv.owned)||obj(data.owned)||{};worn=obj(sv.worn)||obj(data.worn)||{};
   gemUnlocked=obj(sv.gemUnlocked)||{};
+  bonusResults=obj(sv.bs)||{};
   hints=+sv.hints||+data.hints||0;hintPaid=obj(sv.hp)||{};dailyDone=obj(sv.dd)||{};seen=obj(sv.seen)||{};
+  const savedStage=Number.isInteger(sv.cs)&&window.FTWBonus.at(sv.cs)?sv.cs:null;
   const requested = Number.isInteger(sv.li)&&LEVELS[sv.li] ? sv.li :
     Number.isInteger(data.li)&&LEVELS[data.li] ? data.li : 0;
   hardOn=hasFullAccess() && !!(sv.hard ?? data.hard);
@@ -2803,6 +2805,11 @@ function start(data){
   if(requested>=FREE_LEVEL_COUNT&&!hasFullAccess())entitlementReturnLevel=requested;
   const index=hasFullAccess()?requested:Math.min(requested,FREE_LEVEL_COUNT-1);
   load(index,index===requested?data.seq:null,true);
+  if(savedStage&&window.FTWBonus.at(savedStage)?.type==="bonus"&&canEnterBonus(window.FTWBonus.at(savedStage))){
+    enterBonusStage(window.FTWBonus.at(savedStage));
+  }else if(savedStage&&savedStage!==stageForPuzzle(index)&&hasFullAccess()){
+    goToCampaignStage(savedStage);
+  }
   refreshStoreEntitlement();
   requestAnimationFrame(ts=>{last=ts/1000;clock=last;requestAnimationFrame(frame);});
 }
