@@ -52,10 +52,13 @@ function makeGrid(seed){
  }
  throw Error("No possible Feast Match starting board");
 }
+/* [foods to serve, moves]. Every swap clears at least three, so a goal above three per move needs combos and
+   Wolf Howls. Tuned by simulation: a player who always takes the biggest match wins about 100, 95, 82, 76 and 60%. */
+const GOALS=[[36,13],[52,14],[70,16],[78,17],[90,18]];
 function mount(api){
  const chapter=api.stage.chapter,random=rng(49000+chapter*501);
- let grid=makeGrid(5541+chapter*743),selected=null,turns=26+chapter*3,
-  target=12+chapter*4,score=0,busy=false,alive=true,powers=new Set();
+ let grid=makeGrid(5541+chapter*743),selected=null,turns=GOALS[chapter][1],
+  target=GOALS[chapter][0],score=0,busy=false,alive=true,powers=new Set();
  api.instructions("Swap neighboring foods to match three or more. Four in a row creates a Wolf Howl that clears nine spaces!");
  api.message("Match the wolf's favorite foods. Bigger combos fill his dinner tray faster.");
  const draw=()=>{
@@ -89,7 +92,7 @@ function mount(api){
   }
   if(!alive)return;
   if(score>=target){api.win();return;}
-  if(turns<=0){api.lose("The dinner tray is not full yet. Try a new strategy, or skip this bonus.");return;}
+  if(turns<=0){api.lose("The tray was "+(target-score)+" short. Line up four in a row for a Wolf Howl, and look for matches that set off another.");return;}
   if(!possible(grid)&&!powers.size){
    grid=makeGrid(97000+Math.floor(random()*100000));api.message("New ingredients shuffled into the kitchen!");
   }
@@ -124,5 +127,5 @@ function mount(api){
  return{destroy(){alive=false;api.play.removeEventListener("click",click);},preview:()=>({grid:grid.slice(),score,turns})};
 }
 root.FTWBonus.register("match",mount);
-root.FTWMatchRules=Object.freeze({find,possible,makeGrid});
+root.FTWMatchRules=Object.freeze({find,possible,makeGrid,GOALS});
 })(typeof window!=="undefined"?window:{});

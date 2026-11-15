@@ -61,15 +61,21 @@ function tileSVG(m,flowing){
   arms+'<circle cx="32" cy="32" r="10" fill="'+(flowing?"#c9fbed":"#e0c298")+
   '" stroke="#68566d" stroke-width="3"/></svg>';
 }
+/* Fewest taps that solve a board, and the limits for each location (the Castle has none: it teaches the game). */
+function minTurns(config){
+ let n=0;config.solution.forEach((want,i)=>{if(want===null)return;let m=config.initial[i],k=0;while(m!==want&&k<4){m=rotate(m);k++;}n+=k;});return n;
+}
+const SLACK=[0,3,2.4,2,1.7],POURS=[0,5,4,3,3];
+function limits(chapter){const c=create(chapter);return{turns:SLACK[chapter]?Math.ceil(minTurns(c)*SLACK[chapter])+2:0,pours:POURS[chapter],min:minTurns(c)};}
 function mount(api){
- const config=create(api.stage.chapter),grid=config.initial.slice();
- let turns=0,lit=[],alive=true,passed=false;
+ const config=create(api.stage.chapter),grid=config.initial.slice(),lim=limits(api.stage.chapter);
+ let turns=0,pours=0,lit=[],alive=true,passed=false;
  const theme=root.FTWBonusThemes?root.FTWBonusThemes.pipes(api.stage.chapter):null,liquid=theme?theme.liquid:"soup",say=t=>t.replace(/soup/g,liquid);
  api.instructions("Rotate the pipes to carry the "+liquid+" from START to the wolf at END. Tap a piece to turn it; press Test Flow to pour.");
  api.message("The "+liquid+" comes in on the left at START. Get it to the wolf's bowl on the right!");
  function draw(){
   if(!alive)return;
-  api.hud.innerHTML='<span><b>Rotations: '+turns+'</b></span>'+
+  api.hud.innerHTML='<span><b>Turns: '+turns+(lim.turns?' / '+lim.turns:'')+'</b>'+(lim.pours?' &nbsp; <b>Pours left: '+(lim.pours-pours)+'</b>':'')+'</span>'+
    '<button type="button" class="fw-pipe-test" data-flow-test>Test Flow</button>';
   const ends=root.FTWBonusThemes?root.FTWBonusThemes.pipes(api.stage.chapter):null;
   api.play.innerHTML='<div class="fw-pipe-labels"><span>'+(ends?ends.from.toUpperCase():"SOUP POT")+' \u25B6</span><span>\u25B6 WOLF\'S BOWL</span></div>'+
@@ -87,11 +93,12 @@ function mount(api){
   if(btn){
    const result=trace(grid);lit=result.trail;api.message(say(result.reason));if(result.win)passed=true;draw();
    if(result.win){passed=true;api.sound(true);api.win();}
-   else api.sound(false);
+   else{api.sound(false);pours++;if(lim.pours&&pours>=lim.pours){passed=true;api.lose(say("That was the last pour and the soup never reached the wolf. Trace the route from START with your finger before pouring."));}}
    return;
   }
   const tile=e.target.closest("[data-pipe]");if(!tile)return;
   const i=Number(tile.dataset.pipe);
+  if(lim.turns&&turns>=lim.turns){passed=true;api.sound(false);api.lose("Out of turns. This one can be done in "+lim.min+". Work out the route before you start turning.");return;}
   grid[i]=rotate(grid[i]);turns++;lit=[];
   api.tone(330+(i%5)*40,.07);api.message("Turned a pipe. Test the flow when you are ready.");
   draw();
@@ -100,5 +107,5 @@ function mount(api){
  return{destroy(){alive=false;api.play.removeEventListener("click",click);},preview:()=>grid.slice()};
 }
 root.FTWBonus.register("pipes",mount);
-root.FTWPipesRules=Object.freeze({PATHS,create,trace,mask,rotate});
+root.FTWPipesRules=Object.freeze({PATHS,create,trace,mask,rotate,minTurns,limits});
 })(typeof window!=="undefined"?window:{});

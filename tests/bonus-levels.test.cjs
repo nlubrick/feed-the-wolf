@@ -50,16 +50,31 @@ test("Every Pantry Panic route has a correct solution and rotated opening pieces
   assert.equal(r.trace(grid).win,true,"Pipe chapter "+chapter+" must be solvable");
  }
 });
-test("Each Dinner Detective chapter has three accessible drawn targets",()=>{
+test("Dinner Detective asks for more in each location, and every target is drawn and reachable",()=>{
  const {FTWHiddenRules:r}=setup();
+ assert.deepEqual(Array.from(r.targets,t=>t.length),[4,5,6,7,8]);
  for(let chapter=0;chapter<5;chapter++){
-  const targets=r.targets[chapter];assert.equal(targets.length,3);
-  assert.equal(new Set(targets).size,3);
+  const targets=r.targets[chapter];
+  assert.equal(new Set(targets).size,targets.length);
   const svg=r.scene(chapter,new Set());
   for(const id of targets)assert.ok(svg.includes('data-object="'+id+'"'));
   assert.equal((svg.match(/data-object="/g)||[]).length,12);
   assert.match(svg,/role="button" tabindex="0"/);
+  assert.doesNotMatch(svg,/NaN|undefined/);
+  if(chapter)assert.ok(r.SECONDS[chapter]<r.SECONDS[chapter-1]);
  }
+});
+test("Feast Match goals rise faster than the moves allowed",()=>{
+ const {FTWMatchRules:r}=setup();
+ assert.equal(r.GOALS.length,5);
+ for(let c=1;c<5;c++)assert.ok(r.GOALS[c][0]/r.GOALS[c][1]>r.GOALS[c-1][0]/r.GOALS[c-1][1]);
+ assert.ok(r.GOALS[0][0]/r.GOALS[0][1]<3,"the first one must be winnable with plain matches");
+});
+test("Pantry Panic limits tighten but always leave room to solve",()=>{
+ const {FTWPipesRules:r}=setup();
+ assert.equal(r.limits(0).turns,0);assert.equal(r.limits(0).pours,0);
+ for(let c=1;c<5;c++){const l=r.limits(c);assert.ok(l.turns>=l.min+2,"chapter "+c);assert.ok(l.pours>=3);}
+ for(let c=2;c<5;c++)assert.ok(r.limits(c).turns/r.limits(c).min<r.limits(c-1).turns/r.limits(c-1).min);
 });
 test("Five chapter motifs exist; four new WAV scores are valid PCM files",()=>{
  const {FTWBonus,FTWWorldMusic}=setup();

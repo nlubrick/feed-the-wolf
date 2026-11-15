@@ -51,6 +51,8 @@ const banners=[
 const shelf=(x,y,w,c)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="13" rx="4" fill="'+c+'" stroke="#00000066" stroke-width="3"/><path d="M'+(x+16)+' '+(y+13)+'l10 22M'+(x+w-16)+' '+(y+13)+'l-10 22" stroke="#00000055" stroke-width="5"/>';
 const table=(x,y,w,c)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="18" rx="5" fill="'+c+'" stroke="#00000066" stroke-width="3"/><rect x="'+(x+14)+'" y="'+(y+18)+'" width="18" height="'+(432-y)+'" fill="'+c+'" stroke="#00000055" stroke-width="2"/><rect x="'+(x+w-32)+'" y="'+(y+18)+'" width="18" height="'+(432-y)+'" fill="'+c+'" stroke="#00000055" stroke-width="2"/>';
 const jar=(x,y,c)=>'<rect x="'+(x-11)+'" y="'+(y-30)+'" width="22" height="30" rx="5" fill="'+c+'" fill-opacity=".8" stroke="#00000066" stroke-width="2"/><rect x="'+(x-9)+'" y="'+(y-36)+'" width="18" height="7" rx="2" fill="#c9a574"/>';
+/* To use a photograph instead of a drawn room, add  photo:"your-file.jpg"  to that room (700 x 460 shape) and
+   move its `spots` to places that make sense in the picture. Objects and clutter are drawn over the photo. */
 const rooms=[
 { // Castle larder
  art:()=>'<rect width="700" height="460" rx="22" fill="#34314e"/>'+blocks(700,400,50,"#232138")+'<rect y="398" width="700" height="62" fill="#26222f"/><path d="M0 398H700M120 398l-40 62M300 398l-14 62M470 398l20 62M620 398l44 62" stroke="#15121c" stroke-width="3"/>'+
@@ -97,6 +99,30 @@ const rooms=[
  spots:[[310,148],[392,148],[480,198],[560,198],[640,198],[70,312],[140,312],[212,312],[300,312],[410,312],[520,424],[620,424]]}
 ];
 
+/* ---------- Clutter: the jars, books and boxes that things hide among. More of it, and more of it in front, in later locations. ---------- */
+const CLUT=[["#8a6a4a","#6d6a86","#b7472e","#c9a574"],["#5a3f9a","#c0504d","#63a88a","#e3b54a"],["#b9772f","#7a5230","#8a8494","#e0a850"],["#6b8f6a","#8a5c34","#c9a574","#9fd8c2"],["#7a4a5e","#e8b84a","#4f6f9b","#c22a42"]];
+function prop(kind,x,y,c,c2){
+ const o='stroke="#0b0910" stroke-width="2.5" stroke-linejoin="round"';
+ if(kind===0)return '<rect x="'+(x-9)+'" y="'+(y-34)+'" width="18" height="34" rx="5" fill="'+c+'" '+o+'/><rect x="'+(x-4)+'" y="'+(y-46)+'" width="8" height="13" fill="'+c+'" '+o+'/><rect x="'+(x-8)+'" y="'+(y-24)+'" width="16" height="10" fill="'+c2+'" opacity=".8"/>';
+ if(kind===1)return '<rect x="'+(x-20)+'" y="'+(y-10)+'" width="40" height="10" fill="'+c+'" '+o+'/><rect x="'+(x-17)+'" y="'+(y-19)+'" width="36" height="9" fill="'+c2+'" '+o+'/><rect x="'+(x-19)+'" y="'+(y-28)+'" width="32" height="9" fill="'+c+'" '+o+'/>';
+ if(kind===2)return '<path d="M'+(x-11)+' '+(y-20)+'h22l-3 20h-16z" fill="'+c+'" '+o+'/><path d="M'+(x+11)+' '+(y-16)+'q9 2 2 11" fill="none" stroke="#0b0910" stroke-width="2.5"/>';
+ if(kind===3)return '<rect x="'+(x-17)+'" y="'+(y-28)+'" width="34" height="28" fill="'+c+'" '+o+'/><path d="M'+(x-17)+' '+(y-19)+'h34M'+x+' '+(y-28)+'v28" stroke="#0b0910" stroke-width="2" opacity=".6"/>';
+ if(kind===4)return '<rect x="'+(x-4)+'" y="'+(y-26)+'" width="8" height="26" fill="#efe6d0" '+o+'/><path d="M'+x+' '+(y-40)+'q6 8 3 12q-3 3 -6 0q-3 -4 3 -12z" fill="#ffc23a" stroke="#b34c00" stroke-width="1.5"/><ellipse cx="'+x+'" cy="'+y+'" rx="10" ry="3" fill="'+c+'" '+o+'/>';
+ if(kind===5)return '<rect x="'+(x-12)+'" y="'+(y-30)+'" width="24" height="30" rx="6" fill="'+c+'" fill-opacity=".85" '+o+'/><rect x="'+(x-10)+'" y="'+(y-36)+'" width="20" height="8" rx="2" fill="'+c2+'" '+o+'/>';
+ return '<ellipse cx="'+x+'" cy="'+(y-16)+'" rx="15" ry="16" fill="'+c+'" '+o+'/><ellipse cx="'+x+'" cy="'+(y-16)+'" rx="8" ry="9" fill="'+c2+'" opacity=".6"/>';
+}
+function clutter(c){
+ let x=9000+c*131;const r=()=>{x=(x*1103515245+12345)&0x7fffffff;return x/0x7fffffff;};
+ const spots=rooms[c].spots,rows={};let back="",front="";
+ for(const [sx,sy] of spots)(rows[sy]=rows[sy]||[]).push(sx);
+ for(const y in rows){
+  const xs=rows[y],lo=Math.max(40,Math.min(...xs)-34),hi=Math.min(660,Math.max(...xs)+34),n=Math.round((hi-lo)/(100-c*6))+1+c;
+  for(let i=0;i<n;i++){const px=lo+r()*(hi-lo),pal=CLUT[c];back+=prop(Math.floor(r()*7),px,+y+27,pal[Math.floor(r()*4)],pal[Math.floor(r()*4)]);}
+ }
+ // In later locations a few things are half behind something.
+ spots.forEach(([sx,sy],i)=>{if((i*7+c*3)%12<c*2+1){const pal=CLUT[c],side=i%2?1:-1;front+=prop([3,1,5,0][i%4],sx+side*(15-c),sy+29,pal[i%4],pal[(i+1)%4]);}});
+ return{back,front};
+}
 /* ---------- Bold icons: saturated colour, dark outline, a white shine. One hue per food so they read at a glance. ---------- */
 const K='stroke-linejoin="round" stroke-linecap="round"';
 const shine=(x,y,w,h,a)=>'<ellipse cx="'+x+'" cy="'+y+'" rx="'+w+'" ry="'+h+'" fill="#fff" opacity=".75" transform="rotate('+(a||-25)+' '+x+' '+y+')"/>';
@@ -126,7 +152,7 @@ const pipes=[
 ];
 root.FTWBonusThemes=Object.freeze({
  banner:c=>svg("0 0 400 130",banners[c](),"fw-banner-art"),
- room:c=>rooms[c],pipes:c=>pipes[c],count:banners.length,
+ room:c=>rooms[c],pipes:c=>pipes[c],count:banners.length,clutter,
  icon:id=>icons[id]?'<svg viewBox="-2 -2 68 68" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">'+icons[id]+'</svg>':null,iconBody:id=>icons[id]||null
 });
 })(typeof window!=="undefined"?window:{});
