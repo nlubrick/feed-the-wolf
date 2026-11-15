@@ -287,6 +287,16 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 .tile.premium-locked img{filter:grayscale(1) brightness(.42);opacity:.73}
 .tile.premium-locked span{color:#d1a76a}
 #qa-toggle{color:#ffe9a1;border:1px dashed #bd965c;border-radius:7px;background:#322544}
+
+.ftw-dev-panel{border:2px dashed #efbd67;border-radius:13px;background:#312241;color:#fff;display:grid;gap:9px;padding:11px 12px;font-size:13px}
+.ftw-dev-panel strong{font-family:var(--display);font-size:17px;color:#ffd985}
+.ftw-dev-panel .ftw-dev-row{display:flex;align-items:center;gap:9px;justify-content:space-between;flex-wrap:wrap}
+.ftw-dev-panel input[type=number]{width:68px;padding:6px;border-radius:7px;background:#1c1430;color:#fff;border:1px solid #ad8ad3}
+.ftw-dev-panel input[type=checkbox]{width:22px;height:22px;accent-color:#5be08a;vertical-align:middle}
+.ftw-dev-panel button{padding:7px 14px;min-height:36px}
+.ftw-dev-panel p{margin:0;color:#cdbfe0;line-height:1.3}
+.tile.ftw-premium-locked{opacity:.44;filter:grayscale(.95) saturate(.35)}
+.tile.ftw-premium-locked::before{content:"FULL GAME";position:absolute;top:4px;left:4px;right:4px;z-index:2;font:bold 9px var(--body);letter-spacing:.6px;color:#fff;text-shadow:0 2px 4px #000;text-align:center}
 </style>
 <script src="./studio-boot-v2.js" defer></script>
 </head>
@@ -298,6 +308,15 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
     <button class="wpill" id="wbtn" type="button"><img id="wface" alt=""><span>Wardrobe</span><span class="cnt"><i class="gem"></i><span id="gems2">0</span></span></button>
   </header>
 
+  <div id="dev-preview" class="ftw-dev-panel" hidden>
+    <strong>DEVELOPER PREVIEW · REMOVE BEFORE RELEASE</strong>
+    <div class="ftw-dev-row">
+      <label for="dev-full"><input id="dev-full" type="checkbox"> Preview FULL game</label>
+      <label for="dev-level">Level <input id="dev-level" type="number" min="1" max="100" value="1"></label>
+      <button class="quiet" id="dev-jump" type="button">Jump</button>
+    </div>
+    <p>Switch OFF to see the five-level demo and locked wardrobe. Switch ON to test all 100 levels. This is not a real purchase.</p>
+  </div>
   <div class="bar">
     <div class="level" id="level"></div>
     <div class="nav"><button id="prev" type="button" aria-label="Previous level">&#8249;</button><button id="next2" type="button" aria-label="Next level">&#8250;</button></div>
@@ -1803,6 +1822,34 @@ function frame(ts){
 const FREE_LEVEL_COUNT = 5;
 const FULL_UNLOCK_PRODUCT_ID = "feed_the_wolf_full_unlock";
 let fullGame = false, storeBusy = false, pendingUnlockTarget = null, entitlementReturnLevel = null;
+/* PRE-RELEASE TEST ONLY. Remove this panel and its logic before App Store submission.
+   Temporary preview control enabled only with ?dev=1 on the test branch. */
+const DEV_PREVIEW = new URLSearchParams(location.search).get("dev") === "1";
+let previewFull = false;
+function hasFullAccess(){ return DEV_PREVIEW ? previewFull : fullGame; }
+$("dev-preview").hidden = !DEV_PREVIEW;
+function setPreviewFull(on){
+  if(!DEV_PREVIEW)return;
+  previewFull=!!on;
+  $("dev-full").checked=previewFull;
+  if(!previewFull){
+    const target=Math.min(li,FREE_LEVEL_COUNT-1);
+    const reset=li!==target||daily||hardOn;
+    daily=false;hardOn=false;
+    if(reset){show("game");load(target,null,true);}
+  }
+  dressWolf();renderWardrobe();updateStoreButtons();
+}
+$("dev-full").addEventListener("change",e=>setPreviewFull(e.target.checked));
+$("dev-jump").addEventListener("click",()=>{
+  if(!DEV_PREVIEW)return;
+  const requested=Number($("dev-level").value);
+  const next=Math.max(1,Math.min(LEVELS.length,Math.round(requested||1)));
+  $("dev-level").value=String(next);
+  daily=false;
+  load(next-1,null,true);
+});
+$("dev-level").addEventListener("keydown",e=>{if(e.key==="Enter")$("dev-jump").click();});
 /* DEVELOPMENT ONLY. Must be false and removed before a production build.
    This is a QA preview, NOT a store entitlement or payment bypass for release. */
 const FTW_QA_PREVIEW = true;
