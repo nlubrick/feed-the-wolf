@@ -26,6 +26,16 @@ function at(number){return Number.isInteger(number)?stages[number-1]||null:null;
 function puzzleStage(index){return stages.find(s=>s.type==="puzzle"&&s.puzzleIndex===index)||null;}
 const registered={};
 function register(mode,factory){if(!modes.includes(mode)||typeof factory!=="function")throw Error("Invalid bonus game");registered[mode]=factory;}
+/* Original motifs: the Castle keeps its existing soundtrack, while four new
+   chapter motifs are reused (with different rhythms) in the optional bonus games. */
+const worldScores=[
+ {name:"Castle",root:69,bass:[45,43,45,40],motif:[0,3,7,4,3,2,0,7,3,2,0,-2,0,2,3,0],color:"triangle"},
+ {name:"Wizard's Tower",root:71,bass:[47,43,45,42],motif:[0,3,7,10,7,5,3,0,5,7,10,12,10,7,3,0],color:"sine"},
+ {name:"Clockwork Citadel",root:64,bass:[40,43,45,38],motif:[0,7,3,7,10,7,3,0,2,7,5,7,12,7,5,2],color:"square"},
+ {name:"Moonlit Conservatory",root:67,bass:[43,45,40,38],motif:[0,2,5,9,7,5,2,0,2,5,9,12,9,7,5,2],color:"sine"},
+ {name:"Ghostlight Theatre",root:68,bass:[44,39,42,40],motif:[0,3,6,10,6,3,1,0,3,6,10,13,10,6,3,-1],color:"triangle"}
+];
+const midiHz=m=>440*Math.pow(2,(m-69)/12);
 class Music{
  constructor(){this.ctx=null;this.interval=null;this.step=0;this.enabled=false;}
  start(mode,chapter,enabled){
@@ -49,19 +59,21 @@ class Music{
   }catch(e){}
  }
  tick(){
-  const i=this.step++%16,shift=this.chapter*2;
+  const i=this.step++%16,score=worldScores[this.chapter];
+  const root=score.root+score.motif[i];
+  // Each bonus is a subtle arrangement of its own chapter tune, not a new song.
   if(this.mode==="match"){
-   const riff=[0,4,7,12,9,7,4,7,0,5,9,12,9,5,7,4];
-   this.note(330*Math.pow(2,(riff[i]+shift)/12),.19,"triangle",.028);
-   if(i%4===0)this.note(165*Math.pow(2,shift/12),.28,"sine",.036);
+   this.note(midiHz(root+12),.18,score.color==="square"?"triangle":score.color,.033);
+   if(i%4===0)this.note(midiHz(score.bass[(i>>2)%4]),.3,"triangle",.035);
+   if(i%2===0)this.note(1450,.025,"sine",.009);
   }else if(this.mode==="pipes"){
-   this.note(i%2?660:900,.055,"square",i%4===0?.012:.006);
-   if(i%4===0)this.note(110*Math.pow(2,shift/12),.19,"triangle",.036);
-   if(i===7||i===15)this.note(230*Math.pow(2,shift/12),.13,"sawtooth",.017);
+   if(i%2===0)this.note(midiHz(root),.21,score.color,.031);
+   this.note(i%2?810:1130,.045,"square",i%4===0?.011:.006);
+   if(i%4===0)this.note(midiHz(score.bass[(i>>2)%4]),.25,"triangle",.033);
   }else{
-   const riff=[0,7,3,10,5,12,7,3,0,5,10,14,10,5,3,7];
-   this.note(247*Math.pow(2,(riff[i]+shift)/12),.44,"sine",.025);
-   if(i%4===0)this.note(124*Math.pow(2,shift/12),.65,"triangle",.012);
+   if(i%2===0)this.note(midiHz(root),.53,"sine",.023);
+   if(i%4===0)this.note(midiHz(score.bass[(i>>2)%4]),.64,"triangle",.016);
+   if(i===7||i===15)this.note(midiHz(root+7),.62,"sine",.014);
   }
  }
  fx(ok){
@@ -136,5 +148,5 @@ class Controller{
    '<button type="button" data-bonus-action="skip">Skip this stage</button></div>';
  }
 }
-root.FTWBonus=Object.freeze({stages,bonus,chapters,at,puzzleStage,register,mount:(node,cb)=>new Controller(node,cb)});
+root.FTWBonus=Object.freeze({stages,bonus,chapters,worldScores,at,puzzleStage,register,mount:(node,cb)=>new Controller(node,cb)});
 })(typeof window!=="undefined"?window:{});
