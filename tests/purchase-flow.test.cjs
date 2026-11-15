@@ -106,7 +106,7 @@ test("Progress reset preserves purchased gems; purchase reset preserves level pr
 });
 test("Test controls must be stripped for App Store release",()=>{
   const guard=fs.readFileSync(path.join(root,"scripts","check-release.cjs"),"utf8");
-  assert.match(guard,/test-store\.js/);
+  assert.match(guard,/test-store-v2\.js/);
   assert.match(guard,/id="developer/);
   assert.match(html,/TEST MODE · NO PAYMENT · NO APPLE CHARGE/);
   assert.match(html,/id="developer-open"/);
