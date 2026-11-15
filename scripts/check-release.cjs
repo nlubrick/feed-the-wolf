@@ -14,10 +14,10 @@ if(/const FTW_TEST_BUILD\s*=\s*true/.test(page) || /\bFTW_TEST_PURCHASE_KEY\b/.t
   errors.push("Remove simulated purchase and browser entitlement storage before the actual sale.");
 if(/id="developer-open"/.test(page) || /id="developer"/.test(page) || /id="developer-from-unlock"/.test(page))
   errors.push("Remove the beta developer button, reset console and test checkout UI.");
-if(page.includes("test-store.js") || page.includes('id="test-checkout"') || page.includes("function openFakeCheckout("))
+if(page.includes("test-store-v2.js") || page.includes('id="test-checkout"') || page.includes("function openFakeCheckout("))
   errors.push("Remove fake Store products, simulated checkout and mock receipt handling before selling.");
-if(fs.existsSync(path.join(root,"test-store.js")))
-  errors.push("Remove test-store.js from the release package.");
+if(fs.existsSync(path.join(root,"test-store-v2.js")))
+  errors.push("Remove test-store-v2.js from the release package.");
 if(!page.includes("result.verified !== true"))errors.push("Verified StoreKit entitlement check is missing.");
 if(!page.includes("const FREE_LEVEL_COUNT = 5"))errors.push("Five free levels gate is missing.");
 if(!fs.existsSync(path.join(root,"expansion-levels.js")))errors.push("Missing 60-level expansion.");
