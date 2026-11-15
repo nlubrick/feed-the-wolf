@@ -286,7 +286,6 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 .tile.premium-locked{opacity:.76;background:#171425;border-color:#665974}
 .tile.premium-locked img{filter:grayscale(1) brightness(.42);opacity:.73}
 .tile.premium-locked span{color:#d1a76a}
-#qa-toggle{color:#ffe9a1;border:1px dashed #bd965c;border-radius:7px;background:#322544}
 
 .ftw-dev-panel{border:2px dashed #efbd67;border-radius:13px;background:#312241;color:#fff;display:grid;gap:9px;padding:11px 12px;font-size:13px}
 .ftw-dev-panel strong{font-family:var(--display);font-size:17px;color:#ffd985}
@@ -345,7 +344,6 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
     <button class="linkish" id="hbtn" type="button">How to play</button>
     <button class="linkish" id="credits-btn" type="button">Credits</button>
     <button class="linkish" id="unlock-link" type="button">Full game</button>
-    <button class="linkish" id="qa-toggle" type="button" hidden aria-label="Development preview: change access mode">QA: Demo</button>
   </nav>
  </div>
 
@@ -1900,35 +1898,8 @@ $("dev-jump").addEventListener("click",()=>{
   load(next-1,null,true);
 });
 $("dev-level").addEventListener("keydown",e=>{if(e.key==="Enter")$("dev-jump").click();});
-/* DEVELOPMENT ONLY. Must be false and removed before a production build.
-   This is a QA preview, NOT a store entitlement or payment bypass for release. */
-const FTW_QA_PREVIEW = true;
-let qaFull = false, storeEntitled = false, qaReturn = null;
-function updateQaLabel(){
-  const b = $("qa-toggle");
-  b.hidden = !FTW_QA_PREVIEW;
-  if(FTW_QA_PREVIEW) b.textContent = qaFull ? "QA: Full → Demo" : "QA: Demo → Full";
-}
-function toggleQaMode(){
-  if(!FTW_QA_PREVIEW) return;
-  qaFull = !qaFull;
-  fullGame = storeEntitled || qaFull;
-  if(!fullGame && (li >= FREE_LEVEL_COUNT || daily)){
-    qaReturn = {index:li,daily:daily};
-    daily = false;
-    load(FREE_LEVEL_COUNT-1,null,true);
-    show("game");
-  }else if(fullGame){
-    if(pendingUnlockTarget) resumeUnlockedPlay();
-    else if(qaReturn){
-      const target=qaReturn;qaReturn=null;
-      daily=target.daily;load(target.index,null,true);show("game");
-    }
-  }
-  updateQaLabel();updateStoreButtons();renderWardrobe();
-}
-$("qa-toggle").addEventListener("click",toggleQaMode);
-updateQaLabel();
+/* The ONLY development preview is the restricted ?dev=1 test panel above.
+   Never expose this query-triggered preview mode in a production build. */
 /* iOS host must expose window.FeedTheWolfStore: async status(id), purchase(id),
    restore(id). It must verify a StoreKit 2 entitlement before returning
    {productId:id, verified:true, entitled:true, displayPrice?}.
@@ -1957,7 +1928,6 @@ function openUnlock(index,isDaily){
 }
 function acceptEntitlement(result){
   if (!result || result.productId !== FULL_UNLOCK_PRODUCT_ID || result.verified !== true || result.entitled !== true) return false;
-  storeEntitled = true;
   fullGame = true;
   if (typeof result.displayPrice === "string" && result.displayPrice.length < 48) $("unlock-price").textContent = result.displayPrice;
   updateStoreButtons(); return true;
