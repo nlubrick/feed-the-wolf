@@ -79,10 +79,15 @@
 .fw-blast{position:absolute;z-index:4;width:58%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#fff,#ffe14a 35%,#ff8a1a00 70%);animation:fw-blast .38s ease-out forwards;pointer-events:none}
 @keyframes fw-nope{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .fw-themed .fw-detective-art{filter:drop-shadow(0 2px 1px #0009)}
-.fw-camo-1 .fw-detective-item:not(.found) .fw-detective-art{filter:saturate(.8) brightness(.92);opacity:.96}
-.fw-camo-2 .fw-detective-item:not(.found) .fw-detective-art{filter:saturate(.62) brightness(.84);opacity:.92}
-.fw-camo-3 .fw-detective-item:not(.found) .fw-detective-art{filter:saturate(.48) brightness(.78) hue-rotate(-12deg);opacity:.88}
-.fw-camo-4 .fw-detective-item:not(.found) .fw-detective-art{filter:saturate(.38) brightness(.7) sepia(.25);opacity:.84}
+.fw-camo-1 .fw-detective-item:not(.found) .fw-detective-art{filter:saturate(.9) brightness(.96)}
+.fw-camo-2 .fw-detective-item:not(.found) .fw-detective-art{filter:saturate(.8) brightness(.92)}
+.fw-camo-3 .fw-detective-item:not(.found) .fw-detective-art{filter:saturate(.72) brightness(.88)}
+.fw-camo-4 .fw-detective-item:not(.found) .fw-detective-art{filter:saturate(.64) brightness(.84)}
+/* On a phone the room is shown tall and wider than the screen, so things are big enough to see; you swipe to look around. */
+.fw-bonus-play{min-width:0}
+.fw-detective-pan{max-width:calc(100vw - 36px);overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;border-radius:12px}
+.fw-pan-tip{display:none;margin:0 0 6px;text-align:center;font-size:12px;opacity:.85}
+@media(max-width:640px){.fw-detective-pan .fw-detective-scene{height:min(60vh,540px);width:calc(min(60vh,540px)*700/460);max-width:none}.fw-pan-tip{display:block}}
 .fw-themed .fw-detective-item:hover,.fw-themed .fw-detective-item:focus{filter:none}
 .fw-themed .fw-detective-item.found{opacity:1}
 .fw-detective-clock{font:900 15px var(--body);color:#17121f;background:var(--fw-accent);padding:6px 10px;border-radius:999px;min-width:52px;text-align:center}
@@ -110,12 +115,13 @@
 .fw-themed .fw-pipe-tile.flowing{border-color:var(--fw-flow);box-shadow:0 0 12px var(--fw-flow)}
 .fw-themed .fw-pipe-labels{text-shadow:0 1px 2px #000}
 /* pouring: each joint swells as the liquid reaches it; a leak shakes and glows red; the bowl glows when it arrives */
-@keyframes fw-pipe-new{from{transform:scale(1.22);filter:brightness(1.9)}to{transform:scale(1)}}
-.fw-pipe-tile.fw-pipe-new{animation:fw-pipe-new .2s ease-out;z-index:2}
+@keyframes fw-pipe-fill{from{stroke-dashoffset:30}to{stroke-dashoffset:0}}
+.fw-pipe-tile.fw-pipe-new .fw-flow-arm{stroke-dasharray:30;animation:fw-pipe-fill .32s linear both}
+.fw-pipe-tile.fw-pipe-new{z-index:2}
 @keyframes fw-pipe-spill{20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
 .fw-themed .fw-pipe-tile.fw-pipe-spill{animation:fw-pipe-spill .4s 2;border-color:#ff4d4d;box-shadow:0 0 16px #ff4d4d}
 @keyframes fw-pipe-fed{50%{transform:scale(1.14);filter:drop-shadow(0 0 12px var(--fw-flow))}}
-.fw-pipe-finish.fw-pipe-fed{animation:fw-pipe-fed .5s ease-in-out 2}
+.fw-pipe-finish.fw-pipe-fed{animation:fw-pipe-fed .6s ease-in-out 2}
 .fw-themed .fw-pipe-caption{background:#0008;border-radius:8px;padding:5px 8px}
 .fw-themed .fw-detective-scene{border-radius:12px}
 

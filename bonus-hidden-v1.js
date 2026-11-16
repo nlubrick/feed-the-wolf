@@ -62,7 +62,7 @@ function scene(chapter,found){
    ' data-object="'+item.id+'" aria-label="'+item.name+(complete?' found':'')+'" '+
    'transform="translate('+x+' '+y+')">'+
    '<circle r="'+(room?30:39)+'" fill="transparent" class="fw-detective-hit"/>'+
-   '<g class="fw-detective-art" transform="'+(room?'translate(0 '+(27-27*(.8-chapter*.05)).toFixed(1)+') rotate('+(((i*37+chapter*53)%50)-25)+') scale('+(.8-chapter*.05).toFixed(2)+') ':'')+'translate(-27 -27) scale(.85)">'+((root.FTWBonusThemes&&root.FTWBonusThemes.iconBody(item.id))||item.shape)+'</g>'+
+   '<g class="fw-detective-art" transform="'+(room?'translate(0 '+(27-27*(.95-chapter*.03)).toFixed(1)+') rotate('+(((i*37+chapter*53)%50)-25)+') scale('+(.95-chapter*.03).toFixed(2)+') ':'')+'translate(-27 -27) scale(.85)">'+((root.FTWBonusThemes&&root.FTWBonusThemes.iconBody(item.id))||item.shape)+'</g>'+
    (complete?'<circle r="32" fill="none" stroke="#9bf6ba" stroke-width="5" stroke-dasharray="6 5"/>':'')+
    '</g>';
  });
@@ -74,7 +74,7 @@ function mount(api){
  api.instructions("Find everything on the list before the clock runs out. Things are tucked in among the clutter. A wrong tap costs "+MISS_COST+" seconds.");
  api.message("The wolf has lost "+find.length+" things in this room. Look closely!");
  const clock=()=>{const el=api.hud.querySelector("[data-clock]");if(el){el.textContent=Math.max(0,Math.ceil(left))+"s";el.classList.toggle("low",left<=15);}};
- const timer=setInterval(()=>{if(!alive||over)return;left-=.25;clock();if(left<=0){over=true;api.sound(false);api.lose("Time ran out with "+(find.length-found.size)+" still hidden. They are smaller and duller than you expect: check behind the jars and boxes.");}},250);
+ const timer=setInterval(()=>{if(!alive||over)return;left-=.25;clock();if(left<=0){over=true;api.sound(false);api.lose("Time ran out with "+(find.length-found.size)+" still hidden. Swipe the room from end to end, and check behind the jars and boxes.");}},250);
  function miss(text){wrong++;left-=MISS_COST;clock();api.message(text);api.sound(false);const sc=api.play.querySelector("svg");if(sc){sc.classList.remove("fw-miss");void sc.getBoundingClientRect();sc.classList.add("fw-miss");}}
  function draw(){
   if(!alive)return;
@@ -82,7 +82,10 @@ function mount(api){
    const obj=shapes.find(o=>o.id===id);
    return '<span class="'+(found.has(id)?' done':'')+'">'+obj.name+(found.has(id)?' ✓':'')+'</span>';
   }).join('')+'<button type="button" class="fw-detective-hint" data-hint>Hint \u2212'+HINT_COST+'s</button></div>';
-  api.play.innerHTML=scene(c,found);clock();
+  const old=api.play.querySelector?api.play.querySelector(".fw-detective-pan"):null,at=old?old.scrollLeft:-1;
+  api.play.innerHTML='<p class="fw-pan-tip">\u2194 Swipe sideways to look around the room</p><div class="fw-detective-pan">'+scene(c,found)+'</div>';clock();
+  const pan=api.play.querySelector?api.play.querySelector(".fw-detective-pan"):null;      // keep the view where it was; start in the middle
+  if(pan)pan.scrollLeft=at>=0?at:Math.max(0,(pan.scrollWidth-pan.clientWidth)/2);
  }
  function choose(id){
   if(!alive||over||found.has(id))return;
@@ -96,6 +99,7 @@ function mount(api){
  function hint(){
   if(!alive||over)return;
   const id=find.find(t=>!found.has(t)),el=id&&api.play.querySelector('[data-object="'+id+'"]');if(!el)return;
+  if(el.scrollIntoView)el.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
   left-=HINT_COST;clock();el.classList.add("fw-hinted");api.tone(880,.2);
   api.message("Look where it is glowing. "+HINT_COST+" seconds spent.");
   setTimeout(()=>el.classList.remove("fw-hinted"),1800);
