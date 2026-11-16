@@ -102,7 +102,7 @@ test("Browser integrates play, skip, saved bonus status and five-level demo",()=
 test("The PWA app shell caches each mode, music and its responsive layout",()=>{
  const sw=fs.readFileSync(path.join(root,"service-worker.js"),"utf8");
  for(const f of sources.concat("bonus-style-v1.css","bonus-themes-v1.css"))assert.ok(sw.includes(f),f+" missing from cache");
- assert.match(sw,/ftw-install-v20/);
+ assert.match(sw,/ftw-install-v21/);
  assert.match(page,/id="bonus-root"/);
 });
 
@@ -193,4 +193,11 @@ test("Feast Match: four in a square is a match and earns a Wolf Howl",()=>{
  assert.ok(f.runs.some(q=>q.length>=4),"counts as a big match, so it makes a Howl");
  for(const i of [14,15,20,21])assert.ok(f.matches.has(i));
  for(let seed=1;seed<=60;seed++){const b=r.makeGrid(seed*37);assert.equal(r.find(b).matches.size,0,"new boards start with no ready-made lines or squares");assert.ok(r.possible(b));}
+});
+
+test("Mini-game sound comes back after the app has been in the background",()=>{
+ const src=fs.readFileSync(path.join(root,"bonus-levels-v1.js"),"utf8");
+ assert.match(src,/wake\(\)\{/);
+ assert.match(src,/\["pointerdown","touchend","click"\]\)this\.node\.addEventListener\(type,\(\)=>this\.music\.wake\(\),true\)/,"every tap in a mini-game must be able to restart audio");
+ assert.doesNotMatch(page,/actx\.state === "suspended"/,"the main game must also resume from iOS's interrupted state");
 });
