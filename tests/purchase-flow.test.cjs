@@ -112,3 +112,25 @@ test("Test controls must be stripped for App Store release",()=>{
   assert.match(html,/TEST MODE · NO PAYMENT · NO APPLE CHARGE/);
   assert.match(html,/id="developer-open"/);
 });
+test("Location trophies are earned, never bought, and every fifth level pays a gem bonus",()=>{
+  const OUTFITS=vm.runInNewContext(fragment("const OUTFITS = [","/* Pets: small companions")+"\nOUTFITS");
+  const trophies=OUTFITS.filter(o=>o.trophy!=null);
+  assert.deepEqual(Array.from(trophies,o=>o.trophy).sort(),[0,1,2,3,4]);           // one per location
+  assert.equal(OUTFITS.filter(o=>"level" in o||"hard" in o).length,0);              // no other free level or Hard Mode prizes
+  assert.equal(OUTFITS.filter(o=>o.slot==="pet").length,16);
+  assert.match(html,/if\(o\.trophy!=null\)\{testToast\(/);                           // the Store refuses to sell a trophy
+  const run=(cleared,stars)=>{const ctx={owned:{},worn:{},gems:0,cleared,stars,dailyDone:{},hints:0,gemUnlocked:{},OUTFITS,mockGemCredits:()=>0,bonusEarnedGems:()=>0};
+    const got=economy(ctx)();return {ctx,got};};
+  let r=run({0:true,1:true,2:true,3:true},{0:3,1:3,2:3,3:3});
+  assert.equal(r.ctx.gems,12);assert.equal(r.got,null);
+  r=run({0:true,1:true,2:true,3:true,4:true},{0:3,1:3,2:3,3:3,4:3});
+  assert.equal(r.ctx.gems,25);                                                       // 15 stars + 10 bonus
+  assert.deepEqual(Object.keys(r.ctx.owned),["wolf"]);                                // gems, not an item
+  r=run({19:true},{});assert.equal(r.got.id,"crown");assert.equal(r.ctx.gems,10);
+  r=run({"99h":true},{"99h":3});assert.equal(r.got.id,"marquee");assert.equal(r.ctx.gems,21); // 6 stars + 15 hard bonus
+  // A full normal and hard run plus mini-games comes within a month of daily puzzles of buying the whole Store.
+  const price=getPrice(),store=OUTFITS.filter(o=>!o.free&&o.trophy==null).reduce((t,o)=>t+price(o),0);
+  const all={},st={};for(let i=0;i<100;i++){all[i]=all[i+"h"]=true;st[i]=st[i+"h"]=3;}
+  r=run(all,st);
+  assert.ok(store-(r.ctx.gems+135)<=5*31,"Store "+store+" vs earned "+(r.ctx.gems+135));
+});
