@@ -1,7 +1,7 @@
 "use strict";
 const test=require("node:test"),assert=require("node:assert/strict"),fs=require("node:fs"),path=require("node:path"),os=require("node:os"),vm=require("node:vm"),sharp=require("sharp");
 const root=path.resolve(__dirname,".."),page=fs.readFileSync(path.join(root,"index.html"),"utf8");
-test("native iOS icon is generated from the full resolution wolf SVG after Capacitor generates the project",async()=>{
+test("native iOS icon matches the FTW Dev wolf artwork after Capacitor generates the project",async()=>{
  const {writeIosIcon}=require("../scripts/ios-app-icon.cjs");
  const version=fs.readFileSync(path.join(root,"scripts/set-app-version.cjs"),"utf8");
  assert.match(version,/if\(platform==="ios"\)await require\("\.\/ios-app-icon\.cjs"\)\.writeIosIcon\(\)/);
@@ -12,6 +12,7 @@ test("native iOS icon is generated from the full resolution wolf SVG after Capac
   fs.copyFileSync(path.join(root,"feed-the-wolf-icon.svg"),path.join(web,"feed-the-wolf-icon.svg"));
   let output=await writeIosIcon({project:path.join(tmp,"App"),web});
   assert.equal(output.tester,false);
+  assert.match(output.source,/index\.html$/);
   let meta=await sharp(output.destination).metadata();
   assert.equal(meta.width,1024);assert.equal(meta.height,1024);assert.equal(meta.hasAlpha,false);
   assert.equal(meta.channels,3);
@@ -22,7 +23,9 @@ test("native iOS icon is generated from the full resolution wolf SVG after Capac
   fs.writeFileSync(path.join(web,"feed-the-wolf-beta-icon.svg"),svg.replace("</svg>",'<text x="256" y="455">BETA</text></svg>'));
   output=await writeIosIcon({project:path.join(tmp,"App"),web});
   assert.equal(output.tester,true);
-  assert.match(output.source,/beta-icon\.svg$/);
+  assert.match(output.source,/index\.html$/);
+  const ordinary=await sharp(Buffer.from(fs.readFileSync(path.join(root,"index.html"),"utf8").match(/<link rel="apple-touch-icon" href="data:image\/png;base64,([^"]+)">/)[1],"base64")).resize(1024,1024).flatten({background:"#292052"}).raw().toBuffer();
+  assert.ok(ordinary.length>0);
   assert.notDeepEqual(await fs.promises.readFile(output.destination),Buffer.alloc(0));
  }finally{fs.rmSync(tmp,{recursive:true,force:true});}
 });
@@ -52,4 +55,16 @@ test("game SFX context is discarded on iOS background and recreated on the first
  window.__feStudioIntroActive=true;docs.pointerdown();assert.equal(made,3,"FE studio intro must not acquire game audio");
  window.__feStudioIntroActive=false;
  document.hidden=true;docs.visibilitychange();document.hidden=false;docs.touchend();assert.equal(made,4);
+ wins.blur();assert.equal(closed,4,"app switching also tears down audio when WKWebView has no visibilitychange");
+ wins.focus();docs.click();assert.equal(made,5,"first post-focus tap rebuilds the SFX audio context");
+ wins.pageshow();docs.pointerdown();assert.equal(made,6);
+});
+
+test("portrait castle uses actual free stage area and reserves fixed actions and footer",()=>{
+ assert.match(page,/function fitCastleToScreen\(\)\{/);
+ assert.match(page,/const freeH=stage\.clientHeight-/);
+ assert.match(page,/Math\.min\(stage\.clientWidth,lv\.cols\*136,freeH\*lv\.cols\/lv\.rows\)/);
+ assert.match(page,/\.wrap:has\(> #game:not\(\[hidden\]\)\)\{height:100dvh/);
+ assert.match(page,/#game \.stage\{flex:1 1 0;min-height:0;align-items:center\}/);
+ assert.match(page,/#game \.btns,#game \.footer-links\{flex-shrink:0\}/);
 });
