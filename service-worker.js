@@ -1,5 +1,5 @@
 /* App shell cache for Feed the Wolf. Navigations use network-first for fresh releases. */
-const VERSION="ftw-install-v18";
+const VERSION="ftw-install-v19";
 const CORE=["./","./index.html","./expansion-levels.js","./test-store-v2.js","./bonus-style-v1.css","./bonus-themes-v1.css","./bonus-themes-v1.js","./bonus-levels-v1.js","./bonus-match-v1.js","./bonus-pipes-v1.js","./bonus-hidden-v1.js","./world-music-v1.js","./studio-boot-v2.js","./studio-credits-roll-v2.js","./failure-entertainment-intro-v2.html","./manifest.webmanifest","./feed-the-wolf-icon.svg"];
 self.addEventListener("install",event=>{
  event.waitUntil(caches.open(VERSION).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()));
