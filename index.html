@@ -2434,15 +2434,14 @@ function load(index, replay, fresh){
   if (!daily) save();  // Preserve current level when the home-screen app is closed.
   calm = 0;
   if (s.status !== "play"){ busy = true; showResult(false); }
-  else if (!daily && !replay && li > 0 && li % 5 === 0 && !seen[li]){ seen[li] = true; save(); reveal(); }
+  else if (!daily && !replay && li > 0 && li % 20 === 0 && !seen[li]){ seen[li] = true; save(); reveal(); }   // only on arriving at a new location, where a new mechanic starts
   if(!$("game").hidden)musicStart();
 }
 function reveal(){                                  // a moment for reaching somewhere new
   const el = document.createElement("div"), extra = [];
-  if (li % 20 === 0) extra.push(locationFor(li).story);
-  for (const o of OUTFITS) if (o.from === li + 1) extra.push("The " + o.name.toLowerCase() + " can now be unlocked in the Store.");
+  extra.push(locationFor(li).story);   // (No "now unlockable in the Store" line: every Store item can be bought with gems from the start.)
   el.className = "result win reveal"; el.setAttribute("role", "status");
-  el.innerHTML = "<p>" + (li % 20 === 0 ? "New location" : "New wing") + "</p><h2>" + (li % 20 === 0 ? locationFor(li).name : wing(li).name) + "</h2>" + extra.map(t => "<p>" + t + "</p>").join("") + '<button class="go" id="go" type="button">In we go</button>';
+  el.innerHTML = "<p>New location</p><h2>" + locationFor(li).name + "</h2>" + extra.map(t => "<p>" + t + "</p>").join("") + '<button class="go" id="go" type="button">In we go</button>';
   board.appendChild(el); busy = true; sfx("win");
   if (!reduce){ board.classList.remove("morph"); void board.offsetWidth; board.classList.add("morph"); for (const r of lv.rooms) starBurst(r.x*U+50, r.y*U+50, 3, 4.5, 260); }
 }
