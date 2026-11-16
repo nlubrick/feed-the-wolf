@@ -102,7 +102,7 @@ test("Browser integrates play, skip, saved bonus status and five-level demo",()=
 test("The PWA app shell caches each mode, music and its responsive layout",()=>{
  const sw=fs.readFileSync(path.join(root,"service-worker.js"),"utf8");
  for(const f of sources.concat("bonus-style-v1.css","bonus-themes-v1.css"))assert.ok(sw.includes(f),f+" missing from cache");
- assert.match(sw,/ftw-install-v16/);
+ assert.match(sw,/ftw-install-v17/);
  assert.match(page,/id="bonus-root"/);
 });
 
@@ -142,4 +142,21 @@ test("Pantry Panic: the Test Flow button in the HUD actually pours",()=>{
  assert.equal(won,true,"a solved board must win when poured");
  assert.doesNotMatch(api.play.innerHTML,/BOILER|SOUP POT|WOLF'S BOWL/);
  game.destroy();assert.equal(api.hud.on.click,undefined);
+});
+
+test("Location tracks are about a minute, never clip, and loop without a seam",()=>{
+ const {FTWBonus,FTWWorldMusic}=setup();
+ for(let chapter=1;chapter<5;chapter++)for(const hard of [false,true]){
+  const wav=FTWWorldMusic.render(chapter,hard,FTWBonus.worldScores),n=(wav.byteLength-44)/2,secs=n/22050;
+  assert.ok(secs>45&&secs<95,"chapter "+chapter+" is "+secs.toFixed(0)+"s");
+  let peak=0,jump=0;const v=i=>wav.getInt16(44+((i+n)%n)*2,true);
+  for(let i=0;i<n;i++){peak=Math.max(peak,Math.abs(v(i)));}
+  assert.ok(peak<32000,"no clipping");
+  // the step from the last sample to the first must be no bigger than ordinary steps inside the track
+  for(let i=1000;i<n-1000;i+=97)jump=Math.max(jump,Math.abs(v(i)-v(i-1)));
+  assert.ok(Math.abs(v(0)-v(-1))<=jump,"chapter "+chapter+" clicks at the loop point");
+  // and the join must not be a hole: the half second either side of it is as loud as the track on average
+  const rms=(from,len)=>{let q=0;for(let i=0;i<len;i++){const x=v(from+i);q+=x*x;}return Math.sqrt(q/len);};
+  assert.ok(rms(-11025,22050)>rms(0,n)*.45,"chapter "+chapter+" goes quiet at the loop point");
+ }
 });
