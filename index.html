@@ -2002,7 +2002,6 @@ function draw(now){
   drawDoors(); drawSaws(); drawSprings(); drawPortals(now); drawGadgets(now);
   const order = actors.slice().sort((a,b) => ORDER[a.kind] - ORDER[b.kind]);
   for (const a of order) drawActor(a, now);
-  drawPet(now);
   if (hasW){ ctx.globalAlpha = .8; ctx.drawImage(mb[1].c, 0, 0, W, H); ctx.globalAlpha = 1; }
   if (hasL){
     ctx.drawImage(mb[0].c, 0, 0, W, H);
@@ -2010,6 +2009,8 @@ function draw(now){
     ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .55; ctx.drawImage(halo.c, 0, 0, W, H); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
     if (Math.random() < .25){ const live = parts.filter(p => !p.dead && p.k === 0); const p = live[Math.random()*live.length | 0]; if (p) fx.push({t:"ember", x:p.x, y:p.y-6, vx:(Math.random()-.5)*16, vy:-30-Math.random()*40, life:.9, max:.9, r:1+Math.random()}); }
   }
+  // Companions stay in front of the fluid's translucent overlays (a small sprite was otherwise washed out).
+  drawPet(now);
   ctx.restore();
   // gates sit in the walls, which the room clip above leaves out, so they are drawn after it is lifted
   P.gadgets.forEach((g,j)=>drawGadgetGate(g,j,now,g.kind==="gear"?"#f8bd54":g.kind==="bloom"?"#76efa9":"#b5a2ff"));
@@ -2161,7 +2162,12 @@ function goToCampaignStage(number){
  if(bonusController.stage)bonusController.close();
  daily=false;show("game");
  const ok=load(stage.puzzleIndex,null,true);
- if(ok)save();
+ if(ok){
+  save();
+  // A mini-game exits inside its own click handler; the global capture listener fired while bonus was visible.
+  // Restart the puzzle soundtrack right now, within that same user gesture, for iPhone/Safari.
+  if(musicOn)musicStart();
+ }
  return ok;
 }
 const bonusController=window.FTWBonus.mount($("bonus-root"),{
@@ -2742,9 +2748,11 @@ function updPet(dt){                                // the pet trails the wolf a
 function drawPet(now){
   const im = IMG.pet;
   if (!im || !pet.on || pet.hide || !im.complete || !im.naturalWidth) return;
-  const fly = worn.pet === "bat", hop = fly ? 17 + Math.sin(now * 4) * 3 : Math.abs(Math.sin(now * (pet.joy ? 9 : 4.5) + 1)) * (pet.joy ? 8 : 2.5), sz = 25;
+  const fly = worn.pet === "bat", hop = fly ? 17 + Math.sin(now * 4) * 3 : Math.abs(Math.sin(now * (pet.joy ? 9 : 4.5) + 1)) * (pet.joy ? 8 : 2.5), sz = 29;
   ctx.fillStyle = "rgba(0,0,0,.32)"; ctx.beginPath(); ctx.ellipse(pet.x, pet.y + 1.5, fly ? 6 : 8.5, 2.4, 0, 0, 6.3); ctx.fill();
-  ctx.save(); ctx.translate(pet.x, pet.y + 2 - hop); ctx.scale(pet.face || 1, 1); ctx.drawImage(bmp(im) || im, -sz/2, -sz, sz, sz); ctx.restore();
+  ctx.save(); ctx.translate(pet.x, pet.y + 2 - hop); ctx.scale(pet.face || 1, 1);
+  ctx.shadowColor = "rgba(255,232,167,.65)"; ctx.shadowBlur = 3;
+  ctx.drawImage(bmp(im) || im, -sz/2, -sz, sz, sz); ctx.restore();
 }
 /* Gems are worked out from what has been earned and bought, so they can never drift: a gem per star (two on hard),
    a bonus every fifth level (bigger on hard), minus hints, minus the price of everything bought. The five location trophies are handed over for finishing a
