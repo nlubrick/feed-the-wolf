@@ -16,18 +16,19 @@ function firefly(api){
  while(thorns.length<C.thorns){const x=30+rand()*(W-60),y=60+rand()*(H-120);if(free(x,y,24)&&Math.hypot(x-W/2,y-H+50)>90&&!thorns.some(t=>Math.hypot(t.x-x,t.y-y)<70))thorns.push({x,y});}
  const spawn=()=>{for(let k=0;k<40;k++){const x=24+rand()*(W-48),y=30+rand()*(H-70);if(Math.hypot(x-P.x,y-P.y)>130){flies.push({x,y,ph:rand()*TAU,vx:0,vy:0,born:.4});return;}}};
  const P={x:W/2,y:H-50,face:1,walk:0};
- let state="ready",fuel=100,got=0,inv=0,tx=P.x,ty=P.y,moving=false,dark=null,dctx=null;
+ let state="ready",fuel=100,got=0,inv=0,moving=false,dark=null,dctx=null,ox=0,oy=0,jx=0,jy=0;
  for(let i=0;i<4;i++)spawn();
  const K=A.kit(api,{label:"Firefly Chase",
-  down(px,py){if(K.over)return;if(state==="ready"){state="play";api.message("Chase them down before the lantern dies!");}tx=px;ty=py-34;moving=true;},
-  move(px,py){tx=px;ty=py-34;},
-  up(){moving=false;},
+  down(px,py){if(K.over)return;if(state==="ready"){state="play";api.message("Chase them down before the lantern dies!");}ox=px;oy=py;jx=jy=0;moving=true;},
+  // A thumb-stick that appears wherever you touch: the wolf goes the way you push from that spot, so your hand can stay out of the way.
+  move(px,py){let dx=px-ox,dy=py-oy;const d=Math.hypot(dx,dy);if(d>44){ox=px-dx/d*44;oy=py-dy/d*44;dx=px-ox;dy=py-oy;}jx=dx/44;jy=dy/44;},
+  up(){moving=false;jx=jy=0;},
   update(dt,t){
    if(state!=="play")return;
    inv=Math.max(0,inv-dt);fuel-=C.burn*dt;
    if(moving&&inv<.65){
-    const dx=tx-P.x,dy=ty-P.y,d=Math.hypot(dx,dy);
-    if(d>3){const s=Math.min(d,C.speed*dt);P.x+=dx/d*s;P.y+=dy/d*s;P.walk+=dt*10;if(Math.abs(dx)>2)P.face=dx>0?1:-1;}
+    const d=Math.hypot(jx,jy);
+    if(d>.16){const s=C.speed*Math.min(1,d*1.25)*dt;P.x+=jx/d*s;P.y+=jy/d*s;P.walk+=dt*10;if(Math.abs(jx)>.1)P.face=jx>0?1:-1;}
    }
    P.x=clamp(P.x,14,W-14);P.y=clamp(P.y,26,H-10);
    for(const h of HEDGES){   // push the wolf (a circle at his feet) out of each hedge
@@ -71,11 +72,12 @@ function firefly(api){
    for(const f of flies){const a=f.born>0?1-f.born/.4:1,pulse=.6+.4*Math.sin(f.ph*6);ctx.fillStyle="rgba(217,255,122,"+(.22*a*pulse)+")";ctx.beginPath();ctx.arc(f.x,f.y,13,0,TAU);ctx.fill();ctx.fillStyle="rgba(240,255,170,"+a+")";ctx.beginPath();ctx.arc(f.x,f.y,3.2,0,TAU);ctx.fill();
     ctx.strokeStyle="rgba(255,255,255,"+(.5*a)+")";ctx.lineWidth=1;const wv=Math.sin(f.ph*40)*3;ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.x-5,f.y-4+wv);ctx.moveTo(f.x,f.y);ctx.lineTo(f.x+5,f.y-4-wv);ctx.stroke();}
    K.drawParts();
+   if(moving&&state==="play"){ctx.strokeStyle="rgba(255,255,255,.35)";ctx.lineWidth=2;ctx.beginPath();ctx.arc(ox,oy,44,0,TAU);ctx.stroke();ctx.fillStyle="rgba(255,255,255,.4)";ctx.beginPath();ctx.arc(ox+jx*44,oy+jy*44,16,0,TAU);ctx.fill();}
    ctx.fillStyle="#0008";rr(ctx,70,10,220,8,4);ctx.fill();ctx.fillStyle=fuel<25?"#ff7b7b":"#ffe07a";rr(ctx,70,10,220*clamp(fuel/100,0,1),8,4);ctx.fill();
    K.hearts(0,"Fireflies "+got+" / "+C.goal+" · lantern "+Math.ceil(fuel)+"%");
-   if(state==="ready")K.banner("Touch to start","Hold and drag · he walks to your finger");
+   if(state==="ready")K.banner("Touch to start","Touch anywhere and push the way to go");
   }});
- api.instructions("Hold your finger on the garden and the wolf walks toward it. Catch the fireflies before the lantern burns out. Each one tops it up; thorns spill it.");
+ api.instructions("Touch anywhere and push your thumb the way you want the wolf to go, like a joystick. Keep your hand in a corner. Catch the fireflies before the lantern burns out. Each one tops it up; thorns spill it.");
  api.message("They flee when he gets close. Herd them into a corner.");
  return{destroy(){K.destroy();},preview:()=>({state,got,fuel,x:P.x,y:P.y,flies:flies.map(f=>({x:f.x,y:f.y}))})};
 }

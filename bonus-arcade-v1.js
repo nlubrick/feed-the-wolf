@@ -141,12 +141,13 @@ function dash(api){
 function catchGame(api){
  const hard=api.hard,e=api.ease||0;
  const C={goal:hard?34:22,time:hard?52:48,lives:(hard?3:3)+e,fall:(hard?150:118)-e*10,potion:(hard?.34:.24)-e*.05,every:hard?.5:.66};
- const FOODS=["apple","cheese","fish","berries","mushroom"],GY=H-30;
- let state="ready",x=W/2,tx=W/2,lives=C.lives,got=0,left=C.time,spawn=.4,inv=0,gulp=0,sick=0,combo=0,face=1;
+ const FOODS=["apple","cheese","fish","berries","mushroom"],GY=H-92;   // the floor is raised: the strip under it is for the thumb
+ let lastPx=0,state="ready",x=W/2,tx=W/2,lives=C.lives,got=0,left=C.time,spawn=.4,inv=0,gulp=0,sick=0,combo=0,face=1;
  const rand=rng(4242+(hard?5:0)),items=[],splats=[];
  const K=kit(api,{label:"Catch the Feast",
-  down(px){if(K.over)return;if(state==="ready"){state="play";api.message("Catch the food. Dodge the potions!");}tx=px;},
-  move(px){tx=px;},
+  // Slide anywhere: he moves as far as the thumb does (and a little more), so the thumb never has to sit on top of him.
+  down(px){if(K.over)return;if(state==="ready"){state="play";api.message("Catch the food. Dodge the potions!");}lastPx=px;tx=x;},
+  move(px){tx=clamp(tx+(px-lastPx)*1.45,24,W-24);lastPx=px;},
   update(dt,t){
    if(state!=="play")return;
    inv=Math.max(0,inv-dt);gulp=Math.max(0,gulp-dt);sick=Math.max(0,sick-dt);left-=dt;
@@ -182,6 +183,9 @@ function catchGame(api){
    for(const sx of [18,W-98]){ctx.fillStyle="#5a3a2a";ctx.fillRect(sx,150,80,7);ctx.fillRect(sx,230,80,7);for(let k=0;k<4;k++){ctx.fillStyle=["#8b5cf6","#4fc3a1","#e0607e","#e8b84a"][(k+(sx>100?2:0))%4];rr(ctx,sx+6+k*18,150-18-(k%2)*5,12,18+(k%2)*5,3);ctx.fill();rr(ctx,sx+8+k*18,230-22+(k%2)*6,12,22-(k%2)*6,3);ctx.fill();}}
    for(let i=0;i<5;i++){const cx=30+i*76,cy=22+Math.sin(t*1.3+i*2)*6;ctx.fillStyle="#f4ead2";ctx.fillRect(cx-3,cy,6,14);ctx.fillStyle="#ffb93c";ctx.beginPath();ctx.ellipse(cx,cy-4,3,5.5+Math.sin(t*10+i),0,0,TAU);ctx.fill();ctx.fillStyle="#ffb93c22";ctx.beginPath();ctx.arc(cx,cy-3,14,0,TAU);ctx.fill();}
    ctx.fillStyle="#4a3766";ctx.fillRect(0,GY,W,H-GY);ctx.fillStyle="#6a5490";ctx.fillRect(0,GY,W,4);
+   // thumb strip
+   ctx.fillStyle="#241a3c";rr(ctx,10,GY+16,W-20,H-GY-26,16);ctx.fill();ctx.strokeStyle="#7a63b855";ctx.lineWidth=2;ctx.stroke();
+   ctx.fillStyle="rgba(246,233,220,"+(K.held?.25:.55+.2*Math.sin(t*3))+")";ctx.font="700 13px system-ui,sans-serif";ctx.textAlign="center";ctx.fillText("◀   slide your thumb here   ▶",W/2,GY+16+(H-GY-26)/2+5);
    for(const s of splats){ctx.globalAlpha=Math.min(1,s.t);ctx.fillStyle=s.bad?"#8b5cf6":"#b98152";ctx.beginPath();ctx.ellipse(s.x,GY+3,12,3.5,0,0,TAU);ctx.fill();}ctx.globalAlpha=1;
    for(const it of items){
     if(it.gold){ctx.fillStyle="#ffd76a44";ctx.beginPath();ctx.arc(it.x,it.y,22+Math.sin(t*8)*3,0,TAU);ctx.fill();}
@@ -196,11 +200,11 @@ function catchGame(api){
    K.drawParts();
    ctx.fillStyle="#0008";rr(ctx,70,10,220,8,4);ctx.fill();ctx.fillStyle=left<10?"#ff7b7b":"#9fd6ff";rr(ctx,70,10,220*clamp(left/C.time,0,1),8,4);ctx.fill();
    K.hearts(lives,"Caught "+got+" / "+C.goal);
-   if(state==="ready")K.banner("Touch to start","Drag left and right · catch food, dodge potions");
+   if(state==="ready")K.banner("Touch to start","Slide your thumb along the bottom strip");
   }});
- api.instructions("Drag anywhere to slide the wolf under the falling food. Catch enough before the time runs out, and let the corked potions drop past.");
+ api.instructions("Slide your thumb along the strip at the bottom and the wolf slides with it. Catch enough food before the time runs out, and let the corked potions drop past.");
  api.message("A golden roast counts for three.");
- return{destroy(){K.destroy();},preview:()=>({state,got,lives,x,items:items.map(i=>({x:i.x,y:i.y,bad:i.bad}))})};
+ return{destroy(){K.destroy();},preview:()=>({state,got,lives,x,tx,items:items.map(i=>({x:i.x,y:i.y,bad:i.bad}))})};
 }
 
 /* ---------- Gear Jump (Clockwork Citadel): tap to leap from gear to spinning gear ---------- */
