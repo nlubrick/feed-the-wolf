@@ -60,11 +60,13 @@ class Music{
  start(mode,chapter,enabled){
   this.stop();this.mode=mode;this.chapter=chapter;this.step=0;this.enabled=!!enabled;
   if(!this.enabled)return;
+  this.pace=pace[mode]||"hidden";
   try{
    const AC=root.AudioContext||root.webkitAudioContext;if(!AC)return;
-   this.ctx=new AC();if(this.ctx.state==="suspended")this.ctx.resume().catch(()=>{});
+   // Reuse one AudioContext across bonus stages. Repeated close/new cycles lose audio on iOS.
+   if(!this.ctx||this.ctx.state==="closed")this.ctx=new AC();
+   if(this.ctx.state!=="running"){const p=this.ctx.resume();if(p?.catch)p.catch(()=>{});}
    this.tick();
-   this.pace=pace[mode]||"hidden";
    this.interval=setInterval(()=>this.tick(),this.pace==="match"?205:this.pace==="pipes"?255:330);
   }catch(e){this.stop();}
  }
@@ -124,7 +126,8 @@ class Music{
  }
  stop(){
   if(this.interval)clearInterval(this.interval);this.interval=null;
-  const c=this.ctx;this.ctx=null;if(c)try{c.close()}catch(e){}
+  this.enabled=false;
+  // Do not close the context between stages; subsequent stages reuse the same iOS audio session.
  }
 }
 class Controller{
