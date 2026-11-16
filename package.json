@@ -23,6 +23,7 @@
     "@capacitor/core": "^8.6.2",
     "@capacitor/ios": "^8.6.2",
     "@capacitor/preferences": "^8.0.1",
-    "@revenuecat/purchases-capacitor": "^14.1.0"
+    "@revenuecat/purchases-capacitor": "^14.1.0",
+    "sharp": "^0.34.0"
   }
 }

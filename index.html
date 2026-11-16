@@ -2935,13 +2935,31 @@ $("hintb").addEventListener("click", toggleHint);
 /* ---------- sound effects: small synthesised sounds through Web Audio ---------- */
 let actx = null, noiseB = null, sfxOn = true, lastHiss = 0;
 try { sfxOn = localStorage.getItem("ftw-sfx") !== "off"; } catch (e) {}
+// iOS can permanently interrupt Web Audio after app switching even while HTML audio music works.
+// Close and discard this short-lived SFX context on backgrounding. The next in-game tap creates
+// a clean context within a user gesture, without touching the soundtrack or saved sound setting.
+function sfxDispose(){
+  const old=actx;actx=null;noiseB=null;
+  if(old&&old.state!=="closed"){
+    try{const p=old.close();if(p?.catch)p.catch(()=>{});}catch(e){}
+  }
+}
 function sfxInit(){
-  if (actx || !sfxOn) return;
-  try {
-    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-    actx = new AC(); noiseB = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
-    const ch = noiseB.getChannelData(0); for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
-  } catch (e) { actx = null; }
+  if(!sfxOn||document.hidden||window.__feStudioIntroActive)return;
+  if(actx&&actx.state!=="closed"&&actx.state!=="interrupted")return;
+  if(actx)sfxDispose();
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    actx=new AC();noiseB=actx.createBuffer(1,actx.sampleRate,actx.sampleRate);
+    const ch=noiseB.getChannelData(0);for(let i=0;i<ch.length;i++)ch[i]=Math.random()*2-1;
+  }catch(e){sfxDispose();}
+}
+function sfxWake(){
+  if(!sfxOn||document.hidden||window.__feStudioIntroActive)return;
+  sfxInit();
+  if(actx&&actx.state==="suspended"){
+    try{const p=actx.resume();if(p?.catch)p.catch(()=>{});}catch(e){sfxDispose();}
+  }
 }
 function tone(type, f0, f1, dur, vol, delay){
   const t = actx.currentTime + (delay || 0), o = actx.createOscillator(), g = actx.createGain();
@@ -2973,9 +2991,15 @@ const SFX = {
   lose(){ [392, 330, 262, 196].forEach((f,i) => tone("triangle", f, 0, .32, .22, i * .15)); },
   morph(){ tone("sawtooth", 70, 700, .55, .16); hush(.6, .35, "lowpass", 1400, .25); tone("sine", 160, 35, .6, .5, .3); }
 };
-function sfx(name, arg){
-  if (!sfxOn || !actx) return;
-  try { if (actx.state !== "running") actx.resume(); SFX[name](arg); } catch (e) {}   // iOS reports "interrupted", not "suspended", after you leave the app
+function sfx(name,arg){
+  if(!sfxOn||document.hidden||window.__feStudioIntroActive)return;
+  sfxInit();
+  if(!actx)return;
+  try{
+    if(actx.state==="suspended"){const p=actx.resume();if(p?.catch)p.catch(()=>{});}
+    if(actx.state==="interrupted"||actx.state==="closed"){sfxDispose();return;}
+    if(SFX[name])SFX[name](arg);
+  }catch(e){}
 }
 function soundLabel(){ const b = $("sound"); b.setAttribute("aria-pressed", sfxOn ? "true" : "false"); b.setAttribute("aria-label", "Sound effects: " + (sfxOn ? "on" : "off")); }
 soundLabel();
@@ -2984,8 +3008,13 @@ $("sound").addEventListener("click", () => {
   try { localStorage.setItem("ftw-sfx", sfxOn ? "on" : "off"); } catch (e) {}
   soundLabel(); if (sfxOn){ sfxInit(); sfx("coin"); }
 });
-document.addEventListener("click", () => { sfxInit(); if (actx && actx.state !== "running") actx.resume(); }, true);
-document.addEventListener("touchend", () => { if (actx && actx.state !== "running") actx.resume(); }, true);
+// Touch/pointer capture occurs before gameplay handlers: the very first tap after returning
+// to the app can produce sounds, instead of requiring an app restart.
+document.addEventListener("pointerdown",sfxWake,true);
+document.addEventListener("touchend",sfxWake,true);
+document.addEventListener("click",sfxWake,true);
+document.addEventListener("visibilitychange",()=>{if(document.hidden)sfxDispose();});
+window.addEventListener("pagehide",sfxDispose);
 
 /* ---------- music: an original castle-caper loop, rendered to a WAV and played through an <audio> element
    (which still plays when an iPhone is on silent). Four 8-bar sections: the theme, the theme over a ticking

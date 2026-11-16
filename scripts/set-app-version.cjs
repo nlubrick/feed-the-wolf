@@ -35,11 +35,16 @@ function stampAndroid(gradle,number,version){
 }
 module.exports={buildNumber,versionName,stampIos,stampAndroid,ANDROID_MAX};
 if(require.main===module){
- const platform=process.argv[2],number=buildNumber(),version=versionName();
- const file=platform==="ios"?path.join(root,"ios","App","App.xcodeproj","project.pbxproj"):platform==="android"?path.join(root,"android","app","build.gradle"):null;
- if(!file)throw new Error("Say which platform: ios or android");
- if(!fs.existsSync(file))throw new Error(file+" does not exist yet. Generate the "+platform+" project first.");
- const before=fs.readFileSync(file,"utf8"),after=platform==="ios"?stampIos(before,number,version):stampAndroid(before,number,version);
- fs.writeFileSync(file,after);
- console.log(platform+": version "+version+", build "+number);
+ (async()=>{
+  const platform=process.argv[2],number=buildNumber(),version=versionName();
+  const file=platform==="ios"?path.join(root,"ios","App","App.xcodeproj","project.pbxproj"):platform==="android"?path.join(root,"android","app","build.gradle"):null;
+  if(!file)throw new Error("Say which platform: ios or android");
+  if(!fs.existsSync(file))throw new Error(file+" does not exist yet. Generate the "+platform+" project first.");
+  // Capacitor recreates ios/ during cloud builds. Install the wolf icon on every
+  // iOS generation before stamping/signing, including simulator and external beta.
+  if(platform==="ios")await require("./ios-app-icon.cjs").writeIosIcon();
+  const before=fs.readFileSync(file,"utf8"),after=platform==="ios"?stampIos(before,number,version):stampAndroid(before,number,version);
+  fs.writeFileSync(file,after);
+  console.log(platform+": version "+version+", build "+number);
+ })().catch(e=>{console.error(e);process.exitCode=1;});
 }
