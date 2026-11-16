@@ -66,7 +66,7 @@ function dash(api){
  const FLOOR=H-34,X=92,R=14;
  let state="ready",y=H/2,vy=0,lives=C.lives,passed=0,inv=0,scroll=0,tilt=0,flapT=0,tableX=null,gotRoast=0;
  const rand=rng(7171+(hard?9:0)),gates=[];
- for(let i=0;i<C.gates;i++){const prev=i?gates[i-1].c:H/2-10,c=clamp(prev+(rand()-.5)*(hard?210:170),C.gap/2+34,FLOOR-C.gap/2-24);gates.push({x:W+90+i*C.space,c,done:false,roast:true});}
+ for(let i=0;i<C.gates;i++){const prev=i?gates[i-1].c:H/2-10,c=clamp(prev+(rand()-.5)*(hard?210:170),C.gap/2+34,FLOOR-C.gap/2-24);gates.push({x:W+90+i*C.space,c,done:false,roast:true,ph:i*1.7});}
  const endX=()=>gates[gates.length-1].x+150;
  const K=kit(api,{label:"Dinner Dash",
   down(){
@@ -117,7 +117,7 @@ function dash(api){
     // tower from the floor
     bricks(ctx,g.x-27,54,bot,FLOOR-bot,0,"#75698f","#4b4163");ctx.fillStyle="#8d80a8";ctx.fillRect(g.x-31,bot,62,8);
     for(let k=0;k<3;k++)ctx.fillRect(g.x-31+k*24,bot-9,14,10);
-    if(g.roast)K.drawIcon("roast",g.x,g.c+Math.sin(t*4+g.x)*4,30);
+    if(g.roast)K.drawIcon("roast",g.x,g.c+Math.sin(t*3+g.ph)*4,30);
    }
    if(tableX!=null){ctx.fillStyle="#7b4a26";rr(ctx,tableX,FLOOR-30,120,10,4);ctx.fill();ctx.fillRect(tableX+10,FLOOR-22,8,22);ctx.fillRect(tableX+102,FLOOR-22,8,22);K.drawIcon("roast",tableX+38,FLOOR-46,38);K.drawIcon("cheese",tableX+84,FLOOR-44,30);}
    const mood=state==="done"?"joy":inv>0?"scared":vy<-60?"joy":"idle";

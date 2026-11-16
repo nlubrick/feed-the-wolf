@@ -2344,7 +2344,7 @@ $("store-products").addEventListener("click",e=>{
   const b=e.target.closest("[data-test-buy]");
   if(!b||b.disabled)return;
   if(b.dataset.testBuy===FULL_UNLOCK_PRODUCT_ID){
-    openUnlock(Math.max(FREE_LEVEL_COUNT,li+1),false);return;
+    openUnlock(li,false,true);return;
   }
   openFakeCheckout(b.dataset.testBuy);
 });
@@ -2389,8 +2389,9 @@ function updateStoreButtons(){
     $("unlock-status").textContent = "One verified App Store purchase. Every level. No subscription.";
   }
 }
-function openUnlock(index,isDaily){
-  pendingUnlockTarget = {index:Number.isInteger(index) && index >= 0 && index < LEVELS.length ? index : Math.max(li,0),daily:!!isDaily};
+/* stay: the player chose to buy (rather than hitting a locked level), so afterwards they go back to exactly where they were. */
+function openUnlock(index,isDaily,stay){
+  pendingUnlockTarget = {index:Number.isInteger(index) && index >= 0 && index < LEVELS.length ? index : Math.max(li,0),daily:!!isDaily,stay:!!stay};
   $("unlock-wolf").src = heroSvg("joy", OUTFITS.filter(o => worn[o.slot] === o.id).map(o => o.id), worn.hero || "wolf").src;
   if(bonusController.stage)bonusController.music.stop();
   updateStoreButtons(); show("unlock");
@@ -2408,6 +2409,7 @@ function resumeUnlockedPlay(){
   if (!hasFullAccess()) return;
   const target = pendingUnlockTarget || (entitlementReturnLevel == null ? null : {index:entitlementReturnLevel,daily:false});
   pendingUnlockTarget = null; entitlementReturnLevel = null;
+  if (target && target.stay && bonusController.stage){ enterBonusStage(bonusController.stage); return; }
   if (target){ daily = target.daily; show("game"); load(target.index,null,true); }
 }
 async function refreshStoreEntitlement(){
@@ -2454,7 +2456,7 @@ $("unlock-back").addEventListener("click",()=>{
  if(!hasFullAccess()&&campaignStage===7&&li===4)goToCampaignStage(6);
  else{show("game");campaignStage=stageForPuzzle(li);musicStart();}
 });
-$("unlock-link").addEventListener("click",()=>openUnlock(Math.max(FREE_LEVEL_COUNT,li+1),false));
+$("unlock-link").addEventListener("click",()=>openUnlock(li,false,true));
 window.addEventListener("pageshow",()=>refreshStoreEntitlement());
 /* ---------- level flow ---------- */
 function pct(n, d){ return (n / d * 100) + "%"; }
