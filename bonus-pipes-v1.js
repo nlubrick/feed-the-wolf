@@ -47,15 +47,17 @@ function create(chapter){
  });
  return{solution,initial,path};
 }
-function tileSVG(m,flowing){
+function tileSVG(m,flowing,entry){
  let arms="",flow="";
  for(let i=0;i<4;i++)if(m&(1<<i)){
   const [x,y]=[[32,3],[61,32],[32,61],[3,32]][i];
   arms+='<path d="M32 32 L'+x+' '+y+'" fill="none" stroke="#c2a27e" style="stroke:var(--fw-pipe)" stroke-width="20" stroke-linecap="round"/>'+
    '<path d="M32 32 L'+x+' '+y+'" fill="none" stroke="#4b4d74" style="stroke:var(--fw-pipe-in)" stroke-width="12" stroke-linecap="round"/>';
   // the liquid is drawn on top of the empty pipe, so a tile can be seen filling up
-  if(flowing)flow+='<path class="fw-flow-arm" d="M32 32 L'+x+' '+y+'" fill="none" stroke="#8be3b5" style="stroke:var(--fw-flow-out)" stroke-width="20" stroke-linecap="round"/>'+
-   '<path class="fw-flow-arm" d="M32 32 L'+x+' '+y+'" fill="none" stroke="#65c9e4" style="stroke:var(--fw-flow)" stroke-width="12" stroke-linecap="round"/>';
+  // It comes in from the side it entered by, reaches the middle, then runs on out of the other arm.
+  if(flowing){const into=i===entry,d=into?'M'+x+' '+y+' L32 32':'M32 32 L'+x+' '+y,cls='fw-flow-arm '+(into?'fw-flow-in':'fw-flow-on');
+   flow+='<path class="'+cls+'" d="'+d+'" fill="none" stroke="#8be3b5" style="stroke:var(--fw-flow-out)" stroke-width="20" stroke-linecap="round"/>'+
+   '<path class="'+cls+'" d="'+d+'" fill="none" stroke="#65c9e4" style="stroke:var(--fw-flow)" stroke-width="12" stroke-linecap="round"/>';}
  }
  return '<svg viewBox="0 0 64 64" aria-hidden="true">'+
   '<rect x="1" y="1" width="62" height="62" rx="13" fill="#252039" stroke="#846986" style="fill:var(--fw-pipe-bg);stroke:var(--fw-accent-dark)" stroke-width="2"/>'+
@@ -102,6 +104,8 @@ function mount(api){
  const theme=root.FTWBonusThemes?root.FTWBonusThemes.pipes(api.stage.chapter):null,liquid=theme?theme.liquid:"soup",say=t=>t.replace(/soup/g,liquid);
  api.instructions("Rotate the pipes to carry the "+liquid+" from START to the wolf at END. Tap a piece to turn it; press Test Flow to pour.");
  api.message("The "+liquid+" comes in on the left at START. Get it to the wolf's bowl on the right!");
+ // Which side the liquid came into a square from: 0 top, 1 right, 2 bottom, 3 left. The first square is fed from START on the left.
+ const entryOf=i=>{const k=lit.indexOf(i);if(k<0)return -1;if(k===0)return 3;const p=lit[k-1];return p===i-5?0:p===i+1?1:p===i+5?2:3;};
  function draw(){
   if(!alive)return;
   api.hud.innerHTML='<span><b>Turns: '+turns+(lim.turns?' / '+lim.turns:'')+'</b>'+(lim.pours?' &nbsp; <b>Pours left: '+(lim.pours-pours)+'</b>':'')+'</span>'+
@@ -112,7 +116,7 @@ function mount(api){
    '<div class="fw-pipe-grid" role="grid" aria-label="Five by five rotating pipe puzzle">'+
    grid.map((m,i)=>'<button type="button" class="fw-pipe-tile'+(lit.includes(i)?' flowing':'')+(pouring&&!draining&&i===lit[lit.length-1]?' fw-pipe-new':'')+(i===spill?' fw-pipe-spill':'')+
    '" data-pipe="'+i+'" aria-label="Rotate pipe row '+(Math.floor(i/5)+1)+
-   ' column '+(i%5+1)+'">'+tileSVG(m,lit.includes(i))+'</button>').join('')+'</div>'+
+   ' column '+(i%5+1)+'">'+tileSVG(m,lit.includes(i),entryOf(i))+'</button>').join('')+'</div>'+
    (ends?'<div class="fw-pipe-end fw-pipe-finish'+(passed?' fw-pipe-fed':'')+'"><i>\u25B6</i>'+(api.wolf?'<img class="fw-pipe-wolf" alt="" src="'+api.wolf(passed?"joy":"idle")+'">':'')+ends.bowl+'<b>END</b></div>':'')+'</div>'+
    '<p class="fw-pipe-caption">'+say("The whole soup route must connect from START to END. Every tap turns one joint.")+'</p>';
  }
