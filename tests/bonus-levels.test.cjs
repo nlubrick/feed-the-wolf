@@ -2,32 +2,56 @@
 const test=require("node:test"),assert=require("node:assert/strict");
 const fs=require("node:fs"),path=require("node:path"),vm=require("node:vm");
 const root=path.resolve(__dirname,".."),page=fs.readFileSync(path.join(root,"index.html"),"utf8");
-const sources=["bonus-themes-v1.js","bonus-levels-v1.js","bonus-match-v1.js","bonus-pipes-v1.js","bonus-hidden-v1.js","world-music-v1.js"];
+const sources=["bonus-themes-v1.js","bonus-levels-v1.js","bonus-match-v1.js","bonus-pipes-v1.js","bonus-hidden-v1.js","bonus-arcade-v1.js","bonus-arcade-b-v1.js","world-music-v1.js"];
 function setup(){
  const window={};
  for(const file of sources)vm.runInNewContext(fs.readFileSync(path.join(root,file),"utf8"),{window});
  return window;
 }
-test("115 consecutive stages contain all 100 unchanged puzzle IDs and 15 bonuses",()=>{
+test("110 consecutive stages contain all 100 unchanged puzzle IDs and 10 mini-games",()=>{
  const {FTWBonus}=setup(),items=FTWBonus.stages;
- assert.equal(items.length,115);assert.equal(FTWBonus.bonus.length,15);
- assert.deepEqual(Array.from(items,s=>s.number),Array.from({length:115},(_,i)=>i+1));
+ assert.equal(items.length,110);assert.equal(FTWBonus.TOTAL,110);assert.equal(FTWBonus.bonus.length,10);
+ assert.deepEqual(Array.from(items,s=>s.number),Array.from({length:110},(_,i)=>i+1));
  const puzzles=items.filter(s=>s.type==="puzzle");
  assert.deepEqual(Array.from(puzzles,s=>s.puzzleIndex),Array.from({length:100},(_,i)=>i));
- assert.equal(FTWBonus.puzzleStage(99).number,115);
+ assert.equal(FTWBonus.puzzleStage(99).number,110);
  assert.equal(FTWBonus.at(6).mode,"match");
  assert.equal(FTWBonus.at(7).puzzleIndex,5);
 });
-test("The 15 bonus stage numbers and chapter order are fixed for QA",()=>{
+test("Ten different mini-games, two per location, at fixed stage numbers",()=>{
  const {FTWBonus}=setup();
  const expect=[
- [6,"match",0],[14,"pipes",0],[22,"hidden",0],
- [29,"match",1],[37,"pipes",1],[45,"hidden",1],
- [52,"match",2],[60,"pipes",2],[68,"hidden",2],
- [75,"match",3],[83,"pipes",3],[91,"hidden",3],
- [98,"match",4],[106,"pipes",4],[114,"hidden",4]
+ [6,"match",0],[15,"dash",0],
+ [28,"pipes",1],[37,"catch",1],
+ [50,"chain",2],[59,"gear",2],
+ [72,"firefly",3],[81,"run",3],
+ [94,"hidden",4],[103,"sneak",4]
  ];
  assert.deepEqual(Array.from(FTWBonus.bonus,s=>[s.number,s.mode,s.chapter]),expect);
+ assert.equal(new Set(FTWBonus.bonus.map(s=>s.mode)).size,10,"no mini-game repeats");
+ assert.equal(FTWBonus.bonus.reduce((t,s)=>t+s.reward,0),135,"mini-game gems total is unchanged");
+ // the three older games each use one of their five tuned tiers in the story, leaving harder ones for Hard Mode
+ assert.deepEqual(Array.from(["match","pipes","hidden"],m=>FTWBonus.bonus.find(s=>s.mode===m).tier),[0,1,2]);
+});
+test("Saves from the 115-stage layout keep their place and their mini-game gems",()=>{
+ const {FTWBonus}=setup();
+ assert.deepEqual({...FTWBonus.legacy(1,{})},{stage:1,gems:0});
+ assert.equal(FTWBonus.legacy(7,{}).stage,7);                      // old stage 7 was puzzle 6; it still is
+ assert.equal(FTWBonus.legacy(15,{}).stage,FTWBonus.puzzleStage(12).number);   // old 15 = puzzle 13 (index 12)
+ assert.equal(FTWBonus.legacy(115,{}).stage,110);
+ assert.equal(FTWBonus.legacy(14,{}).stage,FTWBonus.puzzleStage(12).number);   // was standing on an old mini-game: on to the next puzzle
+ assert.equal(FTWBonus.legacy(1,{6:"win",14:"win",22:"skip",114:"win"}).gems,5+5+13);
+ assert.match(page,/window\.FTWBonus\.legacy\(/);assert.match(page,/sv:2/);
+});
+test("The Dinner Machine is solvable, not solved as dealt, and not solved by most settings",()=>{
+ const {FTWChainRules:r}=setup();
+ assert.equal(r.LEVELS.length,2);
+ for(const level of r.LEVELS){
+  assert.equal(r.simulate(level,level.start).win,false);
+  let wins=0,n=0;const go=a=>{if(a.length===level.planks.length){n++;if(r.simulate(level,a).win)wins++;return;}for(let i=0;i<5;i++)go(a.concat(i));};go([]);
+  assert.ok(wins>=3,"solvable in several ways: "+wins);assert.ok(wins/n<.12,"but most tilts fail: "+wins+"/"+n);
+ }
+ const a=r.simulate(r.LEVELS[0],[3,0,0]);assert.equal(a.win,true);assert.equal(a.rang,true);   // the same tilts always give the same run
 });
 test("All five Feast Match starts have legal moves and no accidental opening matches",()=>{
  const {FTWMatchRules:r}=setup();
@@ -92,17 +116,17 @@ test("Browser integrates play, skip, saved bonus status and five-level demo",()=
  assert.match(page,/function finishBonusStage\(stage,won\)/);
  assert.match(page,/bonusResults\[stage\.number\]="skip"/);
  assert.match(page,/bonusEarnedGems\(\)/);
- assert.match(page,/bs:bonusResults, cs:campaignStage/);
+ assert.match(page,/bs:bonusResults, lg:legacyBonusGems, sv:2, cs:campaignStage/);
  assert.match(page,/bonusResults=obj\(sv\.bs\)/);
  assert.match(page,/stage\.number===6\|\|hasFullAccess\(\)/);
  assert.match(page,/const FREE_LEVEL_COUNT = 5/);
- assert.match(page,/id="dev-level"[^>]+max="115"/);
+ assert.match(page,/id="dev-level"[^>]+max="110"/);
  assert.match(page,/if \(!canPlay\(index,daily\)\)/);
 });
 test("The PWA app shell caches each mode, music and its responsive layout",()=>{
  const sw=fs.readFileSync(path.join(root,"service-worker.js"),"utf8");
  for(const f of sources.concat("bonus-style-v1.css","bonus-themes-v1.css"))assert.ok(sw.includes(f),f+" missing from cache");
- assert.match(sw,/ftw-install-v24/);
+ assert.match(sw,/ftw-install-v25/);
  assert.match(page,/id="bonus-root"/);
 });
 

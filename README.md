@@ -1,4 +1,4 @@
-# Feed the Wolf — 115-Stage Playable Beta
+# Feed the Wolf — 110-Level Playable Beta (100 puzzles + 10 mini-games)
 
 Feed the Wolf by Failure Entertainment is a spooky-fun illustrated puzzle adventure. The existing **100 pull-the-pin levels** and all their original Hard Mode variants remain unchanged. There are now **15 fully playable optional bonus mini-games**, for **115 numbered story stages**.
 

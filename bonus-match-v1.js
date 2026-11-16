@@ -65,9 +65,9 @@ function makeGrid(seed){
    match wins about 100, 96, 84, 73 and 58%. */
 const GOALS=[[38,13],[58,14],[80,16],[92,17],[108,18]];
 function mount(api){
- const chapter=api.stage.chapter,random=rng(49000+chapter*501);
- let grid=makeGrid(5541+chapter*743),selected=null,turns=GOALS[chapter][1],
-  target=GOALS[chapter][0],score=0,busy=false,alive=true,powers=new Set(),popping=new Set(),drops=[];
+ const chapter=api.stage.chapter,tier=api.stage.tier==null?chapter:api.stage.tier,random=rng(49000+chapter*501);
+ let grid=makeGrid(5541+chapter*743),selected=null,turns=GOALS[tier][1],
+  target=GOALS[tier][0],score=0,busy=false,alive=true,powers=new Set(),popping=new Set(),drops=[];
  api.instructions("Swap neighboring foods to match three or more. Four in a row, or four in a square, makes a Wolf Howl that clears nine spaces!");
  api.message("Match the wolf's favorite foods. Bigger combos fill his dinner tray faster.");
  const draw=()=>{
