@@ -67,3 +67,48 @@ workflows:
             CODE_SIGNING_ALLOWED=NO build
     artifacts:
       - ios-build/Build/Products/Debug-iphonesimulator/*.app
+
+  ios-beta-signed:
+    name: Feed the Wolf BETA · Signed iPhone IPA
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    # Uses the Apple API key already saved under Codemagic > Developer Portal.
+    # The Apple Distribution certificate and App Store provisioning profile must
+    # first be generated/fetched under Codemagic > Code signing identities.
+    integrations:
+      app_store_connect: Feed the Wolf Codemagic
+    environment:
+      node: 22
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.failureentertainment.feedthewolf
+    scripts:
+      - name: Install packages and verify game/release checks
+        script: |
+          npm install --no-audit --no-fund
+          npm test
+          npm run release:check
+      - name: Generate Capacitor beta iOS project using Swift Package Manager
+        script: |
+          node scripts/build-tester.cjs --www
+          if [ -d ios ] && [ ! -d ios/App/App.xcodeproj ]; then
+            mv ios ios-legacy-source
+          fi
+          npx cap add ios --packagemanager SPM
+          npx cap sync ios
+      - name: Apply Apple Distribution signing profile
+        script: |
+          xcode-project use-profiles --project ios/App/App.xcodeproj
+      - name: Build signed IPA for physical iPhones / TestFlight
+        script: |
+          xcode-project build-ipa \
+            --project ios/App/App.xcodeproj \
+            --scheme App
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - ios/App/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    # No publishing block by design. First verify the signed artifact, then
+    # explicitly authorize App Store Connect/TestFlight upload. Never submit
+    # the game for public App Store review from this test workflow.
