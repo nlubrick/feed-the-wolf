@@ -30,10 +30,11 @@ function register(mode,factory){if(!modes.includes(mode)||typeof factory!=="func
    chapter motifs are reused (with different rhythms) in the optional bonus games. */
 const worldScores=[
  {name:"Castle",root:69,bass:[45,43,45,40],motif:[0,3,7,4,3,2,0,7,3,2,0,-2,0,2,3,0],color:"triangle"},
- {name:"Wizard's Tower",root:71,bass:[47,43,45,42],motif:[0,3,7,10,7,5,3,0,5,7,10,12,10,7,3,0],color:"sine"},
- {name:"Clockwork Citadel",root:64,bass:[40,43,45,38],motif:[0,7,3,7,10,7,3,0,2,7,5,7,12,7,5,2],color:"triangle"},
- {name:"Moonlit Conservatory",root:67,bass:[43,45,40,38],motif:[0,2,5,9,7,5,2,0,2,5,9,12,9,7,5,2],color:"sine"},
- {name:"Ghostlight Theatre",root:68,bass:[44,39,42,40],motif:[0,3,6,10,6,3,1,0,3,6,10,13,10,6,3,-1],color:"triangle"}
+ // Four different pieces, not one tune recoloured: each has its own key, scale, bass line, tempo and rhythm (see world-music-v1.js).
+ {name:"Wizard's Tower",      root:62,scale:[0,2,3,5,7,8,11],bass:[50,46,43,45],motif:[0,7,12,15,14,12,8,7,0,5,8,12,11,8,7,2],color:"sine"},      // D harmonic minor, slow and spellbound
+ {name:"Clockwork Citadel",   root:65,scale:[0,2,4,7,9],     bass:[53,50,46,48],motif:[0,4,7,4,9,7,4,2,0,4,7,12,9,7,4,7],color:"triangle"},     // F pentatonic, a busy little march
+ {name:"Moonlit Conservatory",root:60,scale:[0,2,4,6,7,9,11],bass:[48,50,45,43],motif:[0,4,7,11,9,7,6,4,2,6,9,11,14,11,9,7],color:"sine"},     // C lydian, a slow lullaby
+ {name:"Ghostlight Theatre",  root:64,scale:[0,2,3,5,7,8,11],bass:[52,45,50,47],motif:[0,3,7,3,8,7,3,2,0,3,7,12,11,8,7,-1],color:"triangle"}    // E harmonic minor, a carnival waltz
 ];
 const midiHz=m=>440*Math.pow(2,(m-69)/12);
 class Music{
@@ -101,6 +102,7 @@ class Controller{
    const a=b.dataset.bonusAction;
    if(a==="skip")this.cb.finish(this.stage,false);
    else if(a==="back")this.cb.back(this.stage);
+   else if(a==="next"){if(this.cb.next&&(!this.cb.canNext||this.cb.canNext(this.stage)))this.cb.next(this.stage);}
    else if(a==="retry")this.start(this.stage);
    else if(a==="continue")this.cb.finish(this.stage,true);
    else if(a==="music"){
@@ -116,6 +118,8 @@ class Controller{
   this.node.innerHTML='<div class="fw-bonus fw-world-'+stage.chapter+' fw-'+stage.mode+(themes?' fw-themed':'')+'">'+
    (themes?'<div class="fw-banner" aria-hidden="true">'+themes.banner(stage.chapter)+'</div>':'')+
    (themes&&this.cb.wolf?'<img class="fw-bonus-wolf" id="fw-bonus-wolf" alt="" src="'+this.cb.wolf("idle")+'"><div class="fw-wolf-bubble" aria-hidden="true">'+themes.icon({match:"roast",pipes:"mushroom",hidden:"key"}[stage.mode])+'</div>':'')+
+   '<div class="fw-bonus-nav"><button type="button" data-bonus-action="back" aria-label="Previous level"'+(stage.number<=1?' disabled':'')+'>\u2039</button>'+
+   '<button type="button" data-bonus-action="next" aria-label="Next level"'+(this.cb.canNext&&!this.cb.canNext(stage)?' disabled':'')+'>\u203A</button></div>'+
    '<header class="fw-bonus-header"><div><p class="fw-bonus-kicker">BONUS LEVEL '+stage.number+
    ' OF 115 · '+chapters[stage.chapter]+'</p><h1>'+stage.title+'</h1><p>'+
    modesTitle[stage.mode]+'</p></div><div class="fw-bonus-reward">✦ +'+stage.reward+' gems</div></header>'+
@@ -124,7 +128,6 @@ class Controller{
    '<div class="fw-bonus-play" id="fw-bonus-play"></div>'+
    '<p class="fw-bonus-message" id="fw-bonus-message" role="status" aria-live="polite"></p>'+
    '<footer class="fw-bonus-actions">'+
-   '<button type="button" data-bonus-action="back">Previous</button>'+
    '<button type="button" data-bonus-action="retry">Restart</button>'+
    '<button type="button" data-bonus-action="music">Music: '+(this.cb.musicEnabled()?"On":"Off")+'</button>'+
    '<button type="button" class="fw-bonus-skip" data-bonus-action="skip">Skip mini-game</button></footer>'+

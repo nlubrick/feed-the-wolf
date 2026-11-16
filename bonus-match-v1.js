@@ -58,7 +58,7 @@ const GOALS=[[36,13],[52,14],[70,16],[78,17],[90,18]];
 function mount(api){
  const chapter=api.stage.chapter,random=rng(49000+chapter*501);
  let grid=makeGrid(5541+chapter*743),selected=null,turns=GOALS[chapter][1],
-  target=GOALS[chapter][0],score=0,busy=false,alive=true,powers=new Set();
+  target=GOALS[chapter][0],score=0,busy=false,alive=true,powers=new Set(),popping=new Set(),drops=[];
  api.instructions("Swap neighboring foods to match three or more. Four in a row creates a Wolf Howl that clears nine spaces!");
  api.message("Match the wolf's favorite foods. Bigger combos fill his dinner tray faster.");
  const draw=()=>{
@@ -66,27 +66,53 @@ function mount(api){
   api.hud.innerHTML='<span><strong>Dinner tray: '+score+' / '+target+'</strong></span><span><strong>Moves: '+turns+'</strong></span>';
   api.play.innerHTML='<div class="fw-food-grid" role="grid" aria-label="Six-by-six food matching grid">'+
    grid.map((food,i)=>'<button type="button" class="fw-food-tile'+(selected===i?' selected':'')+
-    (powers.has(i)?' power':'')+(food>=0?' fw-kind-'+food:'')+'" data-food="'+i+'" aria-label="Row '+(Math.floor(i/6)+1)+
+    (powers.has(i)?' power':'')+(food>=0?' fw-kind-'+food:'')+(popping.has(i)?' fw-popping':'')+(drops[i]?' fw-falling" style="--drop:'+drops[i]:'')+'" data-food="'+i+'" aria-label="Row '+(Math.floor(i/6)+1)+
     ', column '+(i%6+1)+': '+(food>=0?NAMES[food]:'Empty')+'">'+
     (food>=0?SVG[food]:'')+(powers.has(i)?'<span class="fw-howl">HOWL</span>':'')+
     '</button>').join('')+'</div>';
  };
  const wait=(ms)=>new Promise(r=>setTimeout(r,ms));
- async function cascade(removed,large,focus){
+ const quick=typeof matchMedia==="function"&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+ const tile=i=>api.play.querySelector?api.play.querySelector('[data-food="'+i+'"]'):null;
+ /* Slide two neighbouring tiles into each other's squares (and back again if the swap is refused). */
+ async function slide(a,b,back){
+  const ea=tile(a),eb=tile(b);if(!ea||!eb||quick)return;
+  const dx=eb.offsetLeft-ea.offsetLeft,dy=eb.offsetTop-ea.offsetTop;
+  ea.classList.add("fw-sliding");eb.classList.add("fw-sliding");
+  ea.style.transform="translate("+dx+"px,"+dy+"px)";eb.style.transform="translate("+(-dx)+"px,"+(-dy)+"px)";
+  await wait(170);
+  if(back){ea.style.transform=eb.style.transform="";await wait(170);ea.classList.remove("fw-sliding");eb.classList.remove("fw-sliding");}
+ }
+ /* A little "+3" that floats up from where the match was, and a flash for a Wolf Howl. */
+ function puff(cells,text,blast){
+  const g=api.play.querySelector?api.play.querySelector(".fw-food-grid"):null;if(!g||quick)return;
+  let x=0,y=0,n=0;for(const i of cells){const e=tile(i);if(e){x+=e.offsetLeft+e.offsetWidth/2;y+=e.offsetTop+e.offsetHeight/2;n++;}}if(!n)return;
+  const add=(cls,t)=>{const el=document.createElement("div");el.className=cls;el.textContent=t||"";el.style.left=x/n+"px";el.style.top=y/n+"px";g.appendChild(el);};
+  if(blast)add("fw-blast");add("fw-plus",text);
+ }
+ async function cascade(removed,large,focus,blast){
   let chain=0;
   while(alive&&removed.size&&chain<12){
    score+=removed.size;
-   for(const i of removed){grid[i]=-1;powers.delete(i);}
    api.message((chain?"Combo x"+(chain+1)+"! ":"")+removed.size+" ingredients served!");
-   draw();await wait(140);if(!alive)return;
+   // 1. the matched tiles burst
+   popping=new Set(removed);drops=[];draw();puff(removed,"+"+removed.size+(chain?"  x"+(chain+1):""),blast&&chain===0);
+   if(chain)api.tone(520+chain*90,.12);
+   await wait(quick?60:270);if(!alive)return;
+   popping=new Set();
+   for(const i of removed){grid[i]=-1;powers.delete(i);}
+   // 2. everything above drops into the gaps and new food falls in from the top
+   drops=new Array(36).fill(0);
    for(let col=0;col<6;col++){
-    const keep=[];
-    for(let row=5;row>=0;row--)if(grid[row*6+col]>=0)keep.push(grid[row*6+col]);
-    while(keep.length<6)keep.push(Math.floor(random()*6));
-    for(let row=5;row>=0;row--)grid[row*6+col]=keep[5-row];
+    const keep=[],from=[];
+    for(let row=5;row>=0;row--)if(grid[row*6+col]>=0){keep.push(grid[row*6+col]);from.push(row);}
+    const fresh=6-keep.length;
+    while(keep.length<6){keep.push(Math.floor(random()*6));from.push(-1);}
+    for(let row=5;row>=0;row--){const k=5-row;grid[row*6+col]=keep[k];drops[row*6+col]=from[k]<0?fresh:row-from[k];}
    }
    if(large&&chain===0)powers.add(Number.isInteger(focus)?focus:Math.floor(random()*36));
-   draw();await wait(150);if(!alive)return;
+   draw();await wait(quick?60:340);if(!alive)return;
+   drops=[];
    const res=find(grid);removed=res.matches;large=res.runs.some(g=>g.length>=4);
    chain++;
   }
@@ -98,14 +124,14 @@ function mount(api){
   }
   busy=false;draw();
  }
- function play(index){
+ async function play(index){
   if(!alive||busy)return;
   if(powers.has(index)){
    powers.delete(index);turns--;busy=true;selected=null;
    const removed=new Set();
    for(let y=Math.max(0,Math.floor(index/6)-1);y<=Math.min(5,Math.floor(index/6)+1);y++)
     for(let x=Math.max(0,index%6-1);x<=Math.min(5,index%6+1);x++)removed.add(y*6+x);
-   api.sound(true);cascade(removed,false);return;
+   api.sound(true);cascade(removed,false,undefined,true);return;
   }
   if(selected===null){selected=index;draw();return;}
   const from=selected;selected=null;
@@ -114,11 +140,16 @@ function mount(api){
   }
   [grid[from],grid[index]]=[grid[index],grid[from]];
   const found=find(grid);
+  busy=true;draw();
   if(found.matches.size===0){
    [grid[from],grid[index]]=[grid[index],grid[from]];
-   api.sound(false);api.message("That swap doesn't make three. Try another.");draw();return;
+   draw();api.sound(false);api.message("That swap doesn't make three. Try another.");
+   await slide(from,index,true);busy=false;return;
   }
-  turns--;busy=true;api.sound(true);
+  [grid[from],grid[index]]=[grid[index],grid[from]];draw();     // show the board as it was, slide the two tiles, then commit
+  await slide(from,index,false);if(!alive)return;
+  [grid[from],grid[index]]=[grid[index],grid[from]];
+  turns--;api.sound(true);
   cascade(found.matches,found.runs.some(g=>g.length>=4),index);
  }
  const click=e=>{const cell=e.target.closest("[data-food]");if(cell)play(Number(cell.dataset.food));};

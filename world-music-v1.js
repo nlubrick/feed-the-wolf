@@ -5,8 +5,8 @@
 "use strict";
 function render(world,hard,scores){
  const score=scores[world];if(!score||world<1||world>4)throw Error("Unknown chapter soundtrack");
- const sr=22050,stp=(world===1?.28:world===2?.225:world===3?.32:.26)*(hard?.87:1);
- const steps=world===4?288:256,n=Math.round(sr*steps*stp),buf=new Float32Array(n);
+ const sr=22050,stp=(world===1?.3:world===2?.2:world===3?.34:.26)*(hard?.87:1);
+ const steps=world===4?288:world===2?320:256,n=Math.round(sr*steps*stp),buf=new Float32Array(n);
  const freq=m=>440*Math.pow(2,(m-69)/12);
  let lcg=20261115;
  const voice=(m,step,len,vol,shape)=>{
@@ -35,54 +35,64 @@ function render(world,hard,scores){
    buf[(start+i)%n]+=noise*decay*vol;
   }
  };
- /* Each track is four sections played without a break, so the tune develops instead of circling:
-      A   the location's motif, plain
-      A'  the motif again with a harmony line under it and passing notes between
-      B   a bridge: the motif turned upside down, a fourth higher, thinner and quieter
-      A"  the motif once more over a slow counter-melody (its own notes backwards)
-    The last bar climbs back up to the first note, and because every voice wraps round the end of the buffer,
-    notes still ringing at the end ring over the start: there is no gap or first-beat thump to give the loop away. */
- const W=world===4?6:8,secLen=steps/4;
- const lead=world===1?"bell":world===2?"warm":world===3?"flute":"calliope";
- const pad=world===1?"flute":world===2?"warm":world===3?"bell":"calliope";
- const mel=(m,step,len,vol)=>voice(m,step,len,vol,lead);
+ /* Four different pieces. Each is in four sections played straight through (tune, tune developed, a contrasting
+    middle, tune again with more around it) and ends on a short pickup into its first note; every voice wraps round
+    the end of the buffer, so the tail of the last bar rings over the first and the loop has no seam.
+
+      Wizard's Tower        D harmonic minor, slow. A bell arpeggio turns over a drone; the tune is long flute notes.
+                            Middle: the tune played backwards, bells alone.
+      Clockwork Citadel     F pentatonic, brisk. A walking bass ostinato; the tune lands on a 3+3+2 rhythm.
+                            Middle: the tune drops to the bass and a higher voice answers it.
+      Moonlit Conservatory  C lydian, slowest. Rolled harp chords under a long flute line.
+                            Middle: the harp takes the second half of the tune by itself.
+      Ghostlight Theatre    E harmonic minor waltz on a wheezy calliope, oom-pah-pah.
+                            Middle: the tune moves down to the low pipes and the pah-pah floats above it. */
+ const W=world===4?6:8,secLen=steps/4,S=score.scale,R=score.root;
+ const pick=k=>score.motif[((k%16)+16)%16];
+ const inScale=m=>S.includes((((m-R)%12)+12)%12);
+ const third=low=>inScale(low+4)?4:3;                                   // the chord's third, whichever one the scale has
+ const pickup=[];for(let o=-12;o<0;o++)if(inScale(R+o))pickup.push(o);  // scale notes just under the first note
  for(let step=0;step<steps;step++){
-  const sec=Math.floor(step/secLen),i=step%16,beat=step%W,bar=Math.floor(step/W),last=step>=steps-W;
-  const bridge=sec===2,lift=bridge?5:0;
-  const m=bridge?-score.motif[i]:score.motif[i];
-  const root=score.root+lift+m,low=score.bass[bar%4]+lift;
-  const noteLen=world===1?.62:world===2?.42:world===3?.92:stp*1.9;
-  const melVol=(world===2?.2:world===3?.18:world===4?.17:.23)*(bridge?.72:1);
-  // --- melody ---
-  if(last){ // turnaround: a short climb that lands on the first note of the tune
-   const climb=[-5,-3,-2,0,2,3,5,7];
-   if(world!==4||step%2===0)mel(score.root+score.motif[0]+climb[Math.min(7,Math.floor((step-(steps-W))/W*8))]-(world===4?0:0),step,stp*1.4,melVol*.8);
-  }else if(step%2===0){
-   mel(root,step,noteLen,melVol);
-   if(sec===1)voice(root-(m%7===0?5:3)-12+(world===2?12:0),step,noteLen,melVol*.38,pad);       // harmony a third or fourth below
-  }else if(sec===1&&beat===W-1){
-   mel(score.root+lift+score.motif[(i+1)%16]-2,step,stp*.9,melVol*.4);                          // passing note into the next beat
+  const sec=Math.floor(step/secLen),beat=step%W,bar=Math.floor(step/W),low=score.bass[bar%4];
+  const last=step>=steps-W,mid=sec===2;
+  if(last&&step%2===0){                                                 // the pickup back into bar one
+   const k=(step-(steps-W))/2,n=W/2;
+   voice(R+pick(0)+pickup[pickup.length-n+k],step,stp*1.8,.15,world===1?"flute":world===2?"warm":world===3?"flute":"calliope");
   }
-  if(sec===3&&step%4===0&&!last)voice(score.root+score.motif[15-((step>>2)%16)]-12,step,stp*3.6,melVol*.42,pad);   // counter-melody
-  // --- each location's own accompaniment ---
-  if(world===1){        // Wizard's Tower: a long hovering drone under the bells, a high answer at the end of each bar
-   if(beat===0)voice(low,step,stp*8,.09,"flute");
-   if(beat===6&&!bridge)voice(root+7,step,.5,.09,"bell");
-   if(sec>=1&&beat===4)voice(low+7,step,stp*4,.045,"flute");
-  }else if(world===2){  // Clockwork Citadel: a warm steady machine, soft wooden tock, bass that walks in the later sections
-   if(beat%4===0)voice(low,step,stp*4,.17,"warm");
-   if(sec>=1&&beat===6)voice(low+7,step,stp*2,.09,"warm");
+  if(world===1){
+   if(beat===0&&!mid)voice(low,step,stp*8,.1,"flute");
+   voice([low+12,low+19,low+24,low+19][step%4],step,.5,mid?.05:.07,"bell");
+   if(!last&&step%4===0){
+    const k=step>>2,m=mid?pick(15-k):pick(k);
+    if(mid)voice(R+m+12,step,.9,.13,"bell");
+    else{voice(R+m,step,stp*3.8,.2,"flute");if(sec===1)voice(R+m-12,step,stp*3.8,.07,"flute");if(sec===3&&beat===4)voice(R+m+12,step,.6,.05,"bell");}
+   }
+  }else if(world===2){
+   if(step%2===0)voice(low+[0,7,12,7][(step>>1)%4],step,stp*1.7,.15,"warm");
+   if(!last&&(beat===0||beat===3||beat===6)){
+    const k=bar*3+(beat===0?0:beat===3?1:2),m=pick(k);
+    if(mid){voice(R+m-12,step,stp*1.5,.21,"warm");voice(R+pick(k+2),step+1,stp*.9,.08,"gear");}
+    else{voice(R+m,step,stp*1.6,.2,"warm");if(sec===1&&beat===0)voice(R+m+12,step,stp*.8,.045,"gear");if(sec===3)voice(R+m-12,step,stp*1.2,.07,"warm");}
+   }
    if(beat===2||beat===6)tap(step,.035,"tock");
-   if(!bridge&&(beat===0||beat===4))tap(step,.08,"thump");
-   if(sec===3&&beat%2===1)tap(step,.016,"tock");
-  }else if(world===3){  // Moonlit Conservatory: slow bell swells under the flute, a second swell joining later
-   if(beat%4===0)voice(low,step,stp*5,.09,"bell");
-   if(beat===6)voice(root-5,step,.6,.08,"bell");
-   if(sec>=1&&beat===2)voice(low+12,step,stp*4,.04,"bell");
-  }else{                // Ghostlight Theatre: calliope waltz, oom-pah-pah, with a fuller chord once the tune comes back
-   if(beat===0)voice(low,step,stp*1.8,.17,"calliope");
-   if(beat===2||beat===4){voice(low+12,step,stp*.8,.065,"calliope");voice(low+19,step,stp*.8,.05,"calliope");if(sec===3)voice(low+15,step,stp*.8,.04,"calliope");}
-   if(beat===5&&bar%4===3&&!last)voice(root+3,step,stp*.9,.07,"calliope");
+   if(!mid&&(beat===0||beat===4))tap(step,.075,"thump");
+   if(sec===3&&beat%2===1)tap(step,.015,"tock");
+  }else if(world===3){
+   if(beat===0)voice(low,step,stp*7,.085,"flute");
+   if(beat<4)voice(low+[12,12+third(low),19,24][beat],step,1,mid?.075:.055,"bell");
+   if(!last&&step%4===0){
+    const k=step>>2,m=mid?pick(8+k%8):pick(k);
+    if(mid)voice(R+m+12,step,1.1,.1,"bell");
+    else{voice(R+m,step,stp*3.9,.19,"flute");if(sec===3)voice(R+m-12,step,stp*3.9,.06,"flute");}
+   }
+   if(sec===1&&beat===6)voice(R+pick(step>>2)+12,step,.9,.045,"bell");
+  }else{
+   if(!last&&step%2===0){const m=pick(step>>1);voice(R+m-(mid?12:0),step,stp*1.9,mid?.2:.17,"calliope");}
+   if(beat===0&&!mid)voice(low,step,stp*1.8,.17,"calliope");
+   if(beat===2||beat===4){const up=mid?12:0,v=mid?.7:1;
+    voice(low+12+up,step,stp*.8,.065*v,"calliope");voice(low+19+up,step,stp*.8,.05*v,"calliope");
+    if(sec===3)voice(low+12+third(low),step,stp*.8,.04,"calliope");}
+   if(sec===1&&beat===5&&bar%2===1&&!last)voice(R+pick((step>>1)+1)+1,step,stp*.6,.06,"calliope");   // a quick grace note into the next bar
   }
   if(hard){
    if(beat===3||beat===W-1)tap(step,.09,"thump");
