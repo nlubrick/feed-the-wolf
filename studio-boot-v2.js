@@ -28,6 +28,7 @@
     if(event.data && event.data.type==="failure-studio-intro-completed")closeIntro();
   }
   window.__feStudioIntroActive=true;
+  window.dispatchEvent(new Event("failure-studio-intro-opened"));
   window.addEventListener("message",onMessage);
   overlay.append(frame);document.body.append(overlay);
   // Prevent a broken connection from trapping players behind an intro screen.
