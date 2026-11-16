@@ -42,21 +42,21 @@ test("Explicit DEV progress reset clears the backup, so a deliberate reset stays
  assert.equal(local.getItem("ftw-save-backup-v1"),null);
  assert.equal((await progress.recover()).source,"new");
 });
-test("Manual progress backup import validates format and does not grant purchase entitlement",async()=>{
+test("Automatic save validation does not grant purchase entitlement",async()=>{
  const local=store(),{progress}=harness(local),raw=sample(15);
  assert.equal(progress.parse(raw).li,15);
  assert.equal(progress.parse('{"fullGame":true}'),null);
  await progress.replace(raw);
  assert.equal(local.getItem("ftw-save"),raw);
  assert.equal(local.getItem("ftw-save-backup-v1"),raw);
- assert.match(page,/format:"feed-the-wolf-progress",version:1/);
- assert.match(page,/progress-import/);
- assert.match(page,/Full-game purchases are not included/);
+ assert.doesNotMatch(page,/id="progress-open"|id="progress-tools"|id="progress-import"|id="progress-download"/);
+ assert.doesNotMatch(page,/Download progress backup|Restore from backup file/);
 });
 test("Web game awaits recovery before initializing, uses backups on saves, no test-only shortcuts in production",()=>{
  assert.match(page,/recovery=await window\.FTWProgress\.recover\(\)/);
  assert.match(page,/if\(window\.FTWProgress\)window\.FTWProgress\.put\(text\)/);
  assert.match(page,/if\(window\.FTWProgress\?\.blocked\(\)\)return/);
+ assert.doesNotMatch(page,/show\("progress-tools"\)/);
  const worker=fs.readFileSync(path.join(root,"service-worker.js"),"utf8");
  assert.match(worker,/progress-store-v1\.js/);
  const {build}=require("../scripts/build.cjs"),{check}=require("../scripts/check-release.cjs");

@@ -364,12 +364,6 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 @media (prefers-reduced-motion:reduce){.tile.tile-trophy::after{animation:none}}
 .tile.gem-unaffordable{opacity:.78}
 
-/* Progress backup is a normal player feature, not a developer shortcut. */
-.ftw-progress-tools{max-width:560px;margin:24px auto;padding:20px;border:1px solid #9c83ca;border-radius:18px;background:#241936;color:#f9edff;font-family:var(--body)}
-.ftw-progress-tools h2{font-family:var(--display);font-size:clamp(24px,6vw,34px);color:#ffdb8a;margin:0 0 12px}
-.ftw-progress-tools p{font-size:14px;line-height:1.55;color:#e4d8f0}
-.ftw-progress-tools button{width:100%;min-height:46px;margin-top:10px}
-.ftw-progress-tools .ftw-progress-status{min-height:22px;color:#ffe0a5}
 </style>
 <script src="./store-catalog-v1.js"></script>
 <script src="./store-config.js"></script>
@@ -424,21 +418,10 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
     <button class="linkish" id="hbtn" type="button">How to play</button>
     <button class="linkish" id="credits-btn" type="button">Credits</button>
     <button class="linkish" id="unlock-link" type="button">Full game</button>
-    <button class="linkish" id="progress-open" type="button">Save progress</button>
     <!--BETA-START--><button class="linkish" id="developer-open" type="button" hidden>Developer</button><!--BETA-END-->
   </nav>
  </div>
 
- <section id="progress-tools" hidden class="ftw-progress-tools" aria-label="Back up or restore progress">
-  <h2>Keep your progress safe</h2>
-  <p>Your progress is stored in this browser, not on a game account. Using another browser or home-screen installation may show a different save. Clearing site data or using Private Browsing can erase your progress.</p>
-  <p><strong>Save a backup file</strong> to Files or your device, especially before changing phones or clearing browser history. You can restore that file here later. A progress file does not unlock a paid game or transfer store purchases.</p>
-  <button class="go" id="progress-download" type="button">Download progress backup</button>
-  <button class="quiet" id="progress-import" type="button">Restore from backup file</button>
-  <input id="progress-file" type="file" accept=".json,application/json" hidden aria-label="Choose Feed the Wolf progress backup">
-  <button class="quiet" id="progress-back" type="button">Back to game</button>
-  <p class="ftw-progress-status" id="progress-status" role="status" aria-live="polite"></p>
- </section>
  <section id="bonus" hidden aria-label="Bonus mini-game levels">
    <div id="bonus-root"></div>
  </section>
@@ -2863,48 +2846,11 @@ $("shop").addEventListener("click",e=>{
 });
 function menu(){}
 function show(name){                                // screens: the castle, the wardrobe, the rules, the finale, credits
-  for (const id of ["game","shop","help","credits","ftw-finale","unlock","bonus","progress-tools"].concat(BETA ? BETA.screens : [])) $(id).hidden = id !== name;
+  for (const id of ["game","shop","help","credits","ftw-finale","unlock","bonus"].concat(BETA ? BETA.screens : [])) $(id).hidden = id !== name;
   window.scrollTo(0, 0);
   if (name === "game"){ setSize(); renderBg(); }
   if (name === "shop"){renderWardrobe();renderStore();}
 }
-
-$("progress-open").addEventListener("click",()=>{ $("progress-status").textContent="";show("progress-tools"); });
-$("progress-back").addEventListener("click",()=>show("game"));
-$("progress-download").addEventListener("click",async()=>{
- const progress=window.FTWProgress?.current();
- if(!progress){ $("progress-status").textContent="No saved progress is available yet. Complete a level first.";return; }
- try{
-  const payload=JSON.stringify({format:"feed-the-wolf-progress",version:1,exportedAt:new Date().toISOString(),progress},null,2);
-  const filename="feed-the-wolf-progress-"+new Date().toISOString().slice(0,10)+".json";
-  const blob=new Blob([payload],{type:"application/json"});
-  const file=typeof File==="function"?new File([blob],filename,{type:"application/json"}):null;
-  if(file&&navigator.canShare?.({files:[file]})&&navigator.share){
-   try{await navigator.share({files:[file],title:"Feed the Wolf progress backup"});$("progress-status").textContent="Save the backup in Files or another safe place.";return;}
-   catch(e){if(e&&e.name==="AbortError")return;}
-  }
-  const url=URL.createObjectURL(blob),link=document.createElement("a");
-  link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),15000);
-  $("progress-status").textContent="Backup created. Keep the downloaded file somewhere safe.";
- }catch(e){$("progress-status").textContent="Could not create a backup. Please check browser storage.";}
-});
-$("progress-import").addEventListener("click",()=>$("progress-file").click());
-$("progress-file").addEventListener("change",async e=>{
- const file=e.target.files&&e.target.files[0];if(!file)return;
- try{
-  if(file.size>2000000)throw Error("Backup file is too large.");
-  const payload=JSON.parse(await file.text());
-  if(payload?.format!=="feed-the-wolf-progress"||payload.version!==1)
-   throw Error("Choose a Feed the Wolf progress backup file.");
-  const progress=payload.progress;
-  if(!window.FTWProgress?.parse(JSON.stringify(progress)))throw Error("That backup does not contain valid progress.");
-  if(!window.confirm("Restore this save? It will replace this browser's current progress. Full-game purchases are not included."))return;
-  await window.FTWProgress.replace(JSON.stringify(progress));
-  location.reload();
- }catch(err){$("progress-status").textContent=err.message||"Could not restore that file.";}
- finally{e.target.value="";}
-});
 
 $("wbtn").addEventListener("click", () => show("shop"));
 $("hbtn").addEventListener("click", () => show("help"));
@@ -3153,7 +3099,7 @@ async function bootGame(data){
   try{if(window.FTWProgress)recovery=await window.FTWProgress.recover();}catch(e){}
   start(data);
   if(recovery?.recovered)toast("Saved progress recovered from your browser backup.");
-  if(recovery?.warning)toast("Saved progress is damaged. Use Save progress to restore a backup file.");
+  if(recovery?.warning)toast("Browser progress is unreadable. It has not been overwritten; keep site data and contact the game developer.");
 }
 if (hot && hot.ready) hot.ready(data=>{bootGame(data);}); else bootGame((hot && hot.data) || {});
 if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(()=>{}));}
