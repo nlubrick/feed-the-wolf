@@ -154,3 +154,13 @@ test("The full-game gifts are listed in the Store but cannot be bought with gems
   assert.match(html,/id="unlock-gifts"/);assert.match(html,/Free gifts with the full game/);
   assert.match(code,/free Chick pet and Bandana/);
 });
+test("A demo save cannot mint gems or trophies from levels past the free five",()=>{
+  const OUTFITS=vm.runInNewContext(fragment("const OUTFITS = [","/* Pets: small companions")+"\nOUTFITS");
+  const cleared={},stars={};for(let i=0;i<100;i++){cleared[i]=cleared[i+"h"]=true;stars[i]=stars[i+"h"]=3;}
+  const make=full=>({owned:{},worn:{},gems:0,cleared,stars,dailyDone:{1:true,2:true},hints:0,gemUnlocked:{},OUTFITS,mockGemCredits:()=>0,bonusEarnedGems:()=>0,ownsFullGame:()=>full,hasFullAccess:()=>full,FREE_LEVEL_COUNT:5});
+  let c=make(false);economy(c)();
+  assert.equal(c.gems,25,"five free levels at three stars plus the level-5 bonus");
+  assert.deepEqual(Object.keys(c.owned),["wolf"]);
+  c=make(true);economy(c)();
+  assert.equal(c.gems,300+600+200+300+10);assert.equal(OUTFITS.filter(o=>o.trophy!=null&&c.owned[o.id]).length,5);
+});

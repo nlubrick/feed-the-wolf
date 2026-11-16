@@ -126,7 +126,7 @@ test("Browser integrates play, skip, saved bonus status and five-level demo",()=
 test("The PWA app shell caches each mode, music and its responsive layout",()=>{
  const sw=fs.readFileSync(path.join(root,"service-worker.js"),"utf8");
  for(const f of sources.concat("bonus-style-v1.css","bonus-themes-v1.css"))assert.ok(sw.includes(f),f+" missing from cache");
- assert.match(sw,/ftw-install-v32/);
+ assert.match(sw,/ftw-install-v33/);
  assert.match(page,/id="bonus-root"/);
 });
 
@@ -224,4 +224,16 @@ test("Mini-game sound comes back after the app has been in the background",()=>{
  assert.match(src,/wake\(\)\{/);
  assert.match(src,/\["pointerdown","touchend","click"\]\)this\.node\.addEventListener\(type,\(\)=>this\.music\.wake\(\),true\)/,"every tap in a mini-game must be able to restart audio");
  assert.doesNotMatch(page,/actx\.state === "suspended"/,"the main game must also resume from iOS's interrupted state");
+});
+test("Hard Mode mini-game wins pay extra, once each, and the demo only pays for the free one",()=>{
+ const {FTWBonus}=setup();
+ assert.equal(FTWBonus.hardReward(FTWBonus.at(6)),15);assert.equal(FTWBonus.bonus.reduce((t,s)=>t+FTWBonus.hardReward(s),0),205);
+ const src=page.slice(page.indexOf("function bonusEarnedGems(){"),page.indexOf("function canEnterBonus"));
+ const run=(bonusResults,full)=>vm.runInNewContext(src+"\nbonusEarnedGems()",{window:{FTWBonus},bonusResults,legacyBonusGems:0,hasFullAccess:()=>full});
+ assert.equal(run({6:"win"},true),10);
+ assert.equal(run({6:"skip","6h":"win"},true),15);
+ assert.equal(run({6:"win","6h":"win",15:"win","15h":"win"},true),10+15+11+17);
+ assert.equal(run({6:"win","6h":"win",15:"win",103:"win"},false),10,"without the full game only the free mini-game pays");
+ assert.equal(run({"6x":"win","999":"win","06":"win"},true),0,"junk keys pay nothing");
+ assert.match(page,/if\(won&&hardOn\)\{bonusResults\[stage\.number\+"h"\]="win"/);
 });

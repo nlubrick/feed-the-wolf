@@ -2120,14 +2120,18 @@ const LAST_STAGE=window.FTWBonus.TOTAL;
 function stageForPuzzle(index){return window.FTWBonus.puzzleStage(index).number;}
 function bonusEarnedGems(){
  return legacyBonusGems+Object.entries(bonusResults).reduce((total,[number,result])=>{
-  const stage=window.FTWBonus.at(Number(number));
-  return total+(stage?.type==="bonus"&&result==="win"?stage.reward:0);
+  // "37" is the normal win, "37h" the Hard Mode win of the same mini-game; each pays once, and Hard pays half as much again.
+  const hard=/h$/.test(number),stage=window.FTWBonus.at(parseInt(number,10));
+  if(stage?.type!=="bonus"||result!=="win"||(!hard&&String(stage.number)!==number))return total;
+  if(typeof hasFullAccess==="function"&&!hasFullAccess()&&(hard||stage.number!==6))return total;
+  return total+(hard?window.FTWBonus.hardReward(stage):stage.reward);
  },0);
 }
 function canEnterBonus(stage){return stage.number===6||hasFullAccess();}
 function finishBonusStage(stage,won){
  if(!stage||stage.type!=="bonus")return;
- if(won)bonusResults[stage.number]="win";
+ if(won&&hardOn){bonusResults[stage.number+"h"]="win";if(!bonusResults[stage.number])bonusResults[stage.number]="skip";}   // a Hard win also lets you move on
+ else if(won)bonusResults[stage.number]="win";
  else if(!bonusResults[stage.number])bonusResults[stage.number]="skip";
  syncPrizes();save();renderWardrobe();
  if(won)sfx("coin");
@@ -2676,17 +2680,20 @@ function syncPrizes(){
   let got = null, g = 0;
   const give = o => { if (!owned[o.id]){ owned[o.id] = true; if (!worn[o.slot]) worn[o.slot] = o.id; got = o; } };
   owned.wolf = true; if (!worn.hero || !owned[worn.hero]) worn.hero = "wolf";
-  for (const k in stars) g += (+stars[k] || 0) * (/h$/.test(k) ? 2 : 1);
-  for (let i = 4; i < 100; i += 5){ if (cleared[i]) g += MILESTONE_GEMS; if (cleared[i + "h"]) g += HARD_MILESTONE_GEMS; }
+  // Without the full game only the free levels count, so a hand-edited save cannot mint gems or trophies in the demo.
+  const full = typeof hasFullAccess !== "function" || hasFullAccess(), FREE = typeof FREE_LEVEL_COUNT === "number" ? FREE_LEVEL_COUNT : 5;
+  const counts = k => full || (!/h$/.test(k) && +k < FREE);
+  for (const k in stars) if (counts(k)) g += (+stars[k] || 0) * (/h$/.test(k) ? 2 : 1);
+  for (let i = 4; i < 100; i += 5){ if (cleared[i] && counts(String(i))) g += MILESTONE_GEMS; if (cleared[i + "h"] && full) g += HARD_MILESTONE_GEMS; }
   // A thank-you for buying the game: the gift pet and accessory. They are not sold for gems; anyone who paid gems for one before that changed gets those gems back.
   const bought = typeof ownsFullGame === "function" && ownsFullGame();
   for (const o of OUTFITS){
     if (o.gift && bought){ give(o); delete gemUnlocked[o.id]; continue; }
-    if (o.trophy != null && (cleared[o.trophy * 20 + 19] || cleared[(o.trophy * 20 + 19) + "h"])) give(o);
+    if (o.trophy != null && full && (cleared[o.trophy * 20 + 19] || cleared[(o.trophy * 20 + 19) + "h"])) give(o);
     if (o.cost && owned[o.id]) g -= o.cost;
   }
   const prizeGemsSpent=Object.values(gemUnlocked).reduce((t,n)=>t+(Number.isSafeInteger(n)&&n>0?n:0),0);
-  gems = Math.max(0, g + mockGemCredits() + bonusEarnedGems() - prizeGemsSpent - hints + 5 * Object.keys(dailyDone).length);
+  gems = Math.max(0, g + mockGemCredits() + bonusEarnedGems() - prizeGemsSpent - hints + (full ? 5 * Object.keys(dailyDone).length : 0));
   return got;
 }
 function save(){ try { localStorage.setItem("ftw-save", JSON.stringify({cleared, stars, owned, worn, gemUnlocked, bs:bonusResults, lg:legacyBonusGems, sv:2, cs:campaignStage, hints, hp:hintPaid, dd:dailyDone, seen, li, hard:hardOn})); } catch (e) {} }
@@ -2768,7 +2775,7 @@ function showFinale(){
  const uniqueSolved=LEVELS.filter((_,i)=>!!cleared[i]||!!cleared[i+"h"]).length;
  $("fe-finale-heading").textContent=hardOn?(solvedHard===LEVELS.length?"Hard Mode Conquered":"The Final Hard Castle"):"The Castle Is Yours";
  $("fe-finale-description").textContent="You finished Level 110, the grand finale. The wolf is fed. Mostly.";
- $("fe-finale-next").textContent=uniqueSolved+" of 100 pull-the-pin puzzles cleared and "+Object.values(bonusResults).filter(x=>x==="win").length+" of 10 mini-games won. The Store and daily puzzle are still waiting.";
+ $("fe-finale-next").textContent=uniqueSolved+" of 100 pull-the-pin puzzles cleared and "+Object.keys(bonusResults).filter(k=>!/h$/.test(k)&&bonusResults[k]==="win").length+" of 10 mini-games won. The Store and daily puzzle are still waiting.";
  $("finish-hard").hidden=hardOn;
  show("ftw-finale");
 }
