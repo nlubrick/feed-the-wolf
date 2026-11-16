@@ -477,9 +477,9 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
     <li><b>Spring:</b> anything that lands on it bounces through the gap into the next cell, boulders included.</li>
     <li><b>Portals</b> (from level 21): whatever drops into the glowing ring on a floor comes out of the matching ring in a ceiling. That includes lava, water, boulders, dinner and the wolf.</li>
     <li><b>Ghosts</b> (from level 26) drift to the wolf and scare him off once they share a floor. Lava and boulders pass through them. Water gets rid of them.</li>
-    <li><b>Pressure gears</b> (from level 41) spin when a boulder lands, opening a linked gate.</li>
-    <li><b>Magic blooms</b> (from level 61) flower when water reaches them and open living gates.</li>
-    <li><b>Light beacons</b> (from level 81) ignite when lava reaches them and open glowing gates.</li>
+    <li><b>Gears</b> (Clockwork Citadel) turn when a boulder lands on them and open the gate they are wired to. Numbered gears must be turned in order: turn one early and it strips its teeth for good.</li>
+    <li><b>Blooms</b> (Moonlit Conservatory) open their gate when water reaches them, and drink a measure of that water doing it. Lava reaching a bloom that has not opened withers it for good.</li>
+    <li><b>Beacons</b> (Ghostlight Theatre) light when lava reaches them. A lit beacon opens its gate and drives every ghost off that floor. Water reaching an unlit beacon puts it out for good.</li>
     <li><b>Daily puzzle:</b> a different castle each day, worth 5 gems the first time you solve it.</li>
     <li><b>Caged wolves</b> turn up in hard mode. Walk the wolf to the cage, or break it open with a boulder or a blast. Everyone has to be out before dinner counts, and lava must never reach a cage.</li>
     <li><b>Undo</b> takes back your last pull. <b>Hint</b> costs a gem and lights up a pin that still leads to a win.</li>
@@ -564,7 +564,7 @@ function prep(lv){
 }
 function newState(lv){
   const p = prep(lv);
-  const s = {pulled:lv.pins.map(() => false), broken:p.weak.map(() => false), sawUsed:p.saw.map(() => false), gates:p.gadgets.map(() => false),
+  const s = {pulled:lv.pins.map(() => false), broken:p.weak.map(() => false), sawUsed:p.saw.map(() => false), gates:p.gadgets.map(() => false), dead:p.gadgets.map(() => false),
     parent:{}, down:{}, ents:[], pools:[], status:"play", why:"", lost:"", path:{}, ev:[]};
   for (const r of lv.rooms){
     s.parent[r.id] = r.id;
@@ -587,9 +587,15 @@ function settle(s,lv){
   const step = (e,c,how) => { const i = idx(e); (s.path[i] = s.path[i] || []).push({c:c, how:how}); e.c = c; n++; };
   const lose = why => { if (!s.lost) s.lost = why; };
   const out = (e,t,why) => { e.gone = true; n++; s.ev.push({t:t, e:idx(e), why:why}); };
+  /* Devices. Each location's device has its own catch, so the three places play differently:
+       gear    a boulder landing turns it. Numbered gears must be turned in order: one turned early strips its teeth for good.
+       bloom   water opens it, and it drinks one measure of that water. Lava reaching a bloom that has not opened withers it.
+       beacon  lava lights it, and its light drives off every ghost on that floor. Water reaching an unlit beacon puts it out for good. */
+  const spoil = (c,kind) => { p.gadgets.forEach((g,j) => { if (g.c === c && g.kind === kind && !s.gates[j] && !s.dead[j]){ s.dead[j] = true; s.ev.push({t:"jam",j:j}); n++; } }); };
   const activate = (c,kind) => {
     p.gadgets.forEach((g,j) => {
-      if (g.c !== c || g.kind !== kind || s.gates[j]) return;
+      if (g.c !== c || g.kind !== kind || s.gates[j] || s.dead[j]) return;
+      if (g.after != null && !s.gates[g.after]){ s.dead[j] = true; s.ev.push({t:"jam",j:j}); n++; return; }
       s.gates[j] = true;
       const ra=find(s,g.a), rb=find(s,g.b);
       if (ra !== rb) s.parent[ra] = rb;
@@ -611,7 +617,7 @@ function settle(s,lv){
     crack(t.c);
   };
   const scorch = (q,c) => {          // lava reaches a cell; false once the lava is used up
-    activate(c,"beacon");
+    activate(c,"beacon"); spoil(c,"bloom");
     for (const e of inCell(c)) if (e.k === "ice"){ out(e,"melt"); q.n--; if (q.n <= 0) return false; }
     for (const e of inCell(c)){
       if (e.gone) continue;
@@ -623,10 +629,16 @@ function settle(s,lv){
     }
     return true;
   };
-  const soak = c => { activate(c,"bloom"); for (const e of inCell(c)){
-    if (e.k === "tnt" && !e.wet){ e.wet = true; n++; s.ev.push({t:"wet", e:idx(e)}); }
-    else if (e.k === "ghost") out(e,"flee","water");                          // water is the only thing a ghost minds
-  } };
+  const soak = (c,q) => {            // water reaches a cell; false once a bloom has drunk the last of it
+    const thirsty = p.gadgets.some((g,j) => g.c === c && g.kind === "bloom" && !s.gates[j] && !s.dead[j]);
+    activate(c,"bloom"); spoil(c,"beacon");
+    for (const e of inCell(c)){
+      if (e.k === "tnt" && !e.wet){ e.wet = true; n++; s.ev.push({t:"wet", e:idx(e)}); }
+      else if (e.k === "ghost") out(e,"flee","water");
+    }
+    if (thirsty){ q.n--; n++; }
+    return q.n > 0;
+  };
   const walk = (e,target) => {        // true if e ends up in the target's cell
     const a = p.by[e.c], b = p.by[target.c];
     if (a.y !== b.y || find(s,e.c) !== find(s,target.c)) return false;
@@ -676,12 +688,16 @@ function settle(s,lv){
         const xs = []; for (let x = x0; x <= x1; x++) xs.push(x);
         xs.sort((a,b) => dist(a) - dist(b));
         let alive = true;
-        for (const x of xs){ if (q.k === "water") soak(cell(x,sp.y)); else if (!scorch(q,cell(x,sp.y))){ alive = false; break; } }
+        for (const x of xs){ if (!(q.k === "water" ? soak(cell(x,sp.y),q) : scorch(q,cell(x,sp.y)))){ alive = false; break; } }
         if (!alive) continue;
         if (hole != null && s.down[cell(hole,sp.y)]){ const to = p.by[s.down[cell(hole,sp.y)]]; q.y = to.y; q.lo = q.hi = to.x; n++; }
         else if (hole == null && (q.lo !== sp.lo || q.hi !== sp.hi)){ q.lo = sp.lo; q.hi = sp.hi; n++; }
       }
     }
+    p.gadgets.forEach((g,j) => {                                         // a lit beacon clears its floor of ghosts
+      if (g.kind !== "beacon" || !s.gates[j]) return;
+      for (const gh of live("ghost")) if (p.by[gh.c].y === p.by[g.c].y && find(s,gh.c) === find(s,g.c)) out(gh,"flee","light");
+    });
     const king = live("king")[0];                                        // walkers
     if (king && !s.lost){
       for (const m of live("monster")) if (walk(m,king)){ s.ev.push({t:"net", e:idx(m)}); lose("monster"); n++; }
@@ -1676,12 +1692,19 @@ function gadgetBadge(kind,x,y,r,col,now,lit){
 }
 /* The gate a device opens. Shut, it is a barred door in the wall wearing the device's emblem, with a dotted lead
    running back to the device; once the device is set off the bars are gone and the frame stays lit. */
+/* For numbered gears: 1 for a gear with nothing before it, 2 for the one after that, and so on. Blank when the level has no order. */
+function gadgetOrder(j){ if(!P.gadgets.some(g=>g.after!=null))return ""; let n=1,k=j,guard=0; while(P.gadgets[k].after!=null&&guard++<9){k=P.gadgets[k].after;n++;} return String(n); }
+function gadgetNumber(j,x,y){ const t=gadgetOrder(j); if(!t)return; ctx.save();ctx.font="900 15px "+getComputedStyle(document.body).fontFamily;ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.lineWidth=4;ctx.strokeStyle="#120e1c";ctx.strokeText(t,x,y);ctx.fillStyle="#fff";ctx.fillText(t,x,y);ctx.restore(); }
+function gadgetCross(x,y,r){ ctx.save();ctx.strokeStyle="#ff4d4d";ctx.lineWidth=4;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(x-r,y-r);ctx.lineTo(x+r,y+r);ctx.moveTo(x+r,y-r);ctx.lineTo(x-r,y+r);ctx.stroke();ctx.restore(); }
 function drawGadgetGate(g,j,now,col){
-  const a=P.by[g.a],b=P.by[g.b],X=Math.max(a.x,b.x)*U,y=a.y*U,on=s.gates[j];
+  const a=P.by[g.a],b=P.by[g.b],X=Math.max(a.x,b.x)*U,y=a.y*U,on=s.gates[j],dead=s.dead&&s.dead[j];
+  if(dead)col="#8a8494";
   ctx.save();
   if(!on){
     // dotted lead from the device to its gate, drawn dark then bright so it shows on any wall
     const dx=midX(g.c),dy=floorY(g.c)-44;
+    if(dead)ctx.globalAlpha=.35;
     ctx.setLineDash([6,6]);ctx.lineDashOffset=-now*16;ctx.lineCap="round";
     for(const [w,c,al] of [[5,"#0d0a14",.7],[2.6,col,.95]]){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.globalAlpha=al;
       ctx.beginPath();ctx.moveTo(dx,dy);ctx.lineTo(dx,y+13);ctx.lineTo(X,y+13);ctx.lineTo(X,y+20);ctx.stroke();}
@@ -1696,6 +1719,7 @@ function drawGadgetGate(g,j,now,col){
     // the device's emblem, large, in the middle of it
     ctx.fillStyle=col;ctx.beginPath();ctx.arc(X,y+59,15,0,Math.PI*2);ctx.fill();
     gadgetBadge(g.kind,X,y+59,12,col,now,false);
+    if(dead)gadgetCross(X,y+59,9);else gadgetNumber(j,X,y+84);
   } else {
     ctx.strokeStyle=col;ctx.lineWidth=3;ctx.globalAlpha=.7+.2*Math.sin(now*3);
     ctx.beginPath();ctx.moveTo(X-8,y+96);ctx.lineTo(X-8,y+23);ctx.lineTo(X+8,y+23);ctx.lineTo(X+8,y+96);ctx.stroke();
@@ -1706,7 +1730,9 @@ function drawGadgetGate(g,j,now,col){
 function drawGadgets(now){
   P.gadgets.forEach((g,j)=>{
     const on=s.gates[j],x=midX(g.c),y=floorY(g.c)-12,col=g.kind==="gear"?"#f8bd54":g.kind==="bloom"?"#76efa9":"#b5a2ff";
-    if(!on)gadgetBadge(g.kind,x,y-44,9,col,now,false);
+    const dead=s.dead&&s.dead[j];
+    if(!on)gadgetBadge(g.kind,x,y-44,9,dead?"#8a8494":col,now,false);
+    if(dead)gadgetCross(x,y-10,13);else if(!on)gadgetNumber(j,x+17,y-44);
     ctx.save();ctx.translate(x,y);ctx.globalAlpha=on?1:.87;
     ctx.strokeStyle=col;ctx.lineWidth=2;ctx.fillStyle="#1d1930";
     ctx.beginPath();ctx.ellipse(0,5,25,6,0,0,Math.PI*2);ctx.fill();ctx.stroke();

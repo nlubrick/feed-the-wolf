@@ -33,7 +33,7 @@ function solve(level,skip=-1){
   let calls=0;
   function dfs(state,path){
     if(state.status==="win") return path;
-    if(state.status==="lose" || ++calls>50000) return null;
+    if(state.status==="lose" || ++calls>400000) return null;
     for(let i=0;i<level.pins.length;i++){
       if(i===skip || state.pulled[i]) continue;
       const next=copy(state);
@@ -44,7 +44,7 @@ function solve(level,skip=-1){
     return null;
   }
   const path=dfs(newState(level),[]);
-  assert(calls<=50000,"Search budget exceeded on "+level.name);
+  assert(calls<=400000,"Search budget exceeded on "+level.name);
   return path;
 }
 let validated=0;
@@ -54,12 +54,16 @@ for(const [index,normal] of all.entries()){
     const winning=solve(level);
     assert(winning,"Unsolvable level "+(index+1)+" "+difficulty);
     if(index>=40){
-      assert.equal(level.gadgets.length,1,"New levels need a chapter-specific mechanism");
-      const g=level.gadgets[0],expected=["gear","bloom","beacon"][Math.floor((index-40)/20)];
-      assert.equal(g.kind,expected,"Wrong chapter toy on "+normal.name);
-      const trigger=level.pins.findIndex(p=>p.dir==="v" && p.a==="_trigger" && p.b==="_device");
-      assert(trigger>=0,"Missing interactive trigger");
-      assert.equal(solve(level,trigger),null,"New mechanic is optional on "+normal.name+" "+difficulty);
+      const expected=["gear","bloom","beacon"][Math.floor((index-40)/20)];
+      assert(level.gadgets.length>=1,"New levels need their location's device");
+      assert(level.gadgets.every(g=>g.kind===expected),"Wrong device on "+normal.name);
+      assert(level.pins.length>=5&&level.pins.length<=8,"Pin count out of range on "+normal.name);
+      assert(winning.length>=4,"Too short: "+normal.name+" "+difficulty);
+      for(let j=0;j<level.gadgets.length;j++){            // take any one device away and the level must become unwinnable
+        const t=copy(level);t.gadgets.splice(j,1);
+        t.gadgets.forEach(g=>{if(g.after!=null){if(g.after===j)delete g.after;else if(g.after>j)g.after--;}});
+        assert.equal(solve(t),null,"A device is optional on "+normal.name+" "+difficulty);
+      }
     }
     validated++;
   }
@@ -74,4 +78,4 @@ assert(source.includes('FTW_TEST_BUILD = true'));
 if(process.argv.includes("--release")){
   assert.fail("Release blocked: remove the development preview and integrate verified native StoreKit 2 before release.");
 }
-console.log("OK: "+all.length+" levels / "+validated+" solvable variants; all 120 new variants require their chapter toy.");
+console.log("OK: "+all.length+" levels / "+validated+" solvable variants; no device on any of the 120 new variants is optional.");
