@@ -134,3 +134,16 @@ test("Location trophies are earned, never bought, and every fifth level pays a g
   r=run(all,st);
   assert.ok(store-(r.ctx.gems+135)<=5*31,"Store "+store+" vs earned "+(r.ctx.gems+135));
 });
+test("Buying the game gives a free pet and accessory, and refunds gems already spent on them",()=>{
+  const OUTFITS=[{id:"wolf",free:true,slot:"hero"},{id:"chick",slot:"pet",cost:14},{id:"bandana",slot:"neck",from:5},{id:"party",slot:"head",cost:6}];
+  const make=(bought,owned,gemUnlocked)=>({owned,worn:{},gems:0,cleared:{},stars:{0:3,1:3,2:3,3:3,4:3,5:3,6:3,7:3,8:3,9:3,10:3,11:3,12:3},dailyDone:{},hints:0,gemUnlocked,OUTFITS,mockGemCredits:()=>0,bonusEarnedGems:()=>0,ownsFullGame:()=>bought});
+  let c=make(false,{},{});economy(c)();
+  assert.equal(c.owned.chick,undefined);assert.equal(c.owned.bandana,undefined);assert.equal(c.gems,39);   // 13 levels at three stars
+  c=make(true,{},{});economy(c)();
+  assert.equal(c.owned.chick,true);assert.equal(c.owned.bandana,true);assert.equal(c.worn.pet,"chick");assert.equal(c.worn.neck,"bandana");
+  assert.equal(c.gems,39,"the gifts cost nothing");
+  c=make(true,{chick:true,bandana:true,party:true},{bandana:19});economy(c)();
+  assert.equal(c.gems,33,"only the party hat is charged; the chick and bandana gems come back");
+  assert.equal(c.gemUnlocked.bandana,undefined);
+  assert.match(html,/function ownsFullGame\(\)\{ return fullGame \|\| \(testCheckoutAvailable\(\) && simulatedPurchase\); \}/);   // the developer preview switch does not hand out gifts
+});
