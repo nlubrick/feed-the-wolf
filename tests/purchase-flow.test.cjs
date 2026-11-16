@@ -135,7 +135,7 @@ test("Location trophies are earned, never bought, and every fifth level pays a g
   assert.ok(store-(r.ctx.gems+135)<=5*31,"Store "+store+" vs earned "+(r.ctx.gems+135));
 });
 test("Buying the game gives a free pet and accessory, and refunds gems already spent on them",()=>{
-  const OUTFITS=[{id:"wolf",free:true,slot:"hero"},{id:"chick",slot:"pet",cost:14},{id:"bandana",slot:"neck",from:5},{id:"party",slot:"head",cost:6}];
+  const OUTFITS=[{id:"wolf",free:true,slot:"hero"},{id:"chick",slot:"pet",cost:14,gift:true},{id:"bandana",slot:"neck",from:5,gift:true},{id:"party",slot:"head",cost:6}];
   const make=(bought,owned,gemUnlocked)=>({owned,worn:{},gems:0,cleared:{},stars:{0:3,1:3,2:3,3:3,4:3,5:3,6:3,7:3,8:3,9:3,10:3,11:3,12:3},dailyDone:{},hints:0,gemUnlocked,OUTFITS,mockGemCredits:()=>0,bonusEarnedGems:()=>0,ownsFullGame:()=>bought});
   let c=make(false,{},{});economy(c)();
   assert.equal(c.owned.chick,undefined);assert.equal(c.owned.bandana,undefined);assert.equal(c.gems,39);   // 13 levels at three stars
@@ -146,4 +146,11 @@ test("Buying the game gives a free pet and accessory, and refunds gems already s
   assert.equal(c.gems,33,"only the party hat is charged; the chick and bandana gems come back");
   assert.equal(c.gemUnlocked.bandana,undefined);
   assert.match(html,/function ownsFullGame\(\)\{ return fullGame \|\| \(testCheckoutAvailable\(\) && simulatedPurchase\); \}/);   // the developer preview switch does not hand out gifts
+});
+test("The full-game gifts are listed in the Store but cannot be bought with gems",()=>{
+  const OUTFITS=vm.runInNewContext(fragment("const OUTFITS = [","/* Pets: small companions")+"\nOUTFITS");
+  assert.deepEqual(Array.from(OUTFITS.filter(o=>o.gift),o=>o.id+":"+o.slot).sort(),["bandana:neck","chick:pet"]);
+  assert.match(html,/if\(o\.gift\)\{openUnlock\(li,false,true\);return;\}/);      // tapping one shows the full-game offer instead of a gem price
+  assert.match(html,/id="unlock-gifts"/);assert.match(html,/Free gifts with the full game/);
+  assert.match(code,/free Chick pet and Bandana/);
 });
