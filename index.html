@@ -417,7 +417,7 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
       <p class="unlock-kicker">The next wing awaits</p><img id="unlock-wolf" alt="The wolf is ready for his next adventure">
       <h1>Still hungry?</h1>
       <p class="unlock-body">The first five castle puzzles plus one bonus game are free. Unlock all 110 levels (100 puzzles and 10 different mini-games), Hard Mode, and daily challenges across five locations.</p>
-      <div class="unlock-perks"><span>100 puzzles</span><span>10 mini-games</span><span>Hard Mode</span><span>Daily puzzles</span><span>No ads</span></div>
+      <div class="unlock-perks"><span>100 puzzles</span><span>10 mini-games</span><span>Hard Mode</span><span>Daily puzzles</span><span>No ads</span><span>Free pet + bandana</span></div>
       <div class="unlock-price"><span id="unlock-price">$2.99</span><small>One-time purchase · No subscription</small></div>
       <button class="go" id="unlock-buy" type="button" disabled>Unlock the full game</button>
       <button class="quiet" id="unlock-restore" type="button" disabled>Restore purchases</button>
@@ -2104,6 +2104,8 @@ let developerMode = false, previewFull = false, developerReturnView = "game";
 try { simulatedPurchase = FTW_TEST_BUILD && localStorage.getItem(FTW_TEST_PURCHASE_KEY) === "yes"; }
 catch (e) { /* local storage may be unavailable */ }
 function testCheckoutAvailable(){ return FTW_TEST_BUILD && !nativeStore(); }
+/* Really bought (or test-bought), as opposed to the developer preview switch. Buying the game comes with a free pet and accessory. */
+function ownsFullGame(){ return fullGame || (testCheckoutAvailable() && simulatedPurchase); }
 function hasFullAccess(){
   return fullGame || (testCheckoutAvailable() && (simulatedPurchase || (developerMode && previewFull)));
 }
@@ -2334,7 +2336,7 @@ function confirmFakeCheckout(){
   syncPrizes();dressWolf();save();renderWardrobe();renderStore();renderDeveloper();updateStoreButtons();
   if(p.id===FULL_UNLOCK_PRODUCT_ID&&pendingUnlockTarget)resumeUnlockedPlay();
   testToast(p.id===FULL_UNLOCK_PRODUCT_ID
-    ?"TEST PURCHASE · Full game unlocked · No charge"
+    ?"TEST PURCHASE · Full game unlocked · Free chick and bandana added"
     :"TEST PURCHASE · "+p.gems+" gems added · No charge");
 }
 $("store-dev").addEventListener("click",openDeveloper);
@@ -2395,7 +2397,10 @@ function openUnlock(index,isDaily){
 }
 function acceptEntitlement(result){
   if (!result || result.productId !== FULL_UNLOCK_PRODUCT_ID || result.verified !== true || result.entitled !== true) return false;
+  const firstTime = !fullGame && !owned.chick;
   fullGame = true;
+  syncPrizes(); save();   // hands over the free pet and accessory
+  if (firstTime && owned.chick) testToast("Thank you! A chick and a bandana are yours, free.");
   if (typeof result.displayPrice === "string" && result.displayPrice.length < 48) $("unlock-price").textContent = result.displayPrice;
   dressWolf(); renderWardrobe(); updateStoreButtons(); return true;
 }
@@ -2664,7 +2669,10 @@ function syncPrizes(){
   owned.wolf = true; if (!worn.hero || !owned[worn.hero]) worn.hero = "wolf";
   for (const k in stars) g += (+stars[k] || 0) * (/h$/.test(k) ? 2 : 1);
   for (let i = 4; i < 100; i += 5){ if (cleared[i]) g += MILESTONE_GEMS; if (cleared[i + "h"]) g += HARD_MILESTONE_GEMS; }
+  // A thank-you for buying the game: a pet and an accessory, free. If they had already paid gems for either, those gems come back.
+  const gifts = typeof ownsFullGame === "function" && ownsFullGame() ? ["chick", "bandana"] : [];
   for (const o of OUTFITS){
+    if (gifts.includes(o.id)){ give(o); delete gemUnlocked[o.id]; continue; }
     if (o.trophy != null && (cleared[o.trophy * 20 + 19] || cleared[(o.trophy * 20 + 19) + "h"])) give(o);
     if (o.cost && owned[o.id]) g -= o.cost;
   }
