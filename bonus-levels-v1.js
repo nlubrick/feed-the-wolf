@@ -28,6 +28,7 @@ for(let i=0;i<100;i++){
  }
 }
 const TOTAL=stages.length;
+const hardReward=stage=>Math.round(stage.reward*1.5);   // Hard Mode mini-games pay half as much again, on top of the normal win
 /* Saves made when there were 115 stages (three mini-games per location, numbered differently). Returns where that player
    should now stand and the gems they had already won from the old mini-games, so nothing they earned is lost. */
 function legacy(oldStage,oldResults){
@@ -156,7 +157,7 @@ class Controller{
    '<button type="button" data-bonus-action="next" aria-label="Next level"'+(this.cb.canNext&&!this.cb.canNext(stage)?' disabled':'')+'>\u203A</button></div>'+
    '<header class="fw-bonus-header"><div><p class="fw-bonus-kicker">BONUS LEVEL '+stage.number+
    ' OF '+TOTAL+' · '+chapters[stage.chapter]+(hard?' · HARD':'')+'</p><h1>'+stage.title+'</h1><p>'+
-   modesTitle[stage.mode]+'</p></div><div class="fw-bonus-reward">✦ +'+stage.reward+' gems</div></header>'+
+   modesTitle[stage.mode]+'</p></div><div class="fw-bonus-reward">✦ +'+(hard?hardReward(stage):stage.reward)+' gems</div></header>'+
    '<p class="fw-bonus-instructions" id="fw-bonus-instructions"></p>'+
    '<div class="fw-bonus-hud" id="fw-bonus-hud"></div>'+
    '<div class="fw-bonus-play" id="fw-bonus-play"></div>'+
@@ -189,7 +190,7 @@ class Controller{
   this.music.fx(true);this.react("joy",0);
   overlay.hidden=false;
   overlay.innerHTML='<div class="fw-bonus-end"><span>✦ ✦ ✦</span><h2>Dinner saved!</h2>'+
-   '<p>Bonus level '+this.stage.number+' complete. Earn <b>+'+this.stage.reward+
+   '<p>Bonus level '+this.stage.number+' complete. Earn <b>+'+(this.cb.hard&&this.cb.hard()?hardReward(this.stage):this.stage.reward)+
    ' gems</b> for your Store.</p><button type="button" data-bonus-action="continue">'+
    'Continue to Level '+Math.min(TOTAL,this.stage.number+1)+'</button></div>';
  }
@@ -204,5 +205,5 @@ class Controller{
    '<button type="button" data-bonus-action="skip">Skip this stage</button></div>';
  }
 }
-root.FTWBonus=Object.freeze({stages,bonus,chapters,worldScores,at,puzzleStage,register,legacy,TOTAL,mount:(node,cb)=>new Controller(node,cb)});
+root.FTWBonus=Object.freeze({stages,bonus,chapters,worldScores,at,puzzleStage,register,legacy,TOTAL,hardReward,mount:(node,cb)=>new Controller(node,cb)});
 })(typeof window!=="undefined"?window:{});
