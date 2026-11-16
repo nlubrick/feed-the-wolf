@@ -349,6 +349,10 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 .tile .tile-gem-price{font-weight:800;color:#b8edff;background:#132341b0}
 .tile .tile-gem-price .gem{width:.6em;height:.6em}
 .tile .tile-free{font-size:10px;line-height:1.15;color:#ffe6a8;opacity:.9}
+.tile.tile-gift{border-color:#7be39a;box-shadow:0 0 0 1px #7be39a66,0 0 12px #7be39a44}
+.unlock-gifts{display:flex;align-items:center;justify-content:center;gap:10px;margin:12px auto;padding:10px 12px;max-width:34ch;border:2px solid #7be39a;border-radius:16px;background:#7be39a14}
+.unlock-gifts img{width:58px;height:58px;border-radius:12px;background:#0003}
+.unlock-gifts p{margin:0;text-align:left;font-size:14px;line-height:1.3}.unlock-gifts b{color:#b8f5c8}
 .tile.tile-trophy{position:relative;overflow:hidden;border-color:#ffd76a;box-shadow:0 0 0 1px #ffd76a66,0 0 14px #ffc94a55}
 .tile.tile-trophy::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(255,240,180,.38) 50%,transparent 65%);transform:translateX(-120%);animation:trophy-sheen 3.2s ease-in-out infinite;pointer-events:none}
 @keyframes trophy-sheen{0%,55%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
@@ -416,8 +420,9 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
     <div class="unlock-card">
       <p class="unlock-kicker">The next wing awaits</p><img id="unlock-wolf" alt="The wolf is ready for his next adventure">
       <h1>Still hungry?</h1>
-      <p class="unlock-body">The first five castle puzzles plus one bonus game are free. Unlock all 110 levels (100 puzzles and 10 different mini-games), Hard Mode, and daily challenges across five locations.</p>
-      <div class="unlock-perks"><span>100 puzzles</span><span>10 mini-games</span><span>Hard Mode</span><span>Daily puzzles</span><span>No ads</span><span>Free pet + bandana</span></div>
+      <p class="unlock-body">The first five castle puzzles plus one bonus game are free. Unlock all 110 levels (100 puzzles and 10 different mini-games), Hard Mode, and daily challenges across five locations, and get a free pet and accessory.</p>
+      <div class="unlock-perks"><span>100 puzzles</span><span>10 mini-games</span><span>Hard Mode</span><span>Daily puzzles</span><span>No ads</span></div>
+      <div class="unlock-gifts" id="unlock-gifts"></div>
       <div class="unlock-price"><span id="unlock-price">$2.99</span><small>One-time purchase · No subscription</small></div>
       <button class="go" id="unlock-buy" type="button" disabled>Unlock the full game</button>
       <button class="quiet" id="unlock-restore" type="button" disabled>Restore purchases</button>
@@ -505,7 +510,7 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
   <div id="store-products" class="ftw-products"></div>
   <h2 class="shelf">Characters &amp; Companions</h2>
   <div class="mirror"><img id="petImg" alt="" hidden><img id="dress" alt="The wolf in what he is wearing now"></div>
-  <p class="hint">Collect gems by earning stars (double in Hard Mode) or buy gem packs during this test. You also get a gem bonus every 5 levels and from mini-games and the daily puzzle. Everything below is bought with gems, except the five gold trophies: those are only earned, one for finishing each location. Wear one hat, face accessory and neck accessory, with one pet at a time.</p>
+  <p class="hint">Collect gems by earning stars (double in Hard Mode) or buy gem packs during this test. You also get a gem bonus every 5 levels and from mini-games and the daily puzzle. Everything below is bought with gems, except the five gold trophies (earned, one for finishing each location) and the green gifts (free with the full game). Wear one hat, face accessory and neck accessory, with one pet at a time.</p>
   <div class="tiles" id="tilesH"></div>
   <h2 class="shelf">Costumes &amp; Accessories</h2>
   <div class="tiles" id="tilesS"></div>
@@ -830,7 +835,7 @@ const OUTFITS = [
   {id:"bear", c:"#b5762e", name:"Bear cub", slot:"hero", cost:20, from:11},
   {id:"snow", c:"#7fc6ee", name:"Snow wolf", slot:"hero", cost:25, from:16},
   {id:"shadow", c:"#6a4be0", name:"Shadow wolf", slot:"hero", cost:30, from:21},
-  {id:"bandana", c:"#e23b3b", name:"Bandana", slot:"neck", from:5},
+  {id:"bandana", c:"#e23b3b", name:"Bandana", slot:"neck", from:5, gift:true},
   {id:"shades", c:"#12b5a6", name:"Shades", slot:"face", from:10},
   {id:"chef", c:"#38b6ff", name:"Chef hat", slot:"head", from:15},
   {id:"crown", c:"#ffb300", name:"Crown", slot:"head", trophy:0},
@@ -844,7 +849,7 @@ const OUTFITS = [
   {id:"tophat", c:"#d81e5b", name:"Top hat", slot:"head", cost:16},
   {id:"viking", c:"#3f7fd9", name:"Viking helmet", slot:"head", cost:18},
   {id:"cape", c:"#e2452b", name:"Cape", slot:"neck", cost:24},
-  {id:"chick", c:"#ffb300", name:"Chick", slot:"pet", cost:14},
+  {id:"chick", c:"#ffb300", name:"Chick", slot:"pet", cost:14, gift:true},
   {id:"frog", c:"#2fae4b", name:"Frog", slot:"pet", cost:20},
   {id:"bunny", c:"#ff7db0", name:"Bunny", slot:"pet", from:5},
   {id:"owl", c:"#b5762e", name:"Owl", slot:"pet", from:10},
@@ -2393,6 +2398,8 @@ function updateStoreButtons(){
 function openUnlock(index,isDaily,stay){
   pendingUnlockTarget = {index:Number.isInteger(index) && index >= 0 && index < LEVELS.length ? index : Math.max(li,0),daily:!!isDaily,stay:!!stay};
   $("unlock-wolf").src = heroSvg("joy", OUTFITS.filter(o => worn[o.slot] === o.id).map(o => o.id), worn.hero || "wolf").src;
+  const gift=OUTFITS.filter(o=>o.gift);
+  $("unlock-gifts").innerHTML=gift.map(o=>'<img alt="" src="'+thumb(o.id)+'">').join("")+'<p><b>Free gifts with the full game</b><br>'+gift.map(o=>o.name+(o.slot==="pet"?" pet":"")).join(" + ")+'. Only for full-game owners; not sold for gems.</p>';
   if(bonusController.stage)bonusController.music.stop();
   updateStoreButtons(); show("unlock");
 }
@@ -2671,10 +2678,10 @@ function syncPrizes(){
   owned.wolf = true; if (!worn.hero || !owned[worn.hero]) worn.hero = "wolf";
   for (const k in stars) g += (+stars[k] || 0) * (/h$/.test(k) ? 2 : 1);
   for (let i = 4; i < 100; i += 5){ if (cleared[i]) g += MILESTONE_GEMS; if (cleared[i + "h"]) g += HARD_MILESTONE_GEMS; }
-  // A thank-you for buying the game: a pet and an accessory, free. If they had already paid gems for either, those gems come back.
-  const gifts = typeof ownsFullGame === "function" && ownsFullGame() ? ["chick", "bandana"] : [];
+  // A thank-you for buying the game: the gift pet and accessory. They are not sold for gems; anyone who paid gems for one before that changed gets those gems back.
+  const bought = typeof ownsFullGame === "function" && ownsFullGame();
   for (const o of OUTFITS){
-    if (gifts.includes(o.id)){ give(o); delete gemUnlocked[o.id]; continue; }
+    if (o.gift && bought){ give(o); delete gemUnlocked[o.id]; continue; }
     if (o.trophy != null && (cleared[o.trophy * 20 + 19] || cleared[(o.trophy * 20 + 19) + "h"])) give(o);
     if (o.cost && owned[o.id]) g -= o.cost;
   }
@@ -2695,21 +2702,21 @@ function renderWardrobe(){
   $("gems").textContent=$("gems2").textContent=gems;
   if(!$("shop").hidden)renderStore();
   const tile=o=>{
-    const own=!!owned[o.id],price=gemPrice(o),on=own&&worn[o.slot]===o.id,trophy=o.trophy!=null;
-    const canAfford=own||(!trophy&&gems>=price);
+    const own=!!owned[o.id],price=gemPrice(o),on=own&&worn[o.slot]===o.id,trophy=o.trophy!=null,gift=!!o.gift;
+    const canAfford=own||(!trophy&&!gift&&gems>=price);
     const status=on?(o.slot==="pet"?"With him":o.slot==="hero"?"Playing":"Wearing")
       :own?(o.slot==="pet"?"Bring along":o.slot==="hero"?"Play as":"Put on")
-      :trophy?"Trophy":'<i class="gem"></i>'+price;
-    const action=own?"Choose "+o.name:trophy?o.name+", earned by finishing "+LOCATIONS[o.trophy].name:"Unlock "+o.name+" for "+price+" gems";
-    return '<button type="button" class="tile'+(on?" on":"")+(trophy?" tile-trophy":"")+
+      :trophy?"Trophy":gift?"Full game":'<i class="gem"></i>'+price;
+    const action=own?"Choose "+o.name:trophy?o.name+", earned by finishing "+LOCATIONS[o.trophy].name:gift?o.name+", free with the full game":"Unlock "+o.name+" for "+price+" gems";
+    return '<button type="button" class="tile'+(on?" on":"")+(trophy?" tile-trophy":"")+(gift?" tile-gift":"")+
       (!canAfford?" gem-unaffordable":"")+'" style="--c:'+o.c+'" data-id="'+o.id+
       '" aria-label="'+action+'"><img alt="" src="'+thumb(o.id)+'"><b>'+o.name+
       '</b><span class="tile-gem-price">'+status+'</span>'+
-      (trophy?'<small class="tile-free">'+(own?"Earned: ":"Finish ")+LOCATIONS[o.trophy].name+'</small>':'')+'</button>';
+      (trophy?'<small class="tile-free">'+(own?"Earned: ":"Finish ")+LOCATIONS[o.trophy].name+'</small>':gift?'<small class="tile-free">'+(own?"Full game gift":"Free with the full game")+'</small>':'')+'</button>';
   };
   $("tilesH").innerHTML=OUTFITS.filter(o=>o.slot==="hero").map(tile).join("");
   // One shelf for everything the wolf can wear. Some are also handed over free for clearing a level; the tile says which.
-  $("tilesS").innerHTML=OUTFITS.filter(o=>o.slot!=="pet"&&o.slot!=="hero").sort((a,b)=>(a.trophy!=null?a.trophy-9:gemPrice(a))-(b.trophy!=null?b.trophy-9:gemPrice(b))).map(tile).join("");
+  $("tilesS").innerHTML=OUTFITS.filter(o=>o.slot!=="pet"&&o.slot!=="hero").sort((a,b)=>(a.trophy!=null?a.trophy-9:a.gift?-1:gemPrice(a))-(b.trophy!=null?b.trophy-9:b.gift?-1:gemPrice(b))).map(tile).join("");
   $("tilesT").innerHTML=OUTFITS.filter(o=>o.slot==="pet").map(tile).join("");
 }
 $("shop").addEventListener("click",e=>{
@@ -2718,6 +2725,7 @@ $("shop").addEventListener("click",e=>{
   if(owned[o.id]){
     worn[o.slot]=worn[o.slot]===o.id&&o.slot!=="hero"?null:o.id;
   }else{
+    if(o.gift){openUnlock(li,false,true);return;}   // not for sale: it comes with the full game, so show the offer
     if(o.trophy!=null){testToast(o.name+" can't be bought. Finish "+LOCATIONS[o.trophy].name+" to earn it.");return;}
     const price=gemPrice(o);
     if(gems<price){

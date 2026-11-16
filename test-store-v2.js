@@ -6,7 +6,7 @@
   const FULL_ID="feed_the_wolf_full_unlock";
   const PRODUCTS=Object.freeze([
     Object.freeze({id:FULL_ID,name:"The Full Adventure",category:"One-time unlock",price:"$2.99",gems:0,
-      description:"Unlock all 110 levels: 100 pull-the-pin puzzles and 10 different mini-games, plus Hard Mode and the daily puzzle."}),
+      description:"Unlock all 110 levels: 100 pull-the-pin puzzles and 10 different mini-games, plus Hard Mode and the daily puzzle. Includes a free Chick pet and Bandana, only for full-game owners."}),
     Object.freeze({id:"ftw_gems_50",name:"Gem Pouch",category:"Gems",price:"$0.99",gems:50,
       description:"50 gems to spend on characters, pets, costumes or hints."}),
     Object.freeze({id:"ftw_gems_150",name:"Gem Chest",category:"Gems",price:"$1.99",gems:150,
