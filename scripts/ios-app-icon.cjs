@@ -25,7 +25,7 @@ async function writeIosIcon(options={}){
   const badge=Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"><rect x="716" y="866" width="277" height="112" rx="48" fill="#f7d678" stroke="#252045" stroke-width="12"/><text x="854" y="940" font-family="Arial,Helvetica,sans-serif" font-size="64" font-weight="900" letter-spacing="2" text-anchor="middle" fill="#252045">BETA</text></svg>');
   pipeline=pipeline.composite([{input:badge}]);
  }
- const buffer=await pipeline.png({palette:false,compressionLevel:9}).toBuffer();
+ const buffer=await pipeline.flatten({background:"#292052"}).png({palette:false,compressionLevel:9}).toBuffer();
  const info=await sharp(buffer).metadata();
  if(info.width!==1024||info.height!==1024||info.hasAlpha||info.channels!==3)
   throw new Error("Invalid iOS icon: requires an opaque 1024x1024 RGB PNG");

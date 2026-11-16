@@ -1,7 +1,7 @@
 "use strict";
 const test=require("node:test"),assert=require("node:assert/strict"),fs=require("node:fs"),path=require("node:path"),os=require("node:os"),vm=require("node:vm"),sharp=require("sharp");
 const root=path.resolve(__dirname,".."),page=fs.readFileSync(path.join(root,"index.html"),"utf8");
-test("native iOS icon is generated from the full resolution wolf SVG after Capacitor generates the project",async()=>{
+test("native iOS icon matches the FTW Dev wolf artwork after Capacitor generates the project",async()=>{
  const {writeIosIcon}=require("../scripts/ios-app-icon.cjs");
  const version=fs.readFileSync(path.join(root,"scripts/set-app-version.cjs"),"utf8");
  assert.match(version,/if\(platform==="ios"\)await require\("\.\/ios-app-icon\.cjs"\)\.writeIosIcon\(\)/);
