@@ -16,7 +16,7 @@ async function writeIosIcon(options={}){
  const tester=fs.existsSync(path.join(web,"feed-the-wolf-beta-icon.svg"));
  const source=path.join(root,"index.html");
  const html=fs.readFileSync(source,"utf8");
- const match=html.match(/<link rel="apple-touch-icon" href="data:image\\/png;base64,([^"]+)">/);
+ const match=html.match(/<link rel="apple-touch-icon" href="data:image\/png;base64,([^"]+)">/);
  if(!match)throw new Error("FTW Dev home-screen icon is missing from index.html");
  const wolf=Buffer.from(match[1],"base64");
  const filename="AppIcon-512@2x.png",destination=path.join(icons,filename);

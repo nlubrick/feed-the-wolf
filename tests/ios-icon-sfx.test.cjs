@@ -12,7 +12,7 @@ test("native iOS icon is generated from the full resolution wolf SVG after Capac
   fs.copyFileSync(path.join(root,"feed-the-wolf-icon.svg"),path.join(web,"feed-the-wolf-icon.svg"));
   let output=await writeIosIcon({project:path.join(tmp,"App"),web});
   assert.equal(output.tester,false);
-  assert.match(output.source,/index\\.html$/);
+  assert.match(output.source,/index\.html$/);
   let meta=await sharp(output.destination).metadata();
   assert.equal(meta.width,1024);assert.equal(meta.height,1024);assert.equal(meta.hasAlpha,false);
   assert.equal(meta.channels,3);
@@ -23,8 +23,8 @@ test("native iOS icon is generated from the full resolution wolf SVG after Capac
   fs.writeFileSync(path.join(web,"feed-the-wolf-beta-icon.svg"),svg.replace("</svg>",'<text x="256" y="455">BETA</text></svg>'));
   output=await writeIosIcon({project:path.join(tmp,"App"),web});
   assert.equal(output.tester,true);
-  assert.match(output.source,/index\\.html$/);
-  const ordinary=await sharp(Buffer.from(fs.readFileSync(path.join(root,"index.html"),"utf8").match(/<link rel="apple-touch-icon" href="data:image\\/png;base64,([^"]+)">/)[1],"base64")).resize(1024,1024).flatten({background:"#292052"}).raw().toBuffer();
+  assert.match(output.source,/index\.html$/);
+  const ordinary=await sharp(Buffer.from(fs.readFileSync(path.join(root,"index.html"),"utf8").match(/<link rel="apple-touch-icon" href="data:image\/png;base64,([^"]+)">/)[1],"base64")).resize(1024,1024).flatten({background:"#292052"}).raw().toBuffer();
   assert.ok(ordinary.length>0);
   assert.notDeepEqual(await fs.promises.readFile(output.destination),Buffer.alloc(0));
  }finally{fs.rmSync(tmp,{recursive:true,force:true});}
