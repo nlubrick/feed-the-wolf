@@ -9,6 +9,7 @@ workflows:
     max_build_duration: 60
     environment:
       node: 22
+      java: 21
     scripts:
       - name: Install packages and test release separation
         script: |
@@ -23,6 +24,8 @@ workflows:
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
       - name: Compile debug APK without store credentials
         script: |
+          java -version
+          javac -version
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
