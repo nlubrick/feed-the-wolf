@@ -1271,8 +1271,7 @@ function drawLocationAccents(c){
         c.beginPath();c.arc(x+dx,y+dy,3.2,0,Math.PI*2);c.fill();
         c.fillStyle="#5c3921";c.beginPath();c.arc(x+dx,y+dy,1.2,0,Math.PI*2);c.fill();c.fillStyle="#ffdb91";
       }
-      c.translate(x+72,y+25);c.strokeStyle="#d59a45";c.lineWidth=2;c.beginPath();c.arc(0,0,12,0,Math.PI*2);c.stroke();
-      for(let k=0;k<8;k++){const a=k*Math.PI/4;c.beginPath();c.moveTo(Math.cos(a)*9,Math.sin(a)*9);c.lineTo(Math.cos(a)*15,Math.sin(a)*15);c.stroke();}
+      // (No gear emblem stamped in every cell: a gear on screen should mean "this is the thing you can set off".)
     } else if(chapter===3){ // Moonlit Conservatory: glass canopy and trailing vines
       c.globalAlpha=.42;c.strokeStyle="#b9f0cd";c.lineWidth=1.5;
       c.beginPath();c.moveTo(x+7,y+32);c.quadraticCurveTo(x+45,y-5,x+83,y+32);c.stroke();
@@ -1663,9 +1662,52 @@ function drawPortals(now){                           // in through the ring on t
     ring(midX(q.to) + (k - (same.length - 1) / 2) * 34, P.by[q.to].y * U + 10, 20, 5.5, col, now, false);
   });
 }
+/* The small emblem that ties a device to the gate it opens: the same picture sits on both. */
+function gadgetBadge(kind,x,y,r,col,now,lit){
+  ctx.save();ctx.translate(x,y);
+  ctx.shadowColor=col;ctx.shadowBlur=lit?14:6+4*Math.sin(now*3);
+  ctx.fillStyle="#120e1c";ctx.strokeStyle=col;ctx.lineWidth=2.4;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.shadowBlur=0;ctx.fillStyle=col;
+  if(kind==="gear"){for(let t=0;t<6;t++){ctx.save();ctx.rotate(t*Math.PI/3+(lit?now:0));ctx.fillRect(-1.6,-r*.72,3.2,r*.3);ctx.restore();}
+    ctx.beginPath();ctx.arc(0,0,r*.42,0,Math.PI*2);ctx.fill();ctx.fillStyle="#120e1c";ctx.beginPath();ctx.arc(0,0,r*.16,0,Math.PI*2);ctx.fill();}
+  else if(kind==="bloom"){for(let t=0;t<5;t++){ctx.save();ctx.rotate(t*Math.PI*2/5);ctx.beginPath();ctx.ellipse(0,-r*.42,r*.2,r*.3,0,0,Math.PI*2);ctx.fill();ctx.restore();}
+    ctx.fillStyle="#ffe38e";ctx.beginPath();ctx.arc(0,0,r*.2,0,Math.PI*2);ctx.fill();}
+  else{ctx.beginPath();ctx.moveTo(0,-r*.66);ctx.lineTo(r*.46,0);ctx.lineTo(0,r*.66);ctx.lineTo(-r*.46,0);ctx.closePath();ctx.fill();}
+  ctx.restore();
+}
+/* The gate a device opens. Shut, it is a barred door in the wall wearing the device's emblem, with a dotted lead
+   running back to the device; once the device is set off the bars are gone and the frame stays lit. */
+function drawGadgetGate(g,j,now,col){
+  const a=P.by[g.a],b=P.by[g.b],X=Math.max(a.x,b.x)*U,y=a.y*U,on=s.gates[j];
+  ctx.save();
+  if(!on){
+    // dotted lead from the device to its gate, drawn dark then bright so it shows on any wall
+    const dx=midX(g.c),dy=floorY(g.c)-44;
+    ctx.setLineDash([6,6]);ctx.lineDashOffset=-now*16;ctx.lineCap="round";
+    for(const [w,c,al] of [[5,"#0d0a14",.7],[2.6,col,.95]]){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.globalAlpha=al;
+      ctx.beginPath();ctx.moveTo(dx,dy);ctx.lineTo(dx,y+13);ctx.lineTo(X,y+13);ctx.lineTo(X,y+20);ctx.stroke();}
+    ctx.setLineDash([]);ctx.globalAlpha=1;
+    // the gate: a dark iron door with bright bars, wider than the wall it sits in
+    ctx.shadowColor=col;ctx.shadowBlur=10+5*Math.sin(now*3);
+    ctx.fillStyle="#120e1c";ctx.fillRect(X-12,y+20,24,78);ctx.shadowBlur=0;
+    ctx.strokeStyle=col;ctx.lineWidth=3;ctx.strokeRect(X-12,y+20,24,78);
+    ctx.fillStyle=col;
+    for(const bx of [-6.5,0,6.5])ctx.fillRect(X+bx-1.5,y+22,3,74);
+    for(const by of [28,88])ctx.fillRect(X-11,y+by,22,3.5);
+    // the device's emblem, large, in the middle of it
+    ctx.fillStyle=col;ctx.beginPath();ctx.arc(X,y+59,15,0,Math.PI*2);ctx.fill();
+    gadgetBadge(g.kind,X,y+59,12,col,now,false);
+  } else {
+    ctx.strokeStyle=col;ctx.lineWidth=3;ctx.globalAlpha=.7+.2*Math.sin(now*3);
+    ctx.beginPath();ctx.moveTo(X-8,y+96);ctx.lineTo(X-8,y+23);ctx.lineTo(X+8,y+23);ctx.lineTo(X+8,y+96);ctx.stroke();
+    ctx.globalAlpha=1;gadgetBadge(g.kind,X,y+14,8,col,now,true);
+  }
+  ctx.restore();
+}
 function drawGadgets(now){
   P.gadgets.forEach((g,j)=>{
     const on=s.gates[j],x=midX(g.c),y=floorY(g.c)-12,col=g.kind==="gear"?"#f8bd54":g.kind==="bloom"?"#76efa9":"#b5a2ff";
+    if(!on)gadgetBadge(g.kind,x,y-44,9,col,now,false);
     ctx.save();ctx.translate(x,y);ctx.globalAlpha=on?1:.87;
     ctx.strokeStyle=col;ctx.lineWidth=2;ctx.fillStyle="#1d1930";
     ctx.beginPath();ctx.ellipse(0,5,25,6,0,0,Math.PI*2);ctx.fill();ctx.stroke();
@@ -1689,9 +1731,6 @@ function drawGadgets(now){
       if(on){const gr=ctx.createRadialGradient(0,-35,3,0,-35,32);gr.addColorStop(0,"#fff2ba99");gr.addColorStop(1,"#fff2ba00");ctx.fillStyle=gr;ctx.fillRect(-35,-70,70,70);}
     }
     ctx.restore();
-    if(on){const a=P.by[g.a],b=P.by[g.b],wx=Math.max(a.x,b.x)*U,wy=a.y*U+52;
-      ctx.save();ctx.strokeStyle=col;ctx.globalAlpha=.7+.2*Math.sin(now*3);ctx.lineWidth=3;
-      ctx.beginPath();ctx.moveTo(wx,wy-17);ctx.lineTo(wx,wy+14);ctx.stroke();ctx.restore();}
   });
 }
 function drawSprings(){
@@ -1879,6 +1918,8 @@ function draw(now){
     if (Math.random() < .25){ const live = parts.filter(p => !p.dead && p.k === 0); const p = live[Math.random()*live.length | 0]; if (p) fx.push({t:"ember", x:p.x, y:p.y-6, vx:(Math.random()-.5)*16, vy:-30-Math.random()*40, life:.9, max:.9, r:1+Math.random()}); }
   }
   ctx.restore();
+  // gates sit in the walls, which the room clip above leaves out, so they are drawn after it is lifted
+  P.gadgets.forEach((g,j)=>drawGadgetGate(g,j,now,g.kind==="gear"?"#f8bd54":g.kind==="bloom"?"#76efa9":"#b5a2ff"));
   drawFx();
   const TH = theme();
   drawAmbient(now, TH.amb);
