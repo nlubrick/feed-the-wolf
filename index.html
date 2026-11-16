@@ -62,7 +62,8 @@ h1{
 .dots i.now{background:var(--brass);outline:2px solid var(--ink);outline-offset:1px}
 
 .stage{display:flex;justify-content:center}
-.castle{width:min(100%,calc(var(--cols,3) * 136px));filter:drop-shadow(0 12px 0 rgba(0,0,0,.28))}
+/* Square and tall castles are narrowed a little on a phone so they fit between the header and the buttons (never below 80% width). */
+.castle{width:min(100%,calc(var(--cols,3) * 136px),max(80%,calc((100dvh - 584px) * var(--cols,3) / var(--rows,3))));filter:drop-shadow(0 12px 0 rgba(0,0,0,.28))}
 .crenel{height:18px;margin:0 4px;background:repeating-linear-gradient(90deg,var(--stone) 0 30px,transparent 30px 46px);border-radius:4px 4px 0 0;transition:background .5s}
 .board{position:relative;width:100%;border-radius:6px 6px 14px 14px;box-shadow:0 0 0 4px var(--edge,#33365c);background:#35375c;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 .board canvas{display:block;width:100%;height:100%;border-radius:inherit;touch-action:manipulation}
@@ -182,6 +183,11 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 .prize img{flex:none;width:48px;height:55px}
 .prize p{font-size:14px;max-width:none}
 #game,#shop,#levels,#help{display:flex;flex-direction:column;gap:16px}
+/* The puzzle screen fills the phone, and the castle sits in the space between the header and the buttons.
+   Castles come in different heights, so without this the buttons and links jump up and down from level to level. */
+.wrap{min-height:100vh;min-height:100dvh}
+#game{flex:1 0 auto}
+#game .stage{flex:1 0 auto;align-items:center}
 [hidden]{display:none!important}
 .shop-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .purse{font-family:var(--display);font-size:24px;color:var(--ink);background:rgba(18,15,43,.6);border:2px solid #38b6ff;border-radius:999px;padding:4px 16px 4px 10px;white-space:nowrap}
@@ -318,6 +324,7 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 .dev-reset-actions .danger{border-color:#f2a46c;color:#ffccae}
 .dev-reset-actions small{font:600 12px/1.45 var(--body);color:#c3b0d5;margin-bottom:12px}
 .ftw-test-checkout{font:800 11px/1.5 var(--body);letter-spacing:1px;text-align:center;color:#ffe2a7;background:#52381e;border:1px solid #d6a35c;border-radius:9px;padding:8px}
+.wrap{padding-top:34px !important}   /* keeps the badge clear of the title */
 #beta-badge{position:fixed;z-index:2147482000;top:max(4px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);pointer-events:none;font:800 10px var(--body);letter-spacing:1.5px;color:#1b1530;background:#ffd76a;border:1px solid #7a5410;border-radius:999px;padding:3px 10px;opacity:.92;white-space:nowrap}
 /*BETA-END*/
 .ftw-toast{position:fixed;top:max(15px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#24513f;color:#f5fff9;border:2px solid #86e5b2;border-radius:13px;box-shadow:0 8px 40px #0008;padding:13px 18px;z-index:1500;font:800 13px/1.3 var(--body);max-width:90vw;text-align:center;pointer-events:none}
@@ -2588,7 +2595,7 @@ function load(index, replay, fresh){
   $("next2").disabled = daily || campaignStage >= LAST_STAGE || (li + 1 >= reached() && !cleared[li] && !cleared[li+"h"]);
   const hb = $("hard"); hb.textContent = hasFullAccess() ? "Hard: " + (hardOn ? "on" : "off") : "Hard: full game"; hb.disabled = daily; hb.style.opacity = daily ? .4 : 1;
   $("daily").innerHTML = !hasFullAccess() ? "Daily puzzle · Full game" : daily ? "Back to level " + (li + 1) : dailyDone[dayNo()] ? "Daily puzzle: solved today" : 'Daily puzzle +<i class="gem"></i>5'; hb.setAttribute("aria-pressed", hardOn ? "true" : "false");
-  castle.style.setProperty("--cols", lv.cols);
+  castle.style.setProperty("--cols", lv.cols);castle.style.setProperty("--rows", lv.rows);
   board.style.aspectRatio = lv.cols + " / " + lv.rows;
   setSize();
   opened = s.pulled.slice(); wOpened = s.broken.slice(); sawFired = s.sawUsed.slice();
