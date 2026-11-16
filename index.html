@@ -2073,6 +2073,8 @@ function goToCampaignStage(number){
 }
 const bonusController=window.FTWBonus.mount($("bonus-root"),{
  finish:finishBonusStage,back:stage=>goToCampaignStage(Math.max(1,stage.number-1)),
+ next:stage=>goToCampaignStage(Math.min(115,stage.number+1)),
+ canNext:stage=>stage.number<115&&(!!bonusResults[stage.number]||reached()>stage.afterPuzzleIndex+1),   // same rule as the main arrows: only on to somewhere you have already been
  wolf:mood=>heroSvg(mood,OUTFITS.filter(o=>worn[o.slot]===o.id).map(o=>o.id),worn.hero).src,   // the player's own dressed wolf, for the mini-game banner
  musicEnabled:()=>musicOn,
  toggleMusic:()=>{

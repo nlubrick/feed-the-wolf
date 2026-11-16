@@ -102,7 +102,7 @@ test("Browser integrates play, skip, saved bonus status and five-level demo",()=
 test("The PWA app shell caches each mode, music and its responsive layout",()=>{
  const sw=fs.readFileSync(path.join(root,"service-worker.js"),"utf8");
  for(const f of sources.concat("bonus-style-v1.css","bonus-themes-v1.css"))assert.ok(sw.includes(f),f+" missing from cache");
- assert.match(sw,/ftw-install-v17/);
+ assert.match(sw,/ftw-install-v18/);
  assert.match(page,/id="bonus-root"/);
 });
 
@@ -159,4 +159,26 @@ test("Location tracks are about a minute, never clip, and loop without a seam",(
   const rms=(from,len)=>{let q=0;for(let i=0;i<len;i++){const x=v(from+i);q+=x*x;}return Math.sqrt(q/len);};
   assert.ok(rms(-11025,22050)>rms(0,n)*.45,"chapter "+chapter+" goes quiet at the loop point");
  }
+});
+
+test("The four new locations are four different pieces of music",()=>{
+ const {FTWBonus,FTWWorldMusic}=setup(),sc=FTWBonus.worldScores,lens=new Set(),sig=[];
+ for(let c=1;c<5;c++){
+  assert.ok(sc[c].motif.every(m=>sc[c].scale.includes(((m%12)+12)%12)),sc[c].name+" tune stays in its own scale");
+  const wav=FTWWorldMusic.render(c,false,sc),n=(wav.byteLength-44)/2;lens.add(n);
+  // a crude fingerprint: loudness in each of 64 equal slices
+  const f=[];for(let k=0;k<64;k++){let q=0;const a=Math.floor(n*k/64),b=Math.floor(n*(k+1)/64);for(let i=a;i<b;i+=7){const v=wav.getInt16(44+i*2,true);q+=v*v;}f.push(Math.sqrt(q/((b-a)/7)));}
+  sig.push(f);
+ }
+ assert.equal(lens.size,4,"four different lengths");
+ for(let a=0;a<4;a++)for(let b=a+1;b<4;b++){
+  assert.notDeepEqual(Array.from(sc[a+1].motif),Array.from(sc[b+1].motif));
+  assert.notEqual(sc[a+1].root+":"+Array.from(sc[a+1].scale),sc[b+1].root+":"+Array.from(sc[b+1].scale),"each has its own key or scale");
+  assert.notDeepEqual(Array.from(sc[a+1].bass),Array.from(sc[b+1].bass));
+ }
+});
+test("Mini-games have level arrows, and the match board animates",()=>{
+ const src=fs.readFileSync(path.join(root,"bonus-levels-v1.js"),"utf8"),match=fs.readFileSync(path.join(root,"bonus-match-v1.js"),"utf8"),css=fs.readFileSync(path.join(root,"bonus-themes-v1.css"),"utf8");
+ assert.match(src,/data-bonus-action="next" aria-label="Next level"/);assert.match(page,/canNext:stage=>/);
+ for(const k of ["fw-popping","fw-falling","fw-sliding"]){assert.ok(match.includes(k),k);assert.ok(css.includes("."+k),k+" style");}
 });
