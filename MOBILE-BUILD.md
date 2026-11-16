@@ -1,33 +1,57 @@
-# Feed the Wolf: building the iPhone and Android apps
+# Feed the Wolf: beta and production builds, iPhone and Android
 
-One web game, two store apps. The app shells load the files in `www/`.
+One codebase, two builds, two stores.
 
-**Status: not yet a store build.** The web bundle step below works and is tested. The app projects, real payments and the release strip-down are not done.
+| | Beta | Production |
+|---|---|---|
+| Made by | `npm run build:beta` | `npm run build:production` |
+| Developer panel, level jumper, full-game preview, progress reset | yes | removed |
+| Practice checkout (no money) | yes, wherever there is no real store | removed |
+| Real store purchases | sandbox, once a store key is set | verified purchases, once a store key is set |
+| Marked on screen | "BETA TEST BUILD" badge | nothing |
+| Game content, levels, music, Store items | identical | identical |
 
-## What works today
+The website on Render is the repository itself, which is the beta. Building never changes source files.
+
+## How the split works
+
+- Everything test-only sits between `BETA-START` and `BETA-END` markers in `index.html`, plus the file `test-store-v2.js`. The production build deletes those blocks and that file.
+- The game asks one question, `hasFullAccess()`. In production it is true only after the store bridge reports a verified purchase. The beta adds its preview and practice purchase through a `BETA` hook that does not exist in production.
+- **New test-only code must go inside a `BETA` block.** If it does not, `npm run release:check` fails.
+
+## Commands
 
 ```
-npm test            # rules, levels, economy, purchase gates
-npm run build:www   # copies the game into www/ (the list comes from service-worker.js)
+npm test                  # rules, levels, economy, gates, and both builds
+npm run release:check     # builds production and fails if any developer shortcut or practice purchase is left
+npm run build:beta        # -> dist/beta
+npm run build:production  # -> dist/production
+npm run app:add           # once: create the android/ and ios/ projects (ios needs a Mac)
+npm run app:beta          # beta build -> www/ -> both app projects
+npm run app:production    # release check, production build -> www/ -> both app projects
 ```
 
-`capacitor.config.json` points a Capacitor shell at `www/`. The app ID in it (`com.failureentertainment.feedthewolf`) is a placeholder: it is permanent once an app is published, so confirm it before creating either store listing.
+Then open `android/` in Android Studio, or `ios/App` in Xcode, to run on a phone or upload to a store.
 
-## Still to do, in order
+## Store setup (RevenueCat)
 
-1. **Create the app projects** (needs a Mac with Xcode for iPhone; Android Studio for Android):
-   `npm i @capacitor/core @capacitor/cli @capacitor/ios @capacitor/android`, then `npx cap add ios`, `npx cap add android`, `npx cap sync`.
-2. **Real payments.** The game talks to a bridge called `window.FeedTheWolfStore` with `status`, `purchase` and `restore`. Each must answer `{productId, verified:true, entitled:true}` only for a purchase the store itself has verified. Products:
-   - `feed_the_wolf_full_unlock`: one-time, non-consumable, $2.99
-   - `ftw_gems_50`, `ftw_gems_150`, `ftw_gems_400`: consumable gem packs ($0.99, $1.99, $3.99). The game only credits these from the test store today; real crediting is part of this step.
-   - Restore Purchases must work on both stores.
-   The older `ios/` Swift files are an iPhone-only StoreKit bridge for the unlock alone; a cross-platform plugin replaces them.
-3. **Release strip-down.** Remove the developer panel, `?dev=1`, the test checkout and `test-store-v2.js`. `npm run release:check` fails until this is done, on purpose.
-4. **Device testing** on a real iPhone and a real Android phone: touch feel, sound, performance, purchase, cancel, restore, fresh install.
-5. **Store listings**: icon set, screenshots, description, age rating, privacy policy.
+Real purchases stay off until store keys are set. With no key the app has no store and nothing can be bought.
 
-## Rules that stay true
+1. In App Store Connect and Google Play Console, create these products with exactly these IDs:
+   - `feed_the_wolf_full_unlock`: non-consumable (Google: one-time product), $2.99
+   - `ftw_gems_50`, `ftw_gems_150`, `ftw_gems_400`: consumable, $0.99 / $1.99 / $3.99
+2. In RevenueCat, add both apps with bundle/package ID `com.failureentertainment.feedthewolf`, import the four products, and create an entitlement named **`full_game`** attached to `feed_the_wolf_full_unlock`.
+3. Put RevenueCat's public SDK keys in `build.config.json` (or the environment variables `FTW_RC_IOS_KEY`, `FTW_RC_ANDROID_KEY`). Fill in `beta` first. Leave `production` empty until real sales are approved.
+4. `npm run release:check -- --strict` also requires the production keys; use it on the day sales are switched on.
 
-- Levels 1 to 5 and the first mini-game (level 6) are free. Everything else needs the unlock.
-- Progress past the free levels pays no gems or trophies without the unlock.
-- Gem packs never buy gameplay advantage, and the five location trophies and two full-game gifts are never sold.
+A beta app with keys uses each store's sandbox: TestFlight on iPhone, a licensed tester account on Google Play. No real money moves in either.
+
+## Player progress
+
+- Saves live under the key `ftw-save` at the app's address. `capacitor.config.json` pins that address; changing `server` or the app ID would orphan every saved game, and a test guards it.
+- The app also keeps a second copy of the save in native storage and puts it back if the web copy goes missing.
+- Purchases are held by the store, so the unlock and gem packs come back on a new phone through Restore Purchases.
+
+## Not verified yet
+
+Written and unit-tested against RevenueCat's published interface, but never run on a device: the store bridge (`store-bridge-v1.js`) and the native save backup. The Android project generates cleanly with both plugins; the iPhone project has not been generated (needs a Mac). First sandbox purchase on each platform is the real test.

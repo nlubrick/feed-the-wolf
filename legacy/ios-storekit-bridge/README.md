@@ -1,3 +1,7 @@
+# Superseded
+
+These Swift files were an iPhone-only StoreKit bridge for the unlock alone. The app now uses a Capacitor shell with RevenueCat for both stores (see MOBILE-BUILD.md). Kept for reference; not part of any build.
+
 # Feed the Wolf — iPhone build notes
 
 The repository contains a browser/PWA game and two Swift source files that can be added to a native iPhone Xcode target. **This is not yet an installable .ipa or a submitted App Store app.**

@@ -1,0 +1,5 @@
+{
+  "_note": "Public RevenueCat SDK keys per build. Leave empty until real purchases are approved: with no key the app has no store and nothing can be bought. Environment variables FTW_RC_IOS_KEY and FTW_RC_ANDROID_KEY override these.",
+  "beta":       { "revenueCat": { "ios": "", "android": "" } },
+  "production": { "revenueCat": { "ios": "", "android": "" } }
+}
