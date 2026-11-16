@@ -66,7 +66,9 @@ button:focus-visible{outline:2px solid #fff1c4;outline-offset:4px}
 #enableSound{position:absolute;z-index:16;bottom:max(78px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);border:1px solid #d9b782;border-radius:9px;background:#201720dc;color:#f4dfb9;font:700 12px Arial,sans-serif;letter-spacing:.4px;padding:12px 17px;min-height:42px;white-space:nowrap;box-shadow:0 4px 22px #0009}
 #enableSound[hidden]{display:none!important}
 body.embedded #enableSound{bottom:max(24px,env(safe-area-inset-bottom))}
-body.embedded #tools,body.embedded #skip{display:none!important}
+body.embedded #tools,body.embedded #skip,body.embedded #enableSound{display:none!important}
+#tapHint{position:absolute;z-index:16;bottom:max(26px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;font:700 12px Arial,sans-serif;letter-spacing:.6px;color:#d9c29a;opacity:.8;pointer-events:none;display:none}
+body.embedded #tapHint{display:block}
 #skip{position:absolute;z-index:13;right:18px;top:max(18px,env(safe-area-inset-top));font:800 11px Arial,sans-serif;border:0;background:transparent;color:#e3c896;opacity:.74;padding:10px;display:none}
 .playing #skip{display:block}
 @media(max-height:620px){#content{min-height:0;padding:40px 15px 60px}#crestwrap{height:30vh;width:25vh}#tagline{margin-top:12px}.rule{margin-top:8px}}
@@ -76,6 +78,7 @@ body.embedded #tools,body.embedded #skip{display:none!important}
 <body>
 <main id="stage" aria-label="Failure Entertainment studio introduction">
  <div id="embers" aria-hidden="true"></div>
+ <div id="tapHint" aria-live="polite"></div>
  <div id="content">
  <div id="crestwrap"><div id="burst" aria-hidden="true"></div>
  <svg id="crest" viewBox="-120 -145 240 287" role="img" aria-label="Antique gold shield with a lightning-shaped crack">
@@ -256,6 +259,19 @@ enableSound.addEventListener("click",activateSound);
 replay.addEventListener("click",startIntro);
 sound.addEventListener("click",toggleSound);
 document.getElementById("skip").addEventListener("click",skipIntro);
+// Inside a game: the first tap anywhere turns the sound on (phones stay silent until touched) and a second tap skips.
+// If the sound is already playing, the first tap skips.
+const tapHint=document.getElementById("tapHint");let tapped=false,skipped=false;
+const silent=()=>audioReady&&soundOn&&audio.paused;
+const showHint=()=>{tapHint.textContent=skipped?"":!tapped&&silent()?"Tap for sound \u00b7 tap again to skip":"Tap to skip";};
+if(document.body.classList.contains("embedded")){
+ setTimeout(showHint,1500);   // once we know whether the sound was allowed to start by itself
+ document.addEventListener("click",()=>{
+  if(skipped)return;
+  if(!tapped&&silent()){tapped=true;activateSound();showHint();return;}
+  skipped=true;showHint();skipIntro();
+ });
+}
 document.addEventListener("visibilitychange",()=>{if(document.hidden)audio.pause()});
 window.FailureEntertainmentIntro={play:startIntro,setSound:function(v){if(soundOn!==!!v)toggleSound()},durationMs:6900};
 // Autoplay the studio logo on launch. Audio requires a user gesture on many iPhones;
