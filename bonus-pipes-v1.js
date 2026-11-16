@@ -48,17 +48,18 @@ function create(chapter){
  return{solution,initial,path};
 }
 function tileSVG(m,flowing){
- let arms="";
+ let arms="",flow="";
  for(let i=0;i<4;i++)if(m&(1<<i)){
   const [x,y]=[[32,3],[61,32],[32,61],[3,32]][i];
-  arms+='<path d="M32 32 L'+x+' '+y+'" fill="none" stroke="'+
-   (flowing?"#8be3b5":"#c2a27e")+'" style="stroke:var('+(flowing?"--fw-flow-out":"--fw-pipe")+')" stroke-width="20" stroke-linecap="round"/>'+
-   '<path d="M32 32 L'+x+' '+y+'" fill="none" stroke="'+
-   (flowing?"#65c9e4":"#4b4d74")+'" style="stroke:var('+(flowing?"--fw-flow":"--fw-pipe-in")+')" stroke-width="12" stroke-linecap="round"/>';
+  arms+='<path d="M32 32 L'+x+' '+y+'" fill="none" stroke="#c2a27e" style="stroke:var(--fw-pipe)" stroke-width="20" stroke-linecap="round"/>'+
+   '<path d="M32 32 L'+x+' '+y+'" fill="none" stroke="#4b4d74" style="stroke:var(--fw-pipe-in)" stroke-width="12" stroke-linecap="round"/>';
+  // the liquid is drawn on top of the empty pipe, so a tile can be seen filling up
+  if(flowing)flow+='<path class="fw-flow-arm" d="M32 32 L'+x+' '+y+'" fill="none" stroke="#8be3b5" style="stroke:var(--fw-flow-out)" stroke-width="20" stroke-linecap="round"/>'+
+   '<path class="fw-flow-arm" d="M32 32 L'+x+' '+y+'" fill="none" stroke="#65c9e4" style="stroke:var(--fw-flow)" stroke-width="12" stroke-linecap="round"/>';
  }
- return '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'+
+ return '<svg viewBox="0 0 64 64" aria-hidden="true">'+
   '<rect x="1" y="1" width="62" height="62" rx="13" fill="#252039" stroke="#846986" style="fill:var(--fw-pipe-bg);stroke:var(--fw-accent-dark)" stroke-width="2"/>'+
-  arms+'<circle cx="32" cy="32" r="10" fill="'+(flowing?"#c9fbed":"#e0c298")+
+  arms+flow+'<circle cx="32" cy="32" r="10" fill="'+(flowing?"#c9fbed":"#e0c298")+
   '" stroke="#68566d" stroke-width="3"/></svg>';
 }
 /* Fewest taps that solve a board, and the limits for each location (the Castle has none: it teaches the game). */
@@ -69,27 +70,34 @@ const SLACK=[0,3,2.4,2,1.7],POURS=[0,5,4,3,3];
 function limits(chapter){const c=create(chapter);return{turns:SLACK[chapter]?Math.ceil(minTurns(c)*SLACK[chapter])+2:0,pours:POURS[chapter],min:minTurns(c)};}
 function mount(api){
  const config=create(api.stage.chapter),grid=config.initial.slice(),lim=limits(api.stage.chapter);
- let turns=0,pours=0,lit=[],alive=true,passed=false,pouring=false,spill=-1;
- const quick=typeof matchMedia==="function"&&matchMedia("(prefers-reduced-motion: reduce)").matches;
- const later=(fn,ms)=>{if(typeof setTimeout==="function"&&!quick)setTimeout(fn,ms);else fn();};
- /* Test Flow: the liquid runs through the pipes one joint at a time, so you watch it arrive, or see where it gets out. */
+ let turns=0,pours=0,lit=[],alive=true,passed=false,pouring=false,draining=false,spill=-1;
+ // Timers are skipped only where there are none (the automated tests), so the pour always plays out on a phone.
+ const later=(fn,ms)=>{if(typeof setTimeout==="function")setTimeout(fn,ms);else fn();};
+ const FILL=330,DRAIN=170;
+ /* Test Flow: the liquid creeps through the pipes one joint at a time. If it reaches the wolf he gets fed and then you win;
+    if it gets out, you see where, and it drains back the way it came. */
  function pour(){
   const result=trace(grid);let k=0;
-  pouring=true;spill=-1;lit=[];api.message(say("Pouring the soup..."));
-  const finish=()=>{
+  pouring=true;draining=false;spill=-1;lit=[];api.message(say("Pouring the soup..."));draw();
+  const fill=()=>{
    if(!alive)return;
-   pouring=false;api.message(say(result.reason));
-   if(result.win){passed=true;draw();api.sound(true);later(()=>{if(alive)api.win();},700);return;}
-   spill=result.trail.length?result.trail[result.trail.length-1]:10;draw();api.sound(false);pours++;
-   if(lim.pours&&pours>=lim.pours){passed=true;api.lose(say("That was the last pour and the soup never reached the wolf. Trace the route from START with your finger before pouring."));}
+   if(k>=result.trail.length){later(arrived,FILL+120);return;}
+   k++;lit=result.trail.slice(0,k);draw();api.tone(240+k*30,.09);later(fill,FILL);
+  };
+  const arrived=()=>{
+   if(!alive)return;
+   if(result.win){passed=true;pouring=false;api.message(say(result.reason));draw();api.sound(true);later(()=>{if(alive)api.win();},1500);return;}
+   spill=result.trail.length?result.trail[result.trail.length-1]:10;api.message(say(result.reason));draw();api.sound(false);
+   later(()=>{draining=true;drain();},900);
+  };
+  const drain=()=>{
+   if(!alive)return;
+   if(lit.length){lit=lit.slice(0,-1);spill=-1;draw();api.tone(200+lit.length*18,.05);later(drain,DRAIN);return;}
+   pouring=false;draining=false;pours++;
+   if(lim.pours&&pours>=lim.pours){passed=true;draw();api.lose(say("That was the last pour and the soup never reached the wolf. Trace the route from START with your finger before pouring."));}
    else draw();
   };
-  const step=()=>{
-   if(!alive)return;
-   if(k>=result.trail.length){later(finish,280);return;}
-   k++;lit=result.trail.slice(0,k);draw();api.tone(280+k*38,.07);later(step,150);
-  };
-  step();
+  later(fill,250);
  }
  const theme=root.FTWBonusThemes?root.FTWBonusThemes.pipes(api.stage.chapter):null,liquid=theme?theme.liquid:"soup",say=t=>t.replace(/soup/g,liquid);
  api.instructions("Rotate the pipes to carry the "+liquid+" from START to the wolf at END. Tap a piece to turn it; press Test Flow to pour.");
@@ -102,7 +110,7 @@ function mount(api){
   api.play.innerHTML=(ends?'':'<div class="fw-pipe-labels"><span>SOUP POT</span><span>WOLF\'S BOWL</span></div>')+
    '<div class="fw-pipe-wrap'+(ends?' fw-pipe-ends':'')+'">'+(ends?'<div class="fw-pipe-end fw-pipe-start"><b>START</b>'+ends.pot+'<i>\u25B6</i></div>':'')+
    '<div class="fw-pipe-grid" role="grid" aria-label="Five by five rotating pipe puzzle">'+
-   grid.map((m,i)=>'<button type="button" class="fw-pipe-tile'+(lit.includes(i)?' flowing':'')+(pouring&&i===lit[lit.length-1]?' fw-pipe-new':'')+(i===spill?' fw-pipe-spill':'')+
+   grid.map((m,i)=>'<button type="button" class="fw-pipe-tile'+(lit.includes(i)?' flowing':'')+(pouring&&!draining&&i===lit[lit.length-1]?' fw-pipe-new':'')+(i===spill?' fw-pipe-spill':'')+
    '" data-pipe="'+i+'" aria-label="Rotate pipe row '+(Math.floor(i/5)+1)+
    ' column '+(i%5+1)+'">'+tileSVG(m,lit.includes(i))+'</button>').join('')+'</div>'+
    (ends?'<div class="fw-pipe-end fw-pipe-finish'+(passed?' fw-pipe-fed':'')+'"><i>\u25B6</i>'+(api.wolf?'<img class="fw-pipe-wolf" alt="" src="'+api.wolf(passed?"joy":"idle")+'">':'')+ends.bowl+'<b>END</b></div>':'')+'</div>'+
