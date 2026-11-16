@@ -1,0 +1,65 @@
+{
+  "_note": "Source of truth for both store listings. tests/store-listing.test.cjs enforces each store's length limits. Run `node scripts/store-listing.cjs` to regenerate store/LISTING.md.",
+  "urls": {
+    "privacy": "https://feed-the-wolf.onrender.com/privacy.html",
+    "support": "https://feed-the-wolf.onrender.com/support.html",
+    "marketing": "https://feed-the-wolf.onrender.com/"
+  },
+  "seller": "Failure Entertainment",
+  "copyright": "2026 Failure Entertainment",
+  "category": { "primary": "Games: Puzzle", "secondary": "Games: Casual" },
+  "apple": {
+    "name": "Feed the Wolf",
+    "nameFallback": "Feed the Wolf: Pull the Pin",
+    "subtitle": "Pull-the-pin puzzle adventure",
+    "promotionalText": "The pull-the-pin game you actually get to play. 100 hand-checked puzzles, 10 different mini-games, zero ads. The first five levels are free.",
+    "keywords": "pull the pin,puzzle,brain teaser,logic,castle,rescue,mini games,offline,no ads,casual,pets,physics",
+    "whatsNew": "The first release of Feed the Wolf. Thank you for playing. Tell us what you think from the Help screen.",
+    "inAppPurchases": [
+      { "id": "feed_the_wolf_full_unlock", "type": "Non-Consumable", "displayName": "The Full Adventure", "description": "All 110 levels, Hard Mode and daily puzzle" },
+      { "id": "ftw_gems_50", "type": "Consumable", "displayName": "Gem Pouch", "description": "50 gems for the Store" },
+      { "id": "ftw_gems_150", "type": "Consumable", "displayName": "Gem Chest", "description": "150 gems for the Store" },
+      { "id": "ftw_gems_400", "type": "Consumable", "displayName": "Gem Vault", "description": "400 gems for the Store" }
+    ]
+  },
+  "google": {
+    "title": "Feed the Wolf: Pull the Pin",
+    "shortDescription": "Pull pins, dodge lava, feed the wolf. 100 puzzles, 10 mini-games, no ads."
+  },
+  "description": [
+    "You have seen the ads. Pull a pin, the lava falls, the treasure drops, everybody wins. Then you download the game and it is something else entirely.",
+    "Feed the Wolf is that game, for real.",
+    "One hungry wolf. One dinner. A castle full of pins between them. Pull them in the right order and dinner drops into his paws. Pull them in the wrong order and it is lava, monsters, or a very wet roast.",
+    "100 PULL-THE-PIN PUZZLES\n• Five locations, each with its own tricks: The Castle, the Wizard's Tower, the Clockwork Citadel, the Moonlit Conservatory and the Ghostlight Theatre.\n• Lava, water, boulders, TNT, ice, ghosts, gears, moon flowers and beacons. Every one behaves by rules you can learn.\n• Every puzzle is checked by a solver, so there is always a way through.",
+    "10 DIFFERENT MINI-GAMES\nNo two alike, and each appears once: match, pipes, hidden objects, a chain-reaction machine, and reflex games where you flap, catch, leap, sneak and steer. Skip any of them if it is not your thing.",
+    "HARD MODE\nEvery puzzle has a tougher second version, and every mini-game does too.",
+    "DRESS THE WOLF\n• 13 characters, 16 pets and more than 20 hats, scarves and accessories.\n• Five location trophies with their own effects that cannot be bought, only earned.\n• Earn gems for stars, milestones, mini-games and the daily puzzle.",
+    "FAIR BY DESIGN\n• No ads. None.\n• No energy timers, no lives, no waiting.\n• Works offline.\n• No account and no tracking. Your progress stays on your device.",
+    "WHAT IT COSTS\n• Free to download. Levels 1 to 5 and the first mini-game are free, with no time limit.\n• One purchase of $2.99 (US price; other countries vary) unlocks all 110 levels, Hard Mode and the daily puzzle, forever, and comes with a free pet and accessory.\n• Gem packs are optional. Everything sold for gems can be earned by playing, and gems never buy an advantage in a puzzle.",
+    "Made by Failure Entertainment. 6/10. Good enough."
+  ],
+  "ageRating": {
+    "_note": "Suggested answers for the stores' questionnaires. Confirm each one yourself; you are the one declaring it.",
+    "cartoonOrFantasyViolence": "Infrequent/Mild (a cartoon wolf can be caught by lava, monsters or a hunter; nothing graphic)",
+    "everythingElse": "None (no realistic violence, gambling, horror, mature themes, profanity, alcohol or drugs)",
+    "unrestrictedWebAccess": "No",
+    "userGeneratedContent": "No",
+    "advertising": "No",
+    "inAppPurchases": "Yes"
+  },
+  "dataPrivacy": {
+    "_note": "Suggested answers for Apple's App Privacy section and Google's Data safety form, matching privacy.html. Confirm against RevenueCat's own current guidance when you fill these in.",
+    "tracking": "No",
+    "collected": [
+      { "type": "Purchases (purchase history)", "linkedToIdentity": "No", "purpose": "App functionality", "by": "RevenueCat, to validate and restore purchases" },
+      { "type": "Identifiers (a random per-install ID)", "linkedToIdentity": "No", "purpose": "App functionality", "by": "RevenueCat" }
+    ],
+    "notCollected": "Contact info, location, contacts, user content, browsing or search history, usage analytics, diagnostics sent to us, health, financial details, sensitive info",
+    "dataEncryptedInTransit": "Yes",
+    "deletionRequest": "By contacting support; game progress is deleted by removing the app"
+  },
+  "testFlight": {
+    "betaDescription": "Feed the Wolf is a pull-the-pin puzzle game with 100 puzzles and 10 mini-games. This is a test build: the checkout is a practice one, marked TEST, and no money is ever taken.",
+    "whatToTest": "Please play from Level 1 and tell us about anything that looks wrong, feels unfair or is confusing.\n\n1. Do taps and drags feel right in the mini-games (levels 6, 15, 28, 37, 50, 59, 72, 81, 94, 103)?\n2. Is there sound and music, including after you leave the game and come back?\n3. At Level 6 you reach the unlock screen. Use the TEST checkout to unlock. No payment is taken.\n4. Close and reopen the game. Is your progress still there?\n5. Does anything get cut off or overlap on your screen?\n\nTo report: take a screenshot in the game, tap it, and choose Share Beta Feedback. Say which level you were on."
+  }
+}

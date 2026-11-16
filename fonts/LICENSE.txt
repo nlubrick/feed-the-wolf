@@ -1,0 +1,6 @@
+Lilita One: Copyright (c) 2011 Juan Montoreano, with Reserved Font Name "Lilita One".
+Nunito Sans: Copyright 2016 The Nunito Sans Project Authors (https://github.com/Fonthausen/NunitoSans).
+
+Both fonts are licensed under the SIL Open Font License, Version 1.1.
+The licence text is available at https://openfontlicense.org
+Font files are the Latin subsets distributed by the Fontsource project.
