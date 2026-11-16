@@ -1,9 +1,10 @@
-# Feed the Wolf: cloud builds. All workflows run manually; none publishes anything.
+# Feed the Wolf: cloud builds. All workflows run manually. Only ios-beta-signed uploads, and only to internal TestFlight.
 # Owner of this file for now: Claude (agreed with Nickolas, 2026-11-16). ChatGPT: propose changes rather than editing in place.
 #
 #   android-beta-debug   tester build, debug APK, no credentials
 #   ios-beta-simulator   tester build, simulator compile check, no credentials
-#   ios-beta-signed      tester build, signed IPA for INTERNAL TestFlight (practice checkout, clearly labeled, no money)
+#   ios-beta-signed      tester build, signed IPA, uploaded to App Store Connect for INTERNAL TestFlight
+#                        (practice checkout, clearly labeled, no money; no beta review, no App Store submission)
 #   ios-external-beta    external build, signed IPA for OUTSIDE testers (no practice checkout; Apple sandbox purchases
 #                        through RevenueCat). Needs the Codemagic variable group "revenuecat_beta" with FTW_RC_IOS_KEY.
 #
@@ -122,9 +123,14 @@ workflows:
       - build/ios/ipa/*.ipa
       - ios/App/build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
-    # No publishing block by design. First verify the signed artifact, then
-    # explicitly authorize App Store Connect/TestFlight upload. Never submit
-    # the game for public App Store review from this test workflow.
+    # Uploads the signed build to App Store Connect so it appears under TestFlight for INTERNAL testers.
+    # It does NOT send the build to Apple's beta review (needed only for outside testers) and it NEVER
+    # submits to the public App Store. Who gets the build is decided by hand in App Store Connect.
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false
+        submit_to_app_store: false
 
   ios-external-beta:
     name: Feed the Wolf EXTERNAL BETA · Signed iPhone IPA (Apple sandbox purchases)

@@ -160,7 +160,7 @@ test("Every app build gets a unique, increasing build number that both stores ac
  assert.throws(()=>v.stampIos("nothing here",a,"0.2.0"));assert.throws(()=>v.stampAndroid("nothing here",a,"0.2.0"));
  assert.match(v.versionName(),/^\d+\.\d+\.\d+$/);
 });
-test("Codemagic: every workflow stamps the build number before compiling, and none publishes",()=>{
+test("Codemagic: every workflow stamps the build number before compiling; only internal TestFlight uploads",()=>{
  const y=fs.readFileSync(path.join(root,"codemagic.yaml"),"utf8");
  const flows=y.split(/\n  (?=[a-z0-9-]+:\n    name:)/).slice(1);
  assert.deepEqual(flows.map(f=>f.split(":")[0]),["android-beta-debug","ios-beta-simulator","ios-beta-signed","ios-external-beta"]);
@@ -168,7 +168,11 @@ test("Codemagic: every workflow stamps the build number before compiling, and no
   const name=f.split(":")[0],plat=name.startsWith("android")?"android":"ios";
   const stamp=f.indexOf("node scripts/set-app-version.cjs "+plat),sync=f.indexOf("npx cap sync "+plat),compile=f.search(/gradlew assemble|xcodebuild |xcode-project build-ipa/);
   assert.ok(sync>0&&stamp>sync&&compile>stamp,name+": stamp must come after the project is generated and before it is compiled");
-  assert.doesNotMatch(f,/\n    publishing:/,name+" must not publish");
+  // Only the internal TestFlight workflow uploads. Nothing ever goes to beta review or the public App Store from here.
+  if(name==="ios-beta-signed"){
+   assert.match(f,/\n    publishing:\n      app_store_connect:\n        auth: integration\n        submit_to_testflight: false\n        submit_to_app_store: false\n/);
+  }else assert.doesNotMatch(f,/\n    publishing:/,name+" must not publish");
+  assert.doesNotMatch(f,/submit_to_app_store: true|submit_to_testflight: true|google_play:|beta_groups:/,name+" must not release to anyone automatically");
   assert.match(f,/npm test/);
  }
  // the signing set-up of the working signed workflow is untouched

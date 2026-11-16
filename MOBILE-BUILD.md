@@ -35,13 +35,13 @@ Then open `android/` in Android Studio, or `ios/App` in Xcode, to run on a phone
 
 ## Cloud builds (Codemagic)
 
-`codemagic.yaml` has four manual workflows; none publishes anything.
+`codemagic.yaml` has four manual workflows. Only `ios-beta-signed` uploads, to App Store Connect for internal TestFlight; it never requests beta review or submits to the App Store.
 
 | Workflow | Build | For |
 |---|---|---|
 | `android-beta-debug` | tester | a debug APK to sideload |
 | `ios-beta-simulator` | tester | a compile check, no signing |
-| `ios-beta-signed` | tester | **internal** TestFlight: practice checkout, clearly labeled, no money |
+| `ios-beta-signed` | tester | **internal** TestFlight, uploaded automatically: practice checkout, clearly labeled, no money |
 | `ios-external-beta` | external | **outside** testers: no practice checkout, Apple sandbox purchases |
 
 - Every build is stamped with a unique build number (minutes since 1970, UTC) and the version in `package.json`, by `scripts/set-app-version.cjs`. To release a new version, raise `version` in `package.json`.
