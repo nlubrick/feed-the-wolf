@@ -1,7 +1,14 @@
-# Feed the Wolf: unsigned cloud compile checks. No signing credentials or real payments needed.
-# In Codemagic choose "YAML" and select either workflow; they run manually.
-# These first workflows compile the tester flavor. A signed TestFlight/Play rollout is
-# intentionally NOT configured until the developer accounts and signing are available.
+# Feed the Wolf: cloud builds. All workflows run manually; none publishes anything.
+# Owner of this file for now: Claude (agreed with Nickolas, 2026-11-16). ChatGPT: propose changes rather than editing in place.
+#
+#   android-beta-debug   tester build, debug APK, no credentials
+#   ios-beta-simulator   tester build, simulator compile check, no credentials
+#   ios-beta-signed      tester build, signed IPA for INTERNAL TestFlight (practice checkout, clearly labeled, no money)
+#   ios-external-beta    external build, signed IPA for OUTSIDE testers (no practice checkout; Apple sandbox purchases
+#                        through RevenueCat). Needs the Codemagic variable group "revenuecat_beta" with FTW_RC_IOS_KEY.
+#
+# Every app build is stamped by scripts/set-app-version.cjs with a unique build number (minutes since 1970, UTC)
+# and the version from package.json, so no upload is ever rejected as a duplicate.
 workflows:
   android-beta-debug:
     name: Feed the Wolf BETA · Android debug APK
@@ -21,6 +28,8 @@ workflows:
           node scripts/build-tester.cjs --www
           npx cap add android
           npx cap sync android
+          # Unique, always-increasing build number; Google Play refuses a repeat.
+          node scripts/set-app-version.cjs android
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
       - name: Compile debug APK without store credentials
         script: |
@@ -56,6 +65,8 @@ workflows:
           fi
           npx cap add ios --packagemanager SPM
           npx cap sync ios
+          # Unique, always-increasing build number; TestFlight refuses a repeat.
+          node scripts/set-app-version.cjs ios
       - name: Compile unsigned iOS simulator app
         script: |
           xcodebuild -project ios/App/App.xcodeproj \
@@ -97,6 +108,8 @@ workflows:
           fi
           npx cap add ios --packagemanager SPM
           npx cap sync ios
+          # Unique, always-increasing build number; TestFlight refuses a repeat.
+          node scripts/set-app-version.cjs ios
       - name: Apply Apple Distribution signing profile
         script: |
           xcode-project use-profiles --project ios/App/App.xcodeproj
@@ -112,3 +125,54 @@ workflows:
     # No publishing block by design. First verify the signed artifact, then
     # explicitly authorize App Store Connect/TestFlight upload. Never submit
     # the game for public App Store review from this test workflow.
+
+  ios-external-beta:
+    name: Feed the Wolf EXTERNAL BETA · Signed iPhone IPA (Apple sandbox purchases)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    # For testers outside the team. Same code as production: no developer tools and no practice checkout.
+    # Purchases go through Apple's sandbox via RevenueCat, so testers are never charged.
+    integrations:
+      app_store_connect: Feed the Wolf Codemagic
+    environment:
+      groups:
+        - revenuecat_beta   # must define FTW_RC_IOS_KEY (RevenueCat public iOS SDK key)
+      node: 22
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.failureentertainment.feedthewolf
+    scripts:
+      - name: Install packages, run tests, and require a clean external build with a store key
+        script: |
+          npm install --no-audit --no-fund
+          npm test
+          if [ -z "$FTW_RC_IOS_KEY" ]; then
+            echo "FTW_RC_IOS_KEY is not set. Outside testers would have no way to unlock the game. Stopping."
+            exit 1
+          fi
+          # The check wants both platform keys; this workflow only ships iOS.
+          FTW_RC_ANDROID_KEY="${FTW_RC_ANDROID_KEY:-not-used-in-this-ios-build}" node scripts/check-release.cjs --target external --strict
+      - name: Generate Capacitor iOS project from the external build
+        script: |
+          node scripts/build.cjs external --www
+          if [ -d ios ] && [ ! -d ios/App/App.xcodeproj ]; then
+            mv ios ios-legacy-source
+          fi
+          npx cap add ios --packagemanager SPM
+          npx cap sync ios
+          # Unique, always-increasing build number; TestFlight refuses a repeat.
+          node scripts/set-app-version.cjs ios
+      - name: Apply Apple Distribution signing profile
+        script: |
+          xcode-project use-profiles --project ios/App/App.xcodeproj
+      - name: Build signed IPA for external TestFlight testers
+        script: |
+          xcode-project build-ipa \
+            --project ios/App/App.xcodeproj \
+            --scheme App
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - ios/App/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    # No publishing block by design. Upload to TestFlight and any App Store submission are separate, explicit steps.

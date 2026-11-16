@@ -2,6 +2,8 @@
 
      node scripts/build.cjs beta         -> dist/beta         (developer tools and practice checkout included)
      node scripts/build.cjs production   -> dist/production   (everything between BETA-START and BETA-END removed)
+     node scripts/build.cjs external     -> dist/external     (the production code, with the beta store keys: for outside
+                                                              testers, who buy through the store's own sandbox)
      add --www to also copy the result into www/, the folder the iPhone and Android app shells load.
 
    The website on Render is the repository itself, which is the beta. This script never changes source files. */
@@ -25,15 +27,16 @@ function shellFiles(){
  files.add("index.html");files.add("service-worker.js");return[...files];
 }
 function storeConfig(target){
- let cfg={};try{cfg=JSON.parse(fs.readFileSync(path.join(root,"build.config.json"),"utf8"))[target]||{};}catch(e){}
+ // Outside testers use the same sandbox keys as the beta, with none of the beta's tools.
+ let cfg={};try{const all=JSON.parse(fs.readFileSync(path.join(root,"build.config.json"),"utf8"));cfg=all[target]||(target==="external"?all.beta:null)||{};}catch(e){}
  const rc=Object.assign({ios:"",android:""},cfg.revenueCat||{});
  if(process.env.FTW_RC_IOS_KEY)rc.ios=process.env.FTW_RC_IOS_KEY;
  if(process.env.FTW_RC_ANDROID_KEY)rc.android=process.env.FTW_RC_ANDROID_KEY;
  return{build:target,revenueCat:{ios:String(rc.ios||""),android:String(rc.android||"")}};
 }
 function build(target,outDir){
- if(target!=="beta"&&target!=="production")throw new Error('Build target must be "beta" or "production"');
- const out=outDir||path.join(root,"dist",target),prod=target==="production";
+ if(!["beta","production","external"].includes(target))throw new Error('Build target must be "beta", "production" or "external"');
+ const out=outDir||path.join(root,"dist",target),prod=target!=="beta";
  fs.rmSync(out,{recursive:true,force:true});fs.mkdirSync(out,{recursive:true});
  const written=[];
  for(const f of shellFiles()){

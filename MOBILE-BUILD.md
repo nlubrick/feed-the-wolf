@@ -33,6 +33,20 @@ npm run app:production    # release check, production build -> www/ -> both app 
 
 Then open `android/` in Android Studio, or `ios/App` in Xcode, to run on a phone or upload to a store.
 
+## Cloud builds (Codemagic)
+
+`codemagic.yaml` has four manual workflows; none publishes anything.
+
+| Workflow | Build | For |
+|---|---|---|
+| `android-beta-debug` | tester | a debug APK to sideload |
+| `ios-beta-simulator` | tester | a compile check, no signing |
+| `ios-beta-signed` | tester | **internal** TestFlight: practice checkout, clearly labeled, no money |
+| `ios-external-beta` | external | **outside** testers: no practice checkout, Apple sandbox purchases |
+
+- Every build is stamped with a unique build number (minutes since 1970, UTC) and the version in `package.json`, by `scripts/set-app-version.cjs`. To release a new version, raise `version` in `package.json`.
+- `ios-external-beta` needs a Codemagic variable group named `revenuecat_beta` holding `FTW_RC_IOS_KEY`. It stops at the first step if the key is missing.
+
 ## Store setup (RevenueCat)
 
 Real purchases stay off until store keys are set. With no key the app has no store and nothing can be bought.
