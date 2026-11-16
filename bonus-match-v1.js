@@ -27,8 +27,15 @@ function find(grid){
   if(end-y>=3){const run=[];for(let j=y;j<end;j++){const i=j*6+x;matches.add(i);run.push(i);}runs.push(run);}
   y=end;
  }
+ // four of a kind in a 2 x 2 square also counts, and earns a Wolf Howl like four in a row does
+ for(let y=0;y<5;y++)for(let x=0;x<5;x++){
+  const i=y*6+x,v=grid[i];
+  if(v>=0&&grid[i+1]===v&&grid[i+6]===v&&grid[i+7]===v){const sq=[i,i+1,i+6,i+7];sq.square=true;for(const c of sq)matches.add(c);runs.push(sq);}
+ }
  return{matches,runs};
 }
+/* Where the Wolf Howl from a big match should appear: the lowest square of the four-or-more group. */
+const howlCell=runs=>{const big=runs.find(g=>g.length>=4);return big?Math.max(...big):null;};
 function possible(grid){
  for(let i=0;i<36;i++)for(const j of [i+1,i+6]){
   if(j>=36||(j===i+1&&i%6===5))continue;
@@ -45,7 +52,8 @@ function makeGrid(seed){
   for(let i=0;i<36;i++){
    const choices=[0,1,2,3,4,5].filter(v=>
     !(i%6>=2&&g[i-1]===v&&g[i-2]===v)&&
-    !(i>=12&&g[i-6]===v&&g[i-12]===v));
+    !(i>=12&&g[i-6]===v&&g[i-12]===v)&&
+    !(i%6>=1&&i>=6&&g[i-1]===v&&g[i-6]===v&&g[i-7]===v));      // and no ready-made squares
    g.push(choices[Math.floor(pick()*choices.length)]);
   }
   if(possible(g))return g;
@@ -53,13 +61,14 @@ function makeGrid(seed){
  throw Error("No possible Feast Match starting board");
 }
 /* [foods to serve, moves]. Every swap clears at least three, so a goal above three per move needs combos and
-   Wolf Howls. Tuned by simulation: a player who always takes the biggest match wins about 100, 95, 82, 76 and 60%. */
-const GOALS=[[36,13],[52,14],[70,16],[78,17],[90,18]];
+   Wolf Howls. Tuned by simulation (with squares and chain Howls counted): a player who always takes the biggest
+   match wins about 100, 96, 84, 73 and 58%. */
+const GOALS=[[38,13],[58,14],[80,16],[92,17],[108,18]];
 function mount(api){
  const chapter=api.stage.chapter,random=rng(49000+chapter*501);
  let grid=makeGrid(5541+chapter*743),selected=null,turns=GOALS[chapter][1],
   target=GOALS[chapter][0],score=0,busy=false,alive=true,powers=new Set(),popping=new Set(),drops=[];
- api.instructions("Swap neighboring foods to match three or more. Four in a row creates a Wolf Howl that clears nine spaces!");
+ api.instructions("Swap neighboring foods to match three or more. Four in a row, or four in a square, makes a Wolf Howl that clears nine spaces!");
  api.message("Match the wolf's favorite foods. Bigger combos fill his dinner tray faster.");
  const draw=()=>{
   if(!alive)return;
@@ -110,15 +119,15 @@ function mount(api){
     while(keep.length<6){keep.push(Math.floor(random()*6));from.push(-1);}
     for(let row=5;row>=0;row--){const k=5-row;grid[row*6+col]=keep[k];drops[row*6+col]=from[k]<0?fresh:row-from[k];}
    }
-   if(large&&chain===0)powers.add(Number.isInteger(focus)?focus:Math.floor(random()*36));
+   if(large)powers.add(Number.isInteger(focus)?focus:Math.floor(random()*36));   // combos that make four earn a Howl too
    draw();await wait(quick?60:340);if(!alive)return;
    drops=[];
-   const res=find(grid);removed=res.matches;large=res.runs.some(g=>g.length>=4);
+   const res=find(grid);removed=res.matches;large=res.runs.some(g=>g.length>=4);focus=howlCell(res.runs);blast=false;
    chain++;
   }
   if(!alive)return;
   if(score>=target){api.win();return;}
-  if(turns<=0){api.lose("The tray was "+(target-score)+" short. Line up four in a row for a Wolf Howl, and look for matches that set off another.");return;}
+  if(turns<=0){api.lose("The tray was "+(target-score)+" short. Make four in a row or a square for a Wolf Howl, and look for matches that set off another.");return;}
   if(!possible(grid)&&!powers.size){
    grid=makeGrid(97000+Math.floor(random()*100000));api.message("New ingredients shuffled into the kitchen!");
   }

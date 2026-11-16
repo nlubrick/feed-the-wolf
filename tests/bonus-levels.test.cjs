@@ -102,7 +102,7 @@ test("Browser integrates play, skip, saved bonus status and five-level demo",()=
 test("The PWA app shell caches each mode, music and its responsive layout",()=>{
  const sw=fs.readFileSync(path.join(root,"service-worker.js"),"utf8");
  for(const f of sources.concat("bonus-style-v1.css","bonus-themes-v1.css"))assert.ok(sw.includes(f),f+" missing from cache");
- assert.match(sw,/ftw-install-v19/);
+ assert.match(sw,/ftw-install-v20/);
  assert.match(page,/id="bonus-root"/);
 });
 
@@ -181,4 +181,16 @@ test("Mini-games have level arrows, and the match board animates",()=>{
  const src=fs.readFileSync(path.join(root,"bonus-levels-v1.js"),"utf8"),match=fs.readFileSync(path.join(root,"bonus-match-v1.js"),"utf8"),css=fs.readFileSync(path.join(root,"bonus-themes-v1.css"),"utf8");
  assert.match(src,/data-bonus-action="next" aria-label="Next level"/);assert.match(page,/canNext:stage=>/);
  for(const k of ["fw-popping","fw-falling","fw-sliding"]){assert.ok(match.includes(k),k);assert.ok(css.includes("."+k),k+" style");}
+});
+
+test("Feast Match: four in a square is a match and earns a Wolf Howl",()=>{
+ const {FTWMatchRules:r}=setup();
+ const g=Array.from({length:36},(_,i)=>[0,1,2,3,4,5][(i+Math.floor(i/6)*2)%6]);   // no lines, no squares
+ assert.equal(r.find(g).matches.size,0);
+ g[14]=g[15]=g[20]=g[21]=3;g[13]=0;g[16]=1;g[8]=4;g[9]=5;g[26]=4;g[27]=5;g[19]=2;g[22]=0;
+ const f=r.find(g),sq=f.runs.find(q=>q.square);
+ assert.ok(sq,"square found");assert.deepEqual(Array.from(sq),[14,15,20,21]);
+ assert.ok(f.runs.some(q=>q.length>=4),"counts as a big match, so it makes a Howl");
+ for(const i of [14,15,20,21])assert.ok(f.matches.has(i));
+ for(let seed=1;seed<=60;seed++){const b=r.makeGrid(seed*37);assert.equal(r.find(b).matches.size,0,"new boards start with no ready-made lines or squares");assert.ok(r.possible(b));}
 });
