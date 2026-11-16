@@ -109,6 +109,13 @@
 .fw-themed .fw-pipe-tile{background:var(--fw-pipe-bg);border-color:var(--fw-accent-dark)}
 .fw-themed .fw-pipe-tile.flowing{border-color:var(--fw-flow);box-shadow:0 0 12px var(--fw-flow)}
 .fw-themed .fw-pipe-labels{text-shadow:0 1px 2px #000}
+/* pouring: each joint swells as the liquid reaches it; a leak shakes and glows red; the bowl glows when it arrives */
+@keyframes fw-pipe-new{from{transform:scale(1.22);filter:brightness(1.9)}to{transform:scale(1)}}
+.fw-pipe-tile.fw-pipe-new{animation:fw-pipe-new .2s ease-out;z-index:2}
+@keyframes fw-pipe-spill{20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+.fw-themed .fw-pipe-tile.fw-pipe-spill{animation:fw-pipe-spill .4s 2;border-color:#ff4d4d;box-shadow:0 0 16px #ff4d4d}
+@keyframes fw-pipe-fed{50%{transform:scale(1.14);filter:drop-shadow(0 0 12px var(--fw-flow))}}
+.fw-pipe-finish.fw-pipe-fed{animation:fw-pipe-fed .5s ease-in-out 2}
 .fw-themed .fw-pipe-caption{background:#0008;border-radius:8px;padding:5px 8px}
 .fw-themed .fw-detective-scene{border-radius:12px}
 

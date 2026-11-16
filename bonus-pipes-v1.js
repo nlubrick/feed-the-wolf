@@ -69,7 +69,28 @@ const SLACK=[0,3,2.4,2,1.7],POURS=[0,5,4,3,3];
 function limits(chapter){const c=create(chapter);return{turns:SLACK[chapter]?Math.ceil(minTurns(c)*SLACK[chapter])+2:0,pours:POURS[chapter],min:minTurns(c)};}
 function mount(api){
  const config=create(api.stage.chapter),grid=config.initial.slice(),lim=limits(api.stage.chapter);
- let turns=0,pours=0,lit=[],alive=true,passed=false;
+ let turns=0,pours=0,lit=[],alive=true,passed=false,pouring=false,spill=-1;
+ const quick=typeof matchMedia==="function"&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+ const later=(fn,ms)=>{if(typeof setTimeout==="function"&&!quick)setTimeout(fn,ms);else fn();};
+ /* Test Flow: the liquid runs through the pipes one joint at a time, so you watch it arrive, or see where it gets out. */
+ function pour(){
+  const result=trace(grid);let k=0;
+  pouring=true;spill=-1;lit=[];api.message(say("Pouring the soup..."));
+  const finish=()=>{
+   if(!alive)return;
+   pouring=false;api.message(say(result.reason));
+   if(result.win){passed=true;draw();api.sound(true);later(()=>{if(alive)api.win();},700);return;}
+   spill=result.trail.length?result.trail[result.trail.length-1]:10;draw();api.sound(false);pours++;
+   if(lim.pours&&pours>=lim.pours){passed=true;api.lose(say("That was the last pour and the soup never reached the wolf. Trace the route from START with your finger before pouring."));}
+   else draw();
+  };
+  const step=()=>{
+   if(!alive)return;
+   if(k>=result.trail.length){later(finish,280);return;}
+   k++;lit=result.trail.slice(0,k);draw();api.tone(280+k*38,.07);later(step,150);
+  };
+  step();
+ }
  const theme=root.FTWBonusThemes?root.FTWBonusThemes.pipes(api.stage.chapter):null,liquid=theme?theme.liquid:"soup",say=t=>t.replace(/soup/g,liquid);
  api.instructions("Rotate the pipes to carry the "+liquid+" from START to the wolf at END. Tap a piece to turn it; press Test Flow to pour.");
  api.message("The "+liquid+" comes in on the left at START. Get it to the wolf's bowl on the right!");
@@ -81,25 +102,20 @@ function mount(api){
   api.play.innerHTML=(ends?'':'<div class="fw-pipe-labels"><span>SOUP POT</span><span>WOLF\'S BOWL</span></div>')+
    '<div class="fw-pipe-wrap'+(ends?' fw-pipe-ends':'')+'">'+(ends?'<div class="fw-pipe-end fw-pipe-start"><b>START</b>'+ends.pot+'<i>\u25B6</i></div>':'')+
    '<div class="fw-pipe-grid" role="grid" aria-label="Five by five rotating pipe puzzle">'+
-   grid.map((m,i)=>'<button type="button" class="fw-pipe-tile'+(lit.includes(i)?' flowing':'')+
+   grid.map((m,i)=>'<button type="button" class="fw-pipe-tile'+(lit.includes(i)?' flowing':'')+(pouring&&i===lit[lit.length-1]?' fw-pipe-new':'')+(i===spill?' fw-pipe-spill':'')+
    '" data-pipe="'+i+'" aria-label="Rotate pipe row '+(Math.floor(i/5)+1)+
    ' column '+(i%5+1)+'">'+tileSVG(m,lit.includes(i))+'</button>').join('')+'</div>'+
-   (ends?'<div class="fw-pipe-end fw-pipe-finish"><i>\u25B6</i>'+(api.wolf?'<img class="fw-pipe-wolf" alt="" src="'+api.wolf(passed?"joy":"idle")+'">':'')+ends.bowl+'<b>END</b></div>':'')+'</div>'+
+   (ends?'<div class="fw-pipe-end fw-pipe-finish'+(passed?' fw-pipe-fed':'')+'"><i>\u25B6</i>'+(api.wolf?'<img class="fw-pipe-wolf" alt="" src="'+api.wolf(passed?"joy":"idle")+'">':'')+ends.bowl+'<b>END</b></div>':'')+'</div>'+
    '<p class="fw-pipe-caption">'+say("The whole soup route must connect from START to END. Every tap turns one joint.")+'</p>';
  }
  function click(e){
-  if(passed)return;
+  if(passed||pouring)return;
   const btn=e.target.closest("[data-flow-test]");
-  if(btn){
-   const result=trace(grid);lit=result.trail;api.message(say(result.reason));if(result.win)passed=true;draw();
-   if(result.win){passed=true;api.sound(true);api.win();}
-   else{api.sound(false);pours++;if(lim.pours&&pours>=lim.pours){passed=true;api.lose(say("That was the last pour and the soup never reached the wolf. Trace the route from START with your finger before pouring."));}}
-   return;
-  }
+  if(btn){pour();return;}
   const tile=e.target.closest("[data-pipe]");if(!tile)return;
   const i=Number(tile.dataset.pipe);
   if(lim.turns&&turns>=lim.turns){passed=true;api.sound(false);api.lose("Out of turns. This one can be done in "+lim.min+". Work out the route before you start turning.");return;}
-  grid[i]=rotate(grid[i]);turns++;lit=[];
+  grid[i]=rotate(grid[i]);turns++;lit=[];spill=-1;
   api.tone(330+(i%5)*40,.07);api.message("Turned a pipe. Test the flow when you are ready.");
   draw();
  }
