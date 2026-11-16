@@ -14,6 +14,7 @@ const FORBIDDEN=[
  [/[?&]dev=|DEV_PREVIEW|FTW_QA_PREVIEW|qa-toggle|dev-preview/,"old preview switches"],
  [/[Ss]imulated (purchase|checkout|App Store)/,"simulated purchase wording"],
  [/beta-badge|BETA TEST BUILD|BETA-START|BETA-END/,"beta markers or badge"],
+ [/during this test|this test build|test build only/i,"wording that only makes sense in a test build"],
  [/\blet BETA\b|\bBETA\s*=\s*\{/,"a beta tool block that could be plugged in"]
 ];
 function check(dir,target="production"){
