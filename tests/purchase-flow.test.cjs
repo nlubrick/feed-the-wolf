@@ -30,7 +30,7 @@ test("The one Store combines wardrobe collections and gem packs",()=>{
   assert.match(html,/id="wbtn"[^>]+>[\s\S]*?<span>Store<\/span>/);
   assert.match(html,/<section id="shop" hidden>/);
   assert.match(html,/id="store-products"/);
-  assert.match(html,/id="tilesH"/);assert.match(html,/id="tilesP"/);
+  assert.match(html,/id="tilesH"/);assert.match(html,/id="tilesS"/);assert.doesNotMatch(html,/id="tilesP"/);   // prizes and costumes share one shelf
   assert.match(html,/id="tilesS"/);assert.match(html,/id="tilesT"/);
   assert.doesNotMatch(html,/<section id="store" hidden/);
   assert.doesNotMatch(html,/<h1>Wardrobe<\/h1>/);
