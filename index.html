@@ -62,8 +62,8 @@ h1{
 .dots i.now{background:var(--brass);outline:2px solid var(--ink);outline-offset:1px}
 
 .stage{display:flex;justify-content:center}
-/* Square and tall castles are narrowed a little on a phone so they fit between the header and the buttons (never below 80% width). */
-.castle{width:min(100%,calc(var(--cols,3) * 136px),max(80%,calc((100dvh - 584px) * var(--cols,3) / var(--rows,3))));filter:drop-shadow(0 12px 0 rgba(0,0,0,.28))}
+/* Default sizing; portrait fitCastleToScreen uses the measured free stage height. */
+.castle{width:min(100%,calc(var(--cols,3) * 136px));filter:drop-shadow(0 12px 0 rgba(0,0,0,.28))}
 .crenel{height:18px;margin:0 4px;background:repeating-linear-gradient(90deg,var(--stone) 0 30px,transparent 30px 46px);border-radius:4px 4px 0 0;transition:background .5s}
 .board{position:relative;width:100%;border-radius:6px 6px 14px 14px;box-shadow:0 0 0 4px var(--edge,#33365c);background:#35375c;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 .board canvas{display:block;width:100%;height:100%;border-radius:inherit;touch-action:manipulation}
@@ -254,8 +254,13 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 .footer-links{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap}
 .footer-links .linkish{min-height:44px;min-width:110px;padding:7px 10px}
 @media (max-width:520px) and (orientation:portrait){
+  /* Reserve screen height for the controls and footer before sizing the castle.
+     On unusually short displays the page can still scroll rather than overlap. */
+  .wrap:has(> #game:not([hidden])){height:100dvh;min-height:0}
   .wrap{padding:12px 14px max(14px,env(safe-area-inset-bottom));gap:10px}
-  #game{gap:9px}
+  #game{gap:9px;flex:1 1 auto;min-height:0}
+  #game .stage{flex:1 1 0;min-height:0;align-items:center}
+  #game .btns,#game .footer-links{flex-shrink:0}
   #game>header{gap:2px}
   #game>header h1{font-size:clamp(36px,10vw,43px);line-height:1}
   #game .wpill{margin-top:4px}
@@ -1357,7 +1362,20 @@ function torches(){
   for (let y = 0; y < lv.rows; y++) for (let x = 0; x < lv.cols; x++) if (!P.at[x + "," + y]) out.push({x:x*U+50, y:y*U+46, seed:x*7+y*13});
   return out;
 }
+function fitCastleToScreen(){
+  // Measure the actual flex stage after header, navigation, sound controls,
+  // buttons, Daily, and footer have claimed their space. No magic viewport
+  // offset or hardcoded height; level aspect ratios determine the maximum.
+  castle.style.removeProperty("width");
+  if($("game").hidden||!window.matchMedia("(max-width:520px) and (orientation:portrait)").matches)return;
+  const stage=castle.parentElement;
+  const freeH=stage.clientHeight-(castle.querySelector(".crenel")?.offsetHeight||12)-8;
+  if(freeH<=0||stage.clientWidth<=0)return;
+  const width=Math.floor(Math.min(stage.clientWidth,lv.cols*136,freeH*lv.cols/lv.rows));
+  if(width>0)castle.style.width=width+"px";
+}
 function setSize(){
+  fitCastleToScreen();
   const cssW = castle.clientWidth || 300;
   const dpr = Math.min(window.devicePixelRatio || 1, 3);
   W = lv.cols * U; H = lv.rows * U;
@@ -2733,6 +2751,7 @@ $("daily").addEventListener("click", () => {
 });
 let rz = 0;
 window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (!lv) return; setSize(); renderBg(); }, 120); });
+window.visualViewport?.addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{if(!lv)return;setSize();renderBg();},120);});
 
 /* ---------- gems, prizes and the wardrobe ---------- */
 const THUMB = {};
@@ -2994,10 +3013,21 @@ const SFX = {
 function sfx(name,arg){
   if(!sfxOn||document.hidden||window.__feStudioIntroActive)return;
   sfxInit();
-  if(!actx)return;
+  const current=actx;
+  if(!current)return;
   try{
-    if(actx.state==="suspended"){const p=actx.resume();if(p?.catch)p.catch(()=>{});}
-    if(actx.state==="interrupted"||actx.state==="closed"){sfxDispose();return;}
+    if(current.state==="interrupted"||current.state==="closed"){
+      sfxDispose();sfxInit();return;
+    }
+    if(current.state==="suspended"){
+      // Resume is asynchronous on iPhone. Play once the context is running
+      // instead of losing the first effect while the session reconnects.
+      const p=current.resume();
+      if(p?.then)p.then(()=>{
+        if(actx===current&&current.state==="running"&&!document.hidden&&!window.__feStudioIntroActive&&sfxOn&&SFX[name])SFX[name](arg);
+      }).catch(()=>{if(actx===current)sfxDispose();});
+      return;
+    }
     if(SFX[name])SFX[name](arg);
   }catch(e){}
 }
@@ -3014,7 +3044,14 @@ document.addEventListener("pointerdown",sfxWake,true);
 document.addEventListener("touchend",sfxWake,true);
 document.addEventListener("click",sfxWake,true);
 document.addEventListener("visibilitychange",()=>{if(document.hidden)sfxDispose();});
+document.addEventListener("webkitvisibilitychange",()=>{if(document.hidden)sfxDispose();});
 window.addEventListener("pagehide",sfxDispose);
+// Capacitor's WKWebView does not consistently fire visibilitychange on app
+// switching. Discard the old session on blur and focus as well. It is
+// re-created on the next real touch, avoiding iOS autoplay restrictions.
+window.addEventListener("blur",sfxDispose);
+window.addEventListener("focus",sfxDispose);
+window.addEventListener("pageshow",sfxDispose);
 
 /* ---------- music: an original castle-caper loop, rendered to a WAV and played through an <audio> element
    (which still plays when an iPhone is on silent). Four 8-bar sections: the theme, the theme over a ticking

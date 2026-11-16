@@ -1,8 +1,8 @@
 "use strict";
-/* Generate a real Xcode app icon after Capacitor creates its native project.
-   A web manifest and apple-touch-icon only help Safari home-screen bookmarks,
-   never the signed iOS IPA or App Store Connect / TestFlight.
-   Native AppIcon.appiconset must contain a nontransparent 1024x1024 PNG. */
+/* Generate a real Xcode icon from the EXACT FTW Dev home-screen wolf image.
+   The repository's SVG is a different, angular design, not the cheerful wolf
+   used by FTW Dev. iOS tester and production now share that same character.
+   AppIcon.appiconset needs an opaque 1024x1024 PNG in signed IPA builds. */
 const fs=require("node:fs"),path=require("node:path"),sharp=require("sharp");
 const root=path.resolve(__dirname,"..");
 async function writeIosIcon(options={}){
@@ -10,17 +10,22 @@ async function writeIosIcon(options={}){
  const web=options.web||path.join(root,"www");
  const icons=path.join(project,"Assets.xcassets","AppIcon.appiconset");
  if(!fs.existsSync(icons))throw new Error("Generated iOS AppIcon.appiconset is missing: "+icons);
- // The internal tester flavor includes a distinct BETA badge; production/external
- // uses the unbadged wolf. Never use the browser's small 180px icon for native.
+ // FTW Dev currently uses an embedded apple-touch-icon PNG. Reusing these
+ // exact image bytes (rather than the separate angular wolf SVG) makes the
+ // TestFlight icon match FTW Dev. A small BETA badge differentiates tester IPAs.
  const tester=fs.existsSync(path.join(web,"feed-the-wolf-beta-icon.svg"));
- const source=path.join(web,tester?"feed-the-wolf-beta-icon.svg":"feed-the-wolf-icon.svg");
- if(!fs.existsSync(source))throw new Error("Native iOS wolf icon source is missing: "+source);
+ const source=path.join(root,"index.html");
+ const html=fs.readFileSync(source,"utf8");
+ const match=html.match(/<link rel="apple-touch-icon" href="data:image\\/png;base64,([^"]+)">/);
+ if(!match)throw new Error("FTW Dev home-screen icon is missing from index.html");
+ const wolf=Buffer.from(match[1],"base64");
  const filename="AppIcon-512@2x.png",destination=path.join(icons,filename);
- const buffer=await sharp(fs.readFileSync(source),{density:300})
-  .resize(1024,1024,{fit:"fill"})
-  .flatten({background:"#191234"})
-  .png({palette:false,compressionLevel:9})
-  .toBuffer();
+ let pipeline=sharp(wolf).resize(1024,1024,{fit:"fill",kernel:"lanczos3"}).flatten({background:"#292052"});
+ if(tester){
+  const badge=Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"><rect x="716" y="866" width="277" height="112" rx="48" fill="#f7d678" stroke="#252045" stroke-width="12"/><text x="854" y="940" font-family="Arial,Helvetica,sans-serif" font-size="64" font-weight="900" letter-spacing="2" text-anchor="middle" fill="#252045">BETA</text></svg>');
+  pipeline=pipeline.composite([{input:badge}]);
+ }
+ const buffer=await pipeline.png({palette:false,compressionLevel:9}).toBuffer();
  const info=await sharp(buffer).metadata();
  if(info.width!==1024||info.height!==1024||info.hasAlpha||info.channels!==3)
   throw new Error("Invalid iOS icon: requires an opaque 1024x1024 RGB PNG");
