@@ -2,6 +2,16 @@
   "appId": "com.failureentertainment.feedthewolf",
   "appName": "Feed the Wolf",
   "webDir": "www",
-  "ios": { "contentInset": "always", "backgroundColor": "#1b1530" },
-  "android": { "backgroundColor": "#1b1530" }
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#1b1530"
+  },
+  "android": {
+    "backgroundColor": "#1b1530"
+  },
+  "server": {
+    "androidScheme": "https",
+    "iosScheme": "capacitor",
+    "hostname": "localhost"
+  }
 }

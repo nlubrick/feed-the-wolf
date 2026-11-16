@@ -287,17 +287,18 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 .tile.premium-locked img{filter:grayscale(1) brightness(.42);opacity:.73}
 .tile.premium-locked span{color:#d1a76a}
 
-.ftw-dev-panel{border:2px dashed #efbd67;border-radius:13px;background:#312241;color:#fff;display:grid;gap:9px;padding:11px 12px;font-size:13px}
+/*BETA-START*/.ftw-dev-panel{border:2px dashed #efbd67;border-radius:13px;background:#312241;color:#fff;display:grid;gap:9px;padding:11px 12px;font-size:13px}
 .ftw-dev-panel strong{font-family:var(--display);font-size:17px;color:#ffd985}
 .ftw-dev-panel .ftw-dev-row{display:flex;align-items:center;gap:9px;justify-content:space-between;flex-wrap:wrap}
 .ftw-dev-panel input[type=number]{width:68px;padding:6px;border-radius:7px;background:#1c1430;color:#fff;border:1px solid #ad8ad3}
 .ftw-dev-panel input[type=checkbox]{width:22px;height:22px;accent-color:#5be08a;vertical-align:middle}
 .ftw-dev-panel button{padding:7px 14px;min-height:36px}
-.ftw-dev-panel p{margin:0;color:#cdbfe0;line-height:1.3}
+.ftw-dev-panel p{margin:0;color:#cdbfe0;line-height:1.3}/*BETA-END*/
 .tile.ftw-premium-locked{opacity:.44;filter:grayscale(.95) saturate(.35)}
 .tile.ftw-premium-locked::before{content:"FULL GAME";position:absolute;top:4px;left:4px;right:4px;z-index:2;font:bold 9px var(--body);letter-spacing:.6px;color:#fff;text-shadow:0 2px 4px #000;text-align:center}
 
-/* Temporary PWA beta tools. Delete before App Store submission. */
+/*BETA-START*/
+/* Beta-only tools. The production build strips this block. */
 #developer{display:flex;flex-direction:column;gap:16px}
 #developer .dev-console{background:linear-gradient(165deg,#302145,#161126);padding:20px 16px;border:2px solid #dcaf58;border-radius:18px;display:grid;gap:12px;max-width:600px;width:100%;margin:0 auto}
 #developer h1{font:400 clamp(30px,8vw,42px) var(--display);color:#ffe4a5;margin:0}
@@ -315,7 +316,9 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 .dev-reset-actions .danger{border-color:#f2a46c;color:#ffccae}
 .dev-reset-actions small{font:600 12px/1.45 var(--body);color:#c3b0d5;margin-bottom:12px}
 .ftw-test-checkout{font:800 11px/1.5 var(--body);letter-spacing:1px;text-align:center;color:#ffe2a7;background:#52381e;border:1px solid #d6a35c;border-radius:9px;padding:8px}
-.ftw-test-toast{position:fixed;top:max(15px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#24513f;color:#f5fff9;border:2px solid #86e5b2;border-radius:13px;box-shadow:0 8px 40px #0008;padding:13px 18px;z-index:1500;font:800 13px/1.3 var(--body);max-width:90vw;text-align:center;pointer-events:none}
+#beta-badge{position:fixed;z-index:2147482000;top:max(4px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);pointer-events:none;font:800 10px var(--body);letter-spacing:1.5px;color:#1b1530;background:#ffd76a;border:1px solid #7a5410;border-radius:999px;padding:3px 10px;opacity:.92;white-space:nowrap}
+/*BETA-END*/
+.ftw-toast{position:fixed;top:max(15px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#24513f;color:#f5fff9;border:2px solid #86e5b2;border-radius:13px;box-shadow:0 8px 40px #0008;padding:13px 18px;z-index:1500;font:800 13px/1.3 var(--body);max-width:90vw;text-align:center;pointer-events:none}
 
 .ftw-store-head{text-align:center;max-width:560px;margin:0 auto}
 .ftw-store-head h1{font:400 42px var(--display);margin:6px 0;color:var(--brass)}
@@ -330,19 +333,21 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 .ftw-product .go{width:100%;min-height:46px;font-size:14px}
 .ftw-product .go[disabled]{opacity:.55;cursor:default}
 .ftw-product-price{font:800 19px var(--body);color:#fff0c6}
+/*BETA-START*/
 .ftw-test-checkout-overlay{position:fixed;inset:0;background:#100a21da;z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;overscroll-behavior:contain}
 .ftw-test-checkout-card{width:min(100%,420px);padding:25px 18px;border-radius:20px;background:linear-gradient(150deg,#312244,#1c1431);border:2px solid #e9b76b;box-shadow:0 20px 65px #000a;text-align:center;display:flex;flex-direction:column;gap:12px}
 .ftw-test-checkout-card h2{font:400 31px/1.15 var(--display);color:#ffdfa6;margin:0}
 .ftw-test-checkout-card strong{font:700 34px var(--body);color:#fff}
 .ftw-test-checkout-card p{margin:0}
 .ftw-test-checkout-card button{min-height:50px}
+/*BETA-END*/
 @media(max-width:520px){.ftw-products{grid-template-columns:1fr}.ftw-product{padding:13px}.ftw-product>img{width:84px;height:88px}}
 
 /* Unified Store: gem packs above all unlockable cosmetics. */
 .ftw-store-intro{max-width:560px;font-size:14px;line-height:1.5;margin:0 auto;text-align:center;color:var(--ink)}
 .ftw-store-purchase-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:4px}
 .ftw-store-purchase-head .shelf{margin:0}
-.ftw-store-purchase-head .ftw-test-checkout{font-size:10px}
+/*BETA-START*/.ftw-store-purchase-head .ftw-test-checkout{font-size:10px}/*BETA-END*/
 .ftw-gem-pack-art{flex:none;display:flex;align-items:center;justify-content:center;width:90px;height:92px;border-radius:14px;background:radial-gradient(circle at 50% 45%,#6acfff77,#292354 70%);border:1px solid #a8a9e5}
 .ftw-gem-pack-art span{font-size:40px;text-shadow:0 4px 8px #001e4a;transform:rotate(-12deg)}
 .ftw-product .go{width:100%}
@@ -359,7 +364,10 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 @media (prefers-reduced-motion:reduce){.tile.tile-trophy::after{animation:none}}
 .tile.gem-unaffordable{opacity:.78}
 </style>
-<script src="./test-store-v2.js"></script>
+<script src="./store-catalog-v1.js"></script>
+<script src="./store-config.js"></script>
+<script src="./store-bridge-v1.js"></script>
+<!--BETA-START--><script src="./test-store-v2.js"></script><!--BETA-END-->
 <link rel="stylesheet" href="./bonus-style-v1.css">
 <link rel="stylesheet" href="./bonus-themes-v1.css">
 <script src="./bonus-themes-v1.js"></script>
@@ -408,7 +416,7 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
     <button class="linkish" id="hbtn" type="button">How to play</button>
     <button class="linkish" id="credits-btn" type="button">Credits</button>
     <button class="linkish" id="unlock-link" type="button">Full game</button>
-    <button class="linkish" id="developer-open" type="button" hidden>Developer</button>
+    <!--BETA-START--><button class="linkish" id="developer-open" type="button" hidden>Developer</button><!--BETA-END-->
   </nav>
  </div>
 
@@ -426,11 +434,13 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
       <div class="unlock-price"><span id="unlock-price">$2.99</span><small>One-time purchase · No subscription</small></div>
       <button class="go" id="unlock-buy" type="button" disabled>Unlock the full game</button>
       <button class="quiet" id="unlock-restore" type="button" disabled>Restore purchases</button>
-      <p class="unlock-note" id="unlock-status" role="status" aria-live="polite">This browser demo cannot process purchases.</p>
-      <p class="ftw-test-checkout" id="test-checkout-label" hidden>TEST PURCHASE ONLY · NO PAYMENT WILL BE TAKEN</p>
-      <button class="quiet" id="developer-from-unlock" type="button" hidden>Developer tools</button>
+      <p class="unlock-note" id="unlock-status" role="status" aria-live="polite">Purchases are available in the Feed the Wolf app.</p>
+      <!--BETA-START--><p class="ftw-test-checkout" id="test-checkout-label" hidden>TEST PURCHASE ONLY · NO PAYMENT WILL BE TAKEN</p>
+      <button class="quiet" id="developer-from-unlock" type="button" hidden>Developer tools</button><!--BETA-END-->
     </div>
   </section>
+  <!--BETA-START-->
+  <div id="beta-badge" aria-hidden="true">BETA TEST BUILD</div>
   <section id="developer" hidden aria-label="Developer testing tools">
     <div class="shop-top"><button class="quiet" id="developer-back" type="button">&#8249; Back to game</button><span class="dev-tag">TEST BUILD</span></div>
     <div class="dev-console">
@@ -471,6 +481,7 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
       <button class="go" id="test-checkout-confirm" type="button">Confirm test purchase</button>
       <button class="quiet" id="test-checkout-cancel" type="button">Cancel</button>
     </div>
+  <!--BETA-END-->
   </div>
   <section id="help" hidden>
   <div class="shop-top"><button class="quiet" id="back3" type="button">&#8249; Back to the castle</button></div>
@@ -502,11 +513,11 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
   <div class="shop-top">
     <button class="quiet" id="back" type="button">&#8249; Back to the castle</button>
     <div class="purse" aria-label="Available gems"><i class="gem"></i><span id="gems">0</span></div>
-    <button class="quiet" id="store-dev" type="button" hidden>Developer</button>
+    <!--BETA-START--><button class="quiet" id="store-dev" type="button" hidden>Developer</button><!--BETA-END-->
   </div>
   <h1>Store</h1>
-  <p class="ftw-store-intro">Earn gems from puzzle wins and optional bonus games, or get more with test purchases. <strong>Every character, costume and pet can be unlocked with gems.</strong></p>
-  <div class="ftw-store-purchase-head"><h2 class="shelf">Gem Packs &amp; Full Game</h2><p class="ftw-test-checkout" id="store-test-note" hidden>TEST STORE · NO ACTUAL MONEY IS CHARGED</p></div>
+  <p class="ftw-store-intro">Earn gems from puzzle wins and optional bonus games, or get more with gem packs. <strong>Every character, costume and pet can be unlocked with gems.</strong></p>
+  <div class="ftw-store-purchase-head"><h2 class="shelf">Gem Packs &amp; Full Game</h2><!--BETA-START--><p class="ftw-test-checkout" id="store-test-note" hidden>TEST STORE · NO ACTUAL MONEY IS CHARGED</p><!--BETA-END--></div>
   <div id="store-products" class="ftw-products"></div>
   <h2 class="shelf">Characters &amp; Companions</h2>
   <div class="mirror"><img id="petImg" alt="" hidden><img id="dress" alt="The wolf in what he is wearing now"></div>
@@ -1457,7 +1468,7 @@ function landed(a, g){
   a.vy = 0; a.vr = 0; a.bounces = 0; a.seg = null;
 }
 function reached(){                                 // every level up to the furthest one reached can be revisited
-  if (FTW_TEST_BUILD && developerMode && previewFull && testCheckoutAvailable()) return LEVELS.length;
+  if (BETA && BETA.previewAll()) return LEVELS.length;
   let m = 0;
   for (let i = 0; i < LEVELS.length; i++) if (cleared[i] || cleared[i + "h"]) m = i + 1;
   return Math.min(LEVELS.length, m + 1);
@@ -2100,20 +2111,13 @@ function frame(ts){
 const FREE_LEVEL_COUNT = 5;
 const FULL_UNLOCK_PRODUCT_ID = "feed_the_wolf_full_unlock";
 let fullGame = false, storeBusy = false, pendingUnlockTarget = null, entitlementReturnLevel = null;
-/* BETA TEST BUILD ONLY: remove everything here and all local simulated
-   entitlement storage before selling the app. This is not StoreKit ownership. */
-const FTW_TEST_BUILD = true;
-const FTW_TEST_PURCHASE_KEY = "ftw-beta-simulated-unlock-v1";
-let simulatedPurchase = false;
-let developerMode = false, previewFull = false, developerReturnView = "game";
-try { simulatedPurchase = FTW_TEST_BUILD && localStorage.getItem(FTW_TEST_PURCHASE_KEY) === "yes"; }
-catch (e) { /* local storage may be unavailable */ }
-function testCheckoutAvailable(){ return FTW_TEST_BUILD && !nativeStore(); }
-/* Really bought (or test-bought), as opposed to the developer preview switch. Buying the game comes with a free pet and accessory. */
-function ownsFullGame(){ return fullGame || (testCheckoutAvailable() && simulatedPurchase); }
-function hasFullAccess(){
-  return fullGame || (testCheckoutAvailable() && (simulatedPurchase || (developerMode && previewFull)));
-}
+/* Beta-only test tools plug in through BETA.
+   The production build contains no beta block at all, so BETA stays null there and only a store-verified purchase opens paid content. */
+let BETA = null;
+/* Really bought, as opposed to a preview. Buying the game comes with a free pet and accessory. */
+function ownsFullGame(){ return fullGame || !!(BETA && BETA.owns()); }
+function hasFullAccess(){ return fullGame || !!(BETA && BETA.fullAccess()); }
+function betaRefresh(){ if (BETA) BETA.refresh(); }
 /* 110-stage campaign wrapper. The 100 original puzzle IDs never change. */
 let campaignStage=1,bonusResults={},legacyBonusGems=0;   // legacyBonusGems: won in the old fifteen mini-game stages, before the lineup changed
 const LAST_STAGE=window.FTWBonus.TOTAL;
@@ -2173,14 +2177,99 @@ const bonusController=window.FTWBonus.mount($("bonus-root"),{
   musicLabel();if(!musicOn)musicStop();
  }
 });
+/* ---------- Store: the real-money products. A purchase only counts when the app's store bridge reports it as verified. ---------- */
+const CATALOG = window.FTWCatalog;
+let nativeGemPacks = {}, storePrices = {};   // gem packs the store has verified for this customer ({productId: count}), and its local prices
+function toast(message){
+  const old=document.querySelector(".ftw-toast"); if(old)old.remove();
+  const el=document.createElement("div");el.className="ftw-toast";
+  el.setAttribute("role","status");el.textContent=message;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),3600);
+}
+function storeGemCredits(){
+  let n=0;
+  for(const p of CATALOG.PRODUCTS){const c=nativeGemPacks[p.id];if(p.gems&&Number.isSafeInteger(c)&&c>0)n+=c*p.gems;}
+  return n+(BETA?BETA.gemCredits():0);
+}
+/* Takes the store's own count of gem packs bought. Anything not marked verified is ignored. */
+function acceptGemPacks(result){
+  if(!result||result.verified!==true||!result.gemPacks||typeof result.gemPacks!=="object")return false;
+  const next={};
+  for(const p of CATALOG.PRODUCTS){const c=result.gemPacks[p.id];if(p.gems&&Number.isSafeInteger(c)&&c>0&&c<=10000)next[p.id]=c;}
+  nativeGemPacks=next;
+  if(result.prices&&typeof result.prices==="object")for(const p of CATALOG.PRODUCTS){const v=result.prices[p.id];if(typeof v==="string"&&v.length<24)storePrices[p.id]=v;}
+  return true;
+}
+function renderStore(){
+  const native=nativeStore(),practice=!native&&!!(BETA&&BETA.checkoutReady());
+  $("store-products").innerHTML=CATALOG.PRODUCTS
+    .filter(p=>p.id!==FULL_UNLOCK_PRODUCT_ID||!ownsFullGame())
+    .map(p=>{
+      const full=p.id===FULL_UNLOCK_PRODUCT_ID;
+      const image=full?'<img alt="" src="'+heroSvg("joy",[],"wolf").src+'">':
+        '<div class="ftw-gem-pack-art" aria-hidden="true"><i class="gem"></i></div>';
+      const count=(nativeGemPacks[p.id]||0)+(BETA?BETA.packCount(p.id):0);
+      const detail=full?"Every level, Hard Mode and daily puzzles":'+'+p.gems+' gems'+(count?" · Bought "+count+"x":"");
+      return '<article class="ftw-product">'+image+'<div class="ftw-product-body"><small>'+p.category+
+        '</small><b>'+p.name+'</b><p>'+p.description+'</p><span class="ftw-product-price">'+
+        (storePrices[p.id]||p.price)+'</span><p>'+detail+'</p></div><button type="button" class="go" data-buy="'+p.id+
+        '"'+(!native&&!practice||storeBusy?" disabled":"")+'>'+(native?(full?"Unlock":"Buy"):practice?BETA.buyLabel:"Available in the app")+'</button></article>';
+    }).join("");
+  betaRefresh();
+}
+async function buyGemPack(id){
+  const native=nativeStore(),p=CATALOG.PRODUCTS.find(q=>q.id===id&&q.gems>0);
+  if(!native||!p||storeBusy)return;
+  storeBusy=true;renderStore();
+  try{
+    const before=storeGemCredits(),result=await native.purchase(id);
+    if(acceptGemPacks(result)&&storeGemCredits()>before){syncPrizes();save();renderWardrobe();sfx("coin");toast("+"+p.gems+" gems added. Thank you!");}
+    else toast(result&&result.cancelled?"Purchase cancelled.":"Purchase not completed. You have not been charged for gems you did not get.");
+  }catch(e){toast("The store is unavailable. Please try again.");}
+  finally{storeBusy=false;updateStoreButtons();renderStore();}
+}
+$("store-products").addEventListener("click",e=>{
+  const b=e.target.closest("[data-buy]");
+  if(!b||b.disabled)return;
+  const id=b.dataset.buy;
+  if(id===FULL_UNLOCK_PRODUCT_ID){openUnlock(li,false,true);return;}
+  if(nativeStore())buyGemPack(id);else if(BETA)BETA.checkout(id);
+});
+/*BETA-START*/
+/* ====================================================================================================================
+   BETA BUILD ONLY. Developer panel, level jumper, full-game preview, progress reset and the practice checkout.
+   scripts/build.cjs removes everything between these markers from the production build, and the release check
+   fails if any of it is left. Keep new test-only code inside a BETA block.
+   ==================================================================================================================== */
+const FTW_TEST_BUILD = true;
+const FTW_TEST_PURCHASE_KEY = "ftw-beta-simulated-unlock-v1";
+let simulatedPurchase = false;
+let developerMode = false, previewFull = false, developerReturnView = "game";
+try { simulatedPurchase = localStorage.getItem(FTW_TEST_PURCHASE_KEY) === "yes"; }
+catch (e) { /* local storage may be unavailable */ }
+/* The practice checkout stands in for the store only where there is no real one. In the app, with a store key, the real sandbox is used instead. */
+function testCheckoutAvailable(){ return !nativeStore(); }
+const FTW_FAKE_SHOP=window.FTWTestStore||null;
+let fakeStoreReceipts=FTW_FAKE_SHOP?FTW_FAKE_SHOP.read():{purchased:[],packs:{}};
+let pendingShopProduct=null,previousCheckoutFocus=null;
+function fakeShopHasProduct(id){
+  return !!(testCheckoutAvailable()&&FTW_FAKE_SHOP&&
+    (id===FULL_UNLOCK_PRODUCT_ID?simulatedPurchase:FTW_FAKE_SHOP.has(fakeStoreReceipts,id)));
+}
+function resetFakeStore(){
+  if(!FTW_FAKE_SHOP)return;
+  try{fakeStoreReceipts=FTW_FAKE_SHOP.reset();}
+  catch(e){fakeStoreReceipts={purchased:[],packs:{}};}
+}
 function renderDeveloper(){
-  $("developer-open").hidden = !FTW_TEST_BUILD;
-  $("developer-from-unlock").hidden = !FTW_TEST_BUILD;
+  $("developer-open").hidden = false;
+  $("developer-from-unlock").hidden = false;
+  $("store-dev").hidden = false;
+  $("store-test-note").hidden = !testCheckoutAvailable();
   $("dev-full").checked = developerMode && previewFull;
-  $("dev-full").disabled = !testCheckoutAvailable();
-  const extra=mockGemCredits();
+  const extra=BETA?BETA.gemCredits():0;
   $("dev-purchase-state").textContent = nativeStore()
-    ? "Apple purchases (cannot reset here)"
+    ? "Real store sandbox (cannot reset here)"
     : (simulatedPurchase ? "Full game purchased" : "Demo · no full unlock") + " · " + extra + " test gems";
   $("dev-progress-state").textContent = "Level " + campaignStage + " / " + LAST_STAGE +
     " · " + Object.keys(cleared).filter(k => /^\d+$/.test(k)).length + " complete";
@@ -2189,7 +2278,6 @@ function renderDeveloper(){
   $("dev-reset-all").disabled = !testCheckoutAvailable();
 }
 function openDeveloper(){
-  if (!FTW_TEST_BUILD) return;
   developerReturnView = !$("shop").hidden ? "shop" : !$("unlock").hidden ? "unlock" : "game";
   developerMode = true;
   renderDeveloper();
@@ -2207,7 +2295,7 @@ function leaveDeveloper(exit){
   else show("game");
 }
 function setPreviewFull(on){
-  if (!FTW_TEST_BUILD || !developerMode || !testCheckoutAvailable()) return;
+  if (!developerMode) return;
   previewFull = !!on;
   if(!hasFullAccess() && (li >= FREE_LEVEL_COUNT || daily || hardOn)){
     daily=false; hardOn=false; load(FREE_LEVEL_COUNT-1,null,true);
@@ -2215,14 +2303,8 @@ function setPreviewFull(on){
   renderDeveloper(); dressWolf(); renderWardrobe(); updateStoreButtons();
   $("dev-message").textContent = previewFull ? "FULL preview active — no purchase made." : "Demo rules active. Level 6 will require a test purchase.";
 }
-function testToast(message){
-  const old=document.querySelector(".ftw-test-toast"); if(old)old.remove();
-  const el=document.createElement("div");el.className="ftw-test-toast";
-  el.setAttribute("role","status");el.textContent=message;
-  document.body.appendChild(el);setTimeout(()=>el.remove(),3600);
-}
 function resetTesting(kind){
-  if(!FTW_TEST_BUILD || !developerMode || !["purchase","progress","all"].includes(kind))return;
+  if(!developerMode || !["purchase","progress","all"].includes(kind))return;
   if((kind==="purchase"||kind==="all") && !testCheckoutAvailable())return;
   const what = kind==="all" ? "the simulated purchase AND all game progress" :
     kind==="purchase" ? "the simulated purchase (game progress is kept)" :
@@ -2253,7 +2335,7 @@ function resetTesting(kind){
   if(kind==="purchase" && [0,1,2,3,4].every(i=>cleared[i])){
     openUnlock(FREE_LEVEL_COUNT,false);
   }
-  testToast(kind==="all" ? "Fresh install test: purchase and progress reset" :
+  toast(kind==="all" ? "Fresh install test: purchase and progress reset" :
     kind==="progress" ? "Game progress cleared · purchase retained" :
     "Test purchase reset · purchase screen is ready");
 }
@@ -2274,41 +2356,6 @@ $("dev-reset-purchase").addEventListener("click",()=>resetTesting("purchase"));
 $("dev-reset-progress").addEventListener("click",()=>resetTesting("progress"));
 $("dev-reset-all").addEventListener("click",()=>resetTesting("all"));
 
-/* PRE-RELEASE STORE: the only money products are the full game and repeatable gem packs. */
-const FTW_FAKE_SHOP=FTW_TEST_BUILD?window.FTWTestStore:null;
-let fakeStoreReceipts=FTW_FAKE_SHOP?FTW_FAKE_SHOP.read():{purchased:[],packs:{}};
-let pendingShopProduct=null,previousCheckoutFocus=null;
-function fakeShopHasProduct(id){
-  return !!(testCheckoutAvailable()&&FTW_FAKE_SHOP&&
-    (id===FULL_UNLOCK_PRODUCT_ID?simulatedPurchase:FTW_FAKE_SHOP.has(fakeStoreReceipts,id)));
-}
-function mockGemCredits(){
-  return testCheckoutAvailable()&&FTW_FAKE_SHOP?FTW_FAKE_SHOP.gemsGranted(fakeStoreReceipts):0;
-}
-function resetFakeStore(){
-  if(!FTW_FAKE_SHOP)return;
-  try{fakeStoreReceipts=FTW_FAKE_SHOP.reset();}
-  catch(e){fakeStoreReceipts={purchased:[],packs:{}};}
-}
-function renderStore(){
-  if(!FTW_FAKE_SHOP)return;
-  const testing=testCheckoutAvailable();
-  $("store-test-note").hidden=!testing;
-  $("store-dev").hidden=!FTW_TEST_BUILD;
-  $("store-products").innerHTML=FTW_FAKE_SHOP.PRODUCTS
-    .filter(p=>p.id!==FULL_UNLOCK_PRODUCT_ID||!fullGame&&!simulatedPurchase)
-    .map(p=>{
-      const full=p.id===FULL_UNLOCK_PRODUCT_ID;
-      const image=full?'<img alt="" src="'+heroSvg("joy",[],"wolf").src+'">':
-        '<div class="ftw-gem-pack-art" aria-hidden="true"><i class="gem"></i></div>';
-      const count=FTW_FAKE_SHOP.count(fakeStoreReceipts,p.id);
-      const detail=full?"Unlock all 100 levels":'+'+p.gems+' gems'+(count?" · Bought "+count+"x":"");
-      return '<article class="ftw-product">'+image+'<div class="ftw-product-body"><small>'+p.category+
-        '</small><b>'+p.name+'</b><p>'+p.description+'</p><span class="ftw-product-price">'+
-        p.price+'</span><p>'+detail+'</p></div><button type="button" class="go" data-test-buy="'+p.id+
-        '"'+(!testing?" disabled":"")+'>'+(testing?"Test purchase":"Not available in browser")+'</button></article>';
-    }).join("");
-}
 function openFakeCheckout(id){
   if(!testCheckoutAvailable()||!FTW_FAKE_SHOP)return;
   const product=FTW_FAKE_SHOP.PRODUCTS.find(p=>p.id===id);
@@ -2344,19 +2391,11 @@ function confirmFakeCheckout(){
   cancelFakeCheckout();
   syncPrizes();dressWolf();save();renderWardrobe();renderStore();renderDeveloper();updateStoreButtons();
   if(p.id===FULL_UNLOCK_PRODUCT_ID&&pendingUnlockTarget)resumeUnlockedPlay();
-  testToast(p.id===FULL_UNLOCK_PRODUCT_ID
+  toast(p.id===FULL_UNLOCK_PRODUCT_ID
     ?"TEST PURCHASE · Full game unlocked · Free chick and bandana added"
     :"TEST PURCHASE · "+p.gems+" gems added · No charge");
 }
 $("store-dev").addEventListener("click",openDeveloper);
-$("store-products").addEventListener("click",e=>{
-  const b=e.target.closest("[data-test-buy]");
-  if(!b||b.disabled)return;
-  if(b.dataset.testBuy===FULL_UNLOCK_PRODUCT_ID){
-    openUnlock(li,false,true);return;
-  }
-  openFakeCheckout(b.dataset.testBuy);
-});
 $("test-checkout-confirm").addEventListener("click",confirmFakeCheckout);
 $("test-checkout-cancel").addEventListener("click",cancelFakeCheckout);
 $("test-checkout").addEventListener("click",e=>{if(e.target.id==="test-checkout")cancelFakeCheckout();});
@@ -2366,8 +2405,47 @@ $("dev-view-paywall").addEventListener("click",()=>{
   previewFull=false;daily=false;hardOn=false;
   openUnlock(FREE_LEVEL_COUNT,false);renderDeveloper();
 });
-/* iOS host must expose window.FeedTheWolfStore: async status(id), purchase(id),
-   restore(id). It must verify a StoreKit 2 entitlement before returning
+BETA = {
+  screens: ["developer"],
+  buyLabel: "Test purchase",
+  owns: () => testCheckoutAvailable() && simulatedPurchase,
+  fullAccess: () => (developerMode && previewFull) || (testCheckoutAvailable() && simulatedPurchase),
+  previewAll: () => developerMode && previewFull,
+  checkoutReady: () => testCheckoutAvailable() && !!FTW_FAKE_SHOP,
+  gemCredits: () => testCheckoutAvailable() && FTW_FAKE_SHOP ? FTW_FAKE_SHOP.gemsGranted(fakeStoreReceipts) : 0,
+  packCount: id => testCheckoutAvailable() && FTW_FAKE_SHOP ? FTW_FAKE_SHOP.count(fakeStoreReceipts,id) : 0,
+  checkout: openFakeCheckout,
+  refresh: renderDeveloper,
+  /* Buy or restore on the unlock screen, when there is no real store behind it. */
+  storeAction(action){
+    if(action==="purchase"){ openFakeCheckout(FULL_UNLOCK_PRODUCT_ID); return; }
+    try{simulatedPurchase = localStorage.getItem(FTW_TEST_PURCHASE_KEY)==="yes";}
+    catch(e){simulatedPurchase=false;}
+    updateStoreButtons();
+    if(simulatedPurchase){
+      dressWolf();renderWardrobe();resumeUnlockedPlay();
+      toast("Test purchase restored · No real transaction");
+    }else{
+      $("unlock-status").textContent = "No simulated purchase found. Tap TEST unlock to continue.";
+    }
+  },
+  /* Makes the unlock screen say plainly when a purchase is only practice. */
+  decorateUnlock(){
+    const testing = testCheckoutAvailable();
+    $("test-checkout-label").hidden = !testing;
+    if (developerMode && previewFull && !ownsFullGame()){
+      $("unlock-status").textContent = "Developer full-game preview is active. No purchase was made.";
+    } else if (testing){
+      if (!hasFullAccess() && !storeBusy) $("unlock-buy").textContent = "Unlock full game · $2.99 (TEST)";
+      $("unlock-restore").textContent = "Restore test purchase";
+      $("unlock-status").textContent = simulatedPurchase ? "Simulated purchase active — all 110 levels unlocked." :
+        "Test checkout: tap to unlock the game without paying real money.";
+    }
+  }
+};
+/*BETA-END*/
+/* The app shell exposes window.FeedTheWolfStore (store-bridge-v1.js): async status(id), purchase(id),
+   restore(id). It must have the store verify the entitlement before returning
    {productId:id, verified:true, entitled:true, displayPrice?}.
    Never grant full access from localStorage, URL params, or test toggles. */
 function nativeStore(){
@@ -2378,25 +2456,15 @@ function canPlay(index,isDaily){
   return hasFullAccess() || (!isDaily && Number.isInteger(index) && index >= 0 && index < FREE_LEVEL_COUNT);
 }
 function updateStoreButtons(){
-  const native = nativeStore(), testing = testCheckoutAvailable();
-  $("unlock-buy").disabled = storeBusy || hasFullAccess() || (!native && !testing);
-  $("unlock-restore").disabled = storeBusy || (!native && !testing);
-  $("unlock-buy").textContent = storeBusy ? "Checking purchase…" :
-    hasFullAccess() ? "Full game unlocked" : testing ? "Unlock full game · $2.99 (TEST)" : "Unlock the full game";
-  $("unlock-restore").textContent = testing ? "Restore test purchase" : "Restore purchases";
-  $("test-checkout-label").hidden = !testing;
-  if (testing && developerMode && previewFull){
-    $("unlock-status").textContent = "Developer full-game preview is active. No purchase was made.";
-  } else if(testing){
-    $("unlock-status").textContent = simulatedPurchase ? "Simulated purchase active — all 110 levels unlocked." :
-      "Test checkout: tap to unlock the game without paying real money.";
-  } else if (fullGame){
-    $("unlock-status").textContent = "Full game unlocked. Thanks for feeding the wolf!";
-  } else if (!native){
-    $("unlock-status").textContent = "Purchases are available only in the iPhone app.";
-  } else if (!storeBusy){
-    $("unlock-status").textContent = "One verified App Store purchase. Every level. No subscription.";
-  }
+  const native = nativeStore(), practice = !native && !!(BETA && BETA.checkoutReady());
+  $("unlock-buy").disabled = storeBusy || hasFullAccess() || (!native && !practice);
+  $("unlock-restore").disabled = storeBusy || (!native && !practice);
+  $("unlock-buy").textContent = storeBusy ? "Checking purchase…" : hasFullAccess() ? "Full game unlocked" : "Unlock the full game";
+  $("unlock-restore").textContent = "Restore purchases";
+  if (fullGame) $("unlock-status").textContent = "Full game unlocked. Thanks for feeding the wolf!";
+  else if (!native && !practice) $("unlock-status").textContent = "Purchases are available in the Feed the Wolf app.";
+  else if (!storeBusy) $("unlock-status").textContent = "One verified purchase. Every level. No subscription.";
+  if (BETA) BETA.decorateUnlock();
 }
 /* stay: the player chose to buy (rather than hitting a locked level), so afterwards they go back to exactly where they were. */
 function openUnlock(index,isDaily,stay){
@@ -2412,7 +2480,7 @@ function acceptEntitlement(result){
   const firstTime = !fullGame && !owned.chick;
   fullGame = true;
   syncPrizes(); save();   // hands over the free pet and accessory
-  if (firstTime && owned.chick) testToast("Thank you! A chick and a bandana are yours, free.");
+  if (firstTime && owned.chick) toast("Thank you! A chick and a bandana are yours, free.");
   if (typeof result.displayPrice === "string" && result.displayPrice.length < 48) $("unlock-price").textContent = result.displayPrice;
   dressWolf(); renderWardrobe(); updateStoreButtons(); return true;
 }
@@ -2423,43 +2491,40 @@ function resumeUnlockedPlay(){
   if (target && target.stay && bonusController.stage){ enterBonusStage(bonusController.stage); return; }
   if (target){ daily = target.daily; show("game"); load(target.index,null,true); }
 }
+/* Whatever the store bridge reports: remember verified gem packs and local prices. */
+function noteStore(result){
+  const before=storeGemCredits();
+  if(acceptGemPacks(result)&&storeGemCredits()!==before){syncPrizes();save();renderWardrobe();}
+}
 async function refreshStoreEntitlement(){
   const native = nativeStore();
-  if (!native || hasFullAccess()) return;
-  try { if (acceptEntitlement(await native.status(FULL_UNLOCK_PRODUCT_ID))) resumeUnlockedPlay(); }
+  if (!native) return;
+  try {
+    const result = await native.status(FULL_UNLOCK_PRODUCT_ID);
+    noteStore(result);
+    if (!fullGame && acceptEntitlement(result)) resumeUnlockedPlay();
+  }
   catch(e){ /* No verified entitlement means no paid access. */ }
 }
 async function storeAction(action){
-  const native = nativeStore(), testing = testCheckoutAvailable();
-  if ((!native && !testing) || storeBusy || !["purchase","restore"].includes(action)) return;
-  if (testing){
-    if(action==="purchase"){
-      openFakeCheckout(FULL_UNLOCK_PRODUCT_ID);
-      return;
-    }
-    try{simulatedPurchase = localStorage.getItem(FTW_TEST_PURCHASE_KEY)==="yes";}
-    catch(e){simulatedPurchase=false;}
-    updateStoreButtons();
-    if(simulatedPurchase){
-      dressWolf();renderWardrobe();resumeUnlockedPlay();
-      testToast("Test purchase restored · No real transaction");
-    }else{
-      $("unlock-status").textContent = "No simulated purchase found. Tap TEST unlock to continue.";
-    }
-    return;
-  }
+  const native = nativeStore();
+  if (storeBusy || !["purchase","restore"].includes(action)) return;
+  if (!native){ if (BETA && BETA.checkoutReady()) BETA.storeAction(action); return; }
   storeBusy = true;
-  $("unlock-status").textContent = action === "purchase" ? "Opening App Store purchase…" : "Restoring your purchase…";
+  $("unlock-status").textContent = action === "purchase" ? "Opening the store…" : "Restoring your purchase…";
   updateStoreButtons();
   try {
-    if (acceptEntitlement(await native[action](FULL_UNLOCK_PRODUCT_ID))){
+    const result = await native[action](FULL_UNLOCK_PRODUCT_ID);
+    noteStore(result);
+    if (acceptEntitlement(result)){
       dressWolf();renderWardrobe();resumeUnlockedPlay();return;
     }
+    storeBusy=false;updateStoreButtons();
     $("unlock-status").textContent = action === "restore" ?
-      "No verified purchase found for this Apple Account." :
+      "No verified purchase found for this account." :
       "Purchase not completed. Your five free levels are still here.";
-  }catch(e){$("unlock-status").textContent="App Store unavailable. Please try again.";}
-  finally{storeBusy=false;updateStoreButtons();}
+  }catch(e){storeBusy=false;updateStoreButtons();$("unlock-status").textContent="The store is unavailable. Please try again.";}
+  finally{storeBusy=false;}
 }
 $("unlock-buy").addEventListener("click",()=>storeAction("purchase"));
 $("unlock-restore").addEventListener("click",()=>storeAction("restore"));
@@ -2488,7 +2553,7 @@ function load(index, replay, fresh){
   const old = board.querySelector(".result"); if (old) old.remove();
   li = index; lv = activeLevel(); P = prep(lv); s = newState(lv); seq = [];
   if(!daily)campaignStage=stageForPuzzle(index);
-  if(FTW_TEST_BUILD) $("dev-level").value=String(campaignStage);
+  betaRefresh();
   for (const i of (replay || [])){ if (pull(s, lv, i)) seq.push(i); }
   document.body.classList.toggle("hard", hardOn);
   { const T = theme(), st = document.documentElement.style; st.setProperty("--night", T.css[0]); st.setProperty("--night-2", T.css[1]); st.setProperty("--stone", T.css[2]); st.setProperty("--stone-dark", T.css[3]); st.setProperty("--edge", T.edge); }
@@ -2693,10 +2758,10 @@ function syncPrizes(){
     if (o.cost && owned[o.id]) g -= o.cost;
   }
   const prizeGemsSpent=Object.values(gemUnlocked).reduce((t,n)=>t+(Number.isSafeInteger(n)&&n>0?n:0),0);
-  gems = Math.max(0, g + mockGemCredits() + bonusEarnedGems() - prizeGemsSpent - hints + (full ? 5 * Object.keys(dailyDone).length : 0));
+  gems = Math.max(0, g + storeGemCredits() + bonusEarnedGems() - prizeGemsSpent - hints + (full ? 5 * Object.keys(dailyDone).length : 0));
   return got;
 }
-function save(){ try { localStorage.setItem("ftw-save", JSON.stringify({cleared, stars, owned, worn, gemUnlocked, bs:bonusResults, lg:legacyBonusGems, sv:2, cs:campaignStage, hints, hp:hintPaid, dd:dailyDone, seen, li, hard:hardOn})); } catch (e) {} }
+function save(){ try { const text = JSON.stringify({cleared, stars, owned, worn, gemUnlocked, bs:bonusResults, lg:legacyBonusGems, sv:2, cs:campaignStage, hints, hp:hintPaid, dd:dailyDone, seen, li, hard:hardOn}); localStorage.setItem("ftw-save", text); if (window.FTWNativeSave) window.FTWNativeSave.put(text); } catch (e) {} }
 /* Every cosmetic is bought with gems, except the five location trophies, which are only ever earned. */
 function gemPrice(o){
   if(o.free)return 0;
@@ -2733,10 +2798,10 @@ $("shop").addEventListener("click",e=>{
     worn[o.slot]=worn[o.slot]===o.id&&o.slot!=="hero"?null:o.id;
   }else{
     if(o.gift){openUnlock(li,false,true);return;}   // not for sale: it comes with the full game, so show the offer
-    if(o.trophy!=null){testToast(o.name+" can't be bought. Finish "+LOCATIONS[o.trophy].name+" to earn it.");return;}
+    if(o.trophy!=null){toast(o.name+" can't be bought. Finish "+LOCATIONS[o.trophy].name+" to earn it.");return;}
     const price=gemPrice(o);
     if(gems<price){
-      testToast("You need "+(price-gems)+" more gems for "+o.name);
+      toast("You need "+(price-gems)+" more gems for "+o.name);
       $("store-products").scrollIntoView?.({behavior:"smooth",block:"start"});
       return;
     }
@@ -2750,7 +2815,7 @@ $("shop").addEventListener("click",e=>{
 });
 function menu(){}
 function show(name){                                // screens: the castle, the wardrobe, the rules, the finale, credits
-  for (const id of ["game","shop","help","credits","ftw-finale","unlock","developer","bonus"]) $(id).hidden = id !== name;
+  for (const id of ["game","shop","help","credits","ftw-finale","unlock","bonus"].concat(BETA ? BETA.screens : [])) $(id).hidden = id !== name;
   window.scrollTo(0, 0);
   if (name === "game"){ setSize(); renderBg(); }
   if (name === "shop"){renderWardrobe();renderStore();}
@@ -2983,7 +3048,7 @@ function start(data){
   hardOn=hasFullAccess() && !!(sv.hard ?? data.hard);
   for(let i=5;i<reached()-1;i+=5)seen[i]=true;
   syncPrizes();dressWolf();renderWardrobe();
-  renderDeveloper();
+  betaRefresh();
   if(requested>=FREE_LEVEL_COUNT&&!hasFullAccess())entitlementReturnLevel=requested;
   const index=hasFullAccess()?requested:Math.min(requested,FREE_LEVEL_COUNT-1);
   load(index,index===requested?data.seq:null,true);

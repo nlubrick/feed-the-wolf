@@ -84,7 +84,7 @@ test("Bought gems enter the real earned/spent-gem balance once",()=>{
     gems:0,cleared:{},stars:{0:3},dailyDone:{},hints:0,
     gemUnlocked:{bandana:19},
     OUTFITS:[{id:"wolf",free:true},{id:"party",cost:6,slot:"head"},{id:"bandana",level:5,slot:"neck"}],
-    mockGemCredits:()=>h.store.gemsGranted(h.store.read(h.storage)),
+    storeGemCredits:()=>h.store.gemsGranted(h.store.read(h.storage)),
     bonusEarnedGems:()=>0
   };
   economy(ctx)();
@@ -105,12 +105,12 @@ test("Progress reset preserves purchased gems; purchase reset preserves level pr
   assert.match(html,/gemUnlocked=\{\};bonusResults=\{\};legacyBonusGems=0;campaignStage=1;hints=0/);
   assert.match(html,/gemUnlocked, bs:bonusResults, lg:legacyBonusGems, sv:2, cs:campaignStage, hints/);
 });
-test("Test controls must be stripped for App Store release",()=>{
+test("Beta tools live inside removable blocks and the release gate guards them",()=>{
   const guard=fs.readFileSync(path.join(root,"scripts","check-release.cjs"),"utf8");
-  assert.match(guard,/test-store-v2\.js/);
-  assert.match(guard,/id="developer/);
-  assert.match(html,/TEST MODE · NO PAYMENT · NO APPLE CHARGE/);
-  assert.match(html,/id="developer-open"/);
+  assert.match(guard,/test-store-v2/);assert.match(guard,/developerMode/);assert.match(guard,/simulatedPurchase/);
+  assert.match(html,/TEST MODE · NO PAYMENT · NO APPLE CHARGE/);          // the beta says plainly that its checkout is practice
+  assert.equal((html.match(/BETA-START/g)||[]).length,(html.match(/BETA-END/g)||[]).length);
+  assert.match(html,/<!--BETA-START--><script src="\.\/test-store-v2\.js"><\/script><!--BETA-END-->/);
 });
 test("Location trophies are earned, never bought, and every fifth level pays a gem bonus",()=>{
   const OUTFITS=vm.runInNewContext(fragment("const OUTFITS = [","/* Pets: small companions")+"\nOUTFITS");
@@ -118,8 +118,8 @@ test("Location trophies are earned, never bought, and every fifth level pays a g
   assert.deepEqual(Array.from(trophies,o=>o.trophy).sort(),[0,1,2,3,4]);           // one per location
   assert.equal(OUTFITS.filter(o=>"level" in o||"hard" in o).length,0);              // no other free level or Hard Mode prizes
   assert.equal(OUTFITS.filter(o=>o.slot==="pet").length,16);
-  assert.match(html,/if\(o\.trophy!=null\)\{testToast\(/);                           // the Store refuses to sell a trophy
-  const run=(cleared,stars)=>{const ctx={owned:{},worn:{},gems:0,cleared,stars,dailyDone:{},hints:0,gemUnlocked:{},OUTFITS,mockGemCredits:()=>0,bonusEarnedGems:()=>0};
+  assert.match(html,/if\(o\.trophy!=null\)\{toast\(/);                           // the Store refuses to sell a trophy
+  const run=(cleared,stars)=>{const ctx={owned:{},worn:{},gems:0,cleared,stars,dailyDone:{},hints:0,gemUnlocked:{},OUTFITS,storeGemCredits:()=>0,bonusEarnedGems:()=>0};
     const got=economy(ctx)();return {ctx,got};};
   let r=run({0:true,1:true,2:true,3:true},{0:3,1:3,2:3,3:3});
   assert.equal(r.ctx.gems,12);assert.equal(r.got,null);
@@ -136,7 +136,7 @@ test("Location trophies are earned, never bought, and every fifth level pays a g
 });
 test("Buying the game gives a free pet and accessory, and refunds gems already spent on them",()=>{
   const OUTFITS=[{id:"wolf",free:true,slot:"hero"},{id:"chick",slot:"pet",cost:14,gift:true},{id:"bandana",slot:"neck",from:5,gift:true},{id:"party",slot:"head",cost:6}];
-  const make=(bought,owned,gemUnlocked)=>({owned,worn:{},gems:0,cleared:{},stars:{0:3,1:3,2:3,3:3,4:3,5:3,6:3,7:3,8:3,9:3,10:3,11:3,12:3},dailyDone:{},hints:0,gemUnlocked,OUTFITS,mockGemCredits:()=>0,bonusEarnedGems:()=>0,ownsFullGame:()=>bought});
+  const make=(bought,owned,gemUnlocked)=>({owned,worn:{},gems:0,cleared:{},stars:{0:3,1:3,2:3,3:3,4:3,5:3,6:3,7:3,8:3,9:3,10:3,11:3,12:3},dailyDone:{},hints:0,gemUnlocked,OUTFITS,storeGemCredits:()=>0,bonusEarnedGems:()=>0,ownsFullGame:()=>bought});
   let c=make(false,{},{});economy(c)();
   assert.equal(c.owned.chick,undefined);assert.equal(c.owned.bandana,undefined);assert.equal(c.gems,39);   // 13 levels at three stars
   c=make(true,{},{});economy(c)();
@@ -145,7 +145,8 @@ test("Buying the game gives a free pet and accessory, and refunds gems already s
   c=make(true,{chick:true,bandana:true,party:true},{bandana:19});economy(c)();
   assert.equal(c.gems,33,"only the party hat is charged; the chick and bandana gems come back");
   assert.equal(c.gemUnlocked.bandana,undefined);
-  assert.match(html,/function ownsFullGame\(\)\{ return fullGame \|\| \(testCheckoutAvailable\(\) && simulatedPurchase\); \}/);   // the developer preview switch does not hand out gifts
+  assert.match(html,/function ownsFullGame\(\)\{ return fullGame \|\| !!\(BETA && BETA\.owns\(\)\); \}/);
+  assert.match(html,/owns: \(\) => testCheckoutAvailable\(\) && simulatedPurchase,/);   // the full-game preview switch does not hand out gifts
 });
 test("The full-game gifts are listed in the Store but cannot be bought with gems",()=>{
   const OUTFITS=vm.runInNewContext(fragment("const OUTFITS = [","/* Pets: small companions")+"\nOUTFITS");
@@ -157,7 +158,7 @@ test("The full-game gifts are listed in the Store but cannot be bought with gems
 test("A demo save cannot mint gems or trophies from levels past the free five",()=>{
   const OUTFITS=vm.runInNewContext(fragment("const OUTFITS = [","/* Pets: small companions")+"\nOUTFITS");
   const cleared={},stars={};for(let i=0;i<100;i++){cleared[i]=cleared[i+"h"]=true;stars[i]=stars[i+"h"]=3;}
-  const make=full=>({owned:{},worn:{},gems:0,cleared,stars,dailyDone:{1:true,2:true},hints:0,gemUnlocked:{},OUTFITS,mockGemCredits:()=>0,bonusEarnedGems:()=>0,ownsFullGame:()=>full,hasFullAccess:()=>full,FREE_LEVEL_COUNT:5});
+  const make=full=>({owned:{},worn:{},gems:0,cleared,stars,dailyDone:{1:true,2:true},hints:0,gemUnlocked:{},OUTFITS,storeGemCredits:()=>0,bonusEarnedGems:()=>0,ownsFullGame:()=>full,hasFullAccess:()=>full,FREE_LEVEL_COUNT:5});
   let c=make(false);economy(c)();
   assert.equal(c.gems,25,"five free levels at three stars plus the level-5 bonus");
   assert.deepEqual(Object.keys(c.owned),["wolf"]);
