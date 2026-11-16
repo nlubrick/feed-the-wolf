@@ -349,6 +349,10 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 .tile .tile-gem-price{font-weight:800;color:#b8edff;background:#132341b0}
 .tile .tile-gem-price .gem{width:.6em;height:.6em}
 .tile .tile-free{font-size:10px;line-height:1.15;color:#ffe6a8;opacity:.9}
+.tile.tile-trophy{position:relative;overflow:hidden;border-color:#ffd76a;box-shadow:0 0 0 1px #ffd76a66,0 0 14px #ffc94a55}
+.tile.tile-trophy::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(255,240,180,.38) 50%,transparent 65%);transform:translateX(-120%);animation:trophy-sheen 3.2s ease-in-out infinite;pointer-events:none}
+@keyframes trophy-sheen{0%,55%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+@media (prefers-reduced-motion:reduce){.tile.tile-trophy::after{animation:none}}
 .tile.gem-unaffordable{opacity:.78}
 </style>
 <script src="./test-store-v2.js"></script>
@@ -499,7 +503,7 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
   <div id="store-products" class="ftw-products"></div>
   <h2 class="shelf">Characters &amp; Companions</h2>
   <div class="mirror"><img id="petImg" alt="" hidden><img id="dress" alt="The wolf in what he is wearing now"></div>
-  <p class="hint">Collect gems by earning stars (double in Hard Mode) or buy gem packs during this test. Every item below has a gem price. Some are also given free when you clear a level; those say which level. Wear one hat, face accessory and neck accessory, with one pet at a time.</p>
+  <p class="hint">Collect gems by earning stars (double in Hard Mode) or buy gem packs during this test. You also get a gem bonus every 5 levels and from mini-games and the daily puzzle. Everything below is bought with gems, except the five gold trophies: those are only earned, one for finishing each location. Wear one hat, face accessory and neck accessory, with one pet at a time.</p>
   <div class="tiles" id="tilesH"></div>
   <h2 class="shelf">Costumes &amp; Accessories</h2>
   <div class="tiles" id="tilesS"></div>
@@ -824,14 +828,14 @@ const OUTFITS = [
   {id:"bear", c:"#b5762e", name:"Bear cub", slot:"hero", cost:20, from:11},
   {id:"snow", c:"#7fc6ee", name:"Snow wolf", slot:"hero", cost:25, from:16},
   {id:"shadow", c:"#6a4be0", name:"Shadow wolf", slot:"hero", cost:30, from:21},
-  {id:"bandana", c:"#e23b3b", name:"Bandana", slot:"neck", level:5},
-  {id:"shades", c:"#12b5a6", name:"Shades", slot:"face", level:10},
-  {id:"chef", c:"#38b6ff", name:"Chef hat", slot:"head", level:15},
-  {id:"crown", c:"#ffb300", name:"Crown", slot:"head", level:20},
-  {id:"wizard", c:"#6a4be0", name:"Wizard hat", slot:"head", level:25},
-  {id:"scarf", c:"#17b89e", name:"Scarf", slot:"neck", level:30},
-  {id:"stars", c:"#ffb300", name:"Star specs", slot:"face", level:35},
-  {id:"halo", c:"#ffd34d", name:"Halo", slot:"head", level:40},
+  {id:"bandana", c:"#e23b3b", name:"Bandana", slot:"neck", from:5},
+  {id:"shades", c:"#12b5a6", name:"Shades", slot:"face", from:10},
+  {id:"chef", c:"#38b6ff", name:"Chef hat", slot:"head", from:15},
+  {id:"crown", c:"#ffb300", name:"Crown", slot:"head", trophy:0},
+  {id:"wizard", c:"#6a4be0", name:"Wizard hat", slot:"head", from:25},
+  {id:"scarf", c:"#17b89e", name:"Scarf", slot:"neck", from:30},
+  {id:"stars", c:"#ffb300", name:"Star specs", slot:"face", from:35},
+  {id:"halo", c:"#ffd34d", name:"Halo", slot:"head", trophy:1},
   {id:"party", c:"#ff4f9a", name:"Party hat", slot:"head", cost:6},
   {id:"bowtie", c:"#8b4dff", name:"Bow tie", slot:"neck", cost:6},
   {id:"monocle", c:"#ff8a1f", name:"Monocle", slot:"face", cost:10},
@@ -840,10 +844,10 @@ const OUTFITS = [
   {id:"cape", c:"#e2452b", name:"Cape", slot:"neck", cost:24},
   {id:"chick", c:"#ffb300", name:"Chick", slot:"pet", cost:14},
   {id:"frog", c:"#2fae4b", name:"Frog", slot:"pet", cost:20},
-  {id:"bunny", c:"#ff7db0", name:"Bunny", slot:"pet", hard:5},
-  {id:"owl", c:"#b5762e", name:"Owl", slot:"pet", hard:10},
-  {id:"bat", c:"#8b4dff", name:"Bat", slot:"pet", hard:15},
-  {id:"dragon", c:"#17b89e", name:"Baby dragon", slot:"pet", hard:20}
+  {id:"bunny", c:"#ff7db0", name:"Bunny", slot:"pet", from:5},
+  {id:"owl", c:"#b5762e", name:"Owl", slot:"pet", from:10},
+  {id:"bat", c:"#8b4dff", name:"Bat", slot:"pet", from:15},
+  {id:"dragon", c:"#17b89e", name:"Baby dragon", slot:"pet", from:20}
 ];
 /* Chapter collectibles live in the same saved inventory and gem economy. */
 OUTFITS.push(
@@ -860,12 +864,12 @@ OUTFITS.push(
     ["gearcrown","Gear crown","head"],["ivy","Ivy wreath","head"],["leafcloak","Leaf cloak","neck"],
     ["blossom","Moon flower","head"],["gardener","Garden hat","head"],["moonmask","Moon mask","face"],
     ["spotlight","Star medallion","neck"],["opera","Opera hat","head"],["marquee","Grand crown","head"]
-  ].map(([id,name,slot],i)=>({id,name,slot,level:45+i*5,c:"#e0b66b",premium:true})),
+  ].map(([id,name,slot],i)=>{const t={gearcrown:2,blossom:3,marquee:4}[id];return t!=null?{id,name,slot,trophy:t,c:"#ffd76a",premium:true}:{id,name,slot,from:45+i*5,c:"#e0b66b",premium:true};}),
   ...[
     ["mouse","Clockwork mouse",25],["robot","Tin pup",30],["hedgehog","Hedgehog",35],["firefly","Firefly",40],
     ["moth","Moon moth",45],["koi","Flying koi",50],["sprite","Leaf sprite",55],["raven","Raven",60],
     ["lamb","Cloud lamb",65],["phoenix","Mini phoenix",70]
-  ].map(([id,name,hard])=>({id,name,slot:"pet",hard,c:"#9fbcde",premium:true}))
+  ].map(([id,name,from])=>({id,name,slot:"pet",from,c:"#9fbcde",premium:true}))
 );
 /* Pets: small companions that trail the wolf. Drawn facing right, in a 60 x 60 box. */
 const PETS = {
@@ -1553,6 +1557,51 @@ function bmp(im){                                   // sprites are SVG; rasteris
   c.getContext("2d").drawImage(im, 0, 0);
   return im._c = c;
 }
+/* Location trophies each carry their own live effect, drawn round the wolf while he wears one. (x, top) is the top of his sprite. */
+function wornTrophy(){ const o = OUTFITS.find(o => o.trophy != null && worn[o.slot] === o.id && owned[o.id]); return o ? o.trophy : -1; }
+function drawTrophyFx(x, top, w, h, now, alpha){
+  const t = wornTrophy(); if (t < 0) return;
+  const hy = top + h * .2, R = w * .5;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.globalCompositeOperation = "lighter";
+  const spark = (px, py, r, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(px, py - r); ctx.quadraticCurveTo(px, py, px + r, py); ctx.quadraticCurveTo(px, py, px, py + r); ctx.quadraticCurveTo(px, py, px - r, py); ctx.quadraticCurveTo(px, py, px, py - r); ctx.fill(); };
+  if (t === 0){                                     // Castle crown: royal gold glints twinkling round his head
+    for (let i = 0; i < 5; i++){
+      const ph = (now * .7 + i * .2) % 1, seed = Math.floor(now * .7 + i * .2) * 7 + i * 13;
+      const ax = Math.sin(seed * 12.9898) * R * .95, ay = Math.cos(seed * 78.233) * h * .2 - h * .04;
+      spark(x + ax, hy + ay, Math.sin(ph * Math.PI) * 3.4, "rgba(255,221,120," + Math.sin(ph * Math.PI) + ")");
+    }
+  } else if (t === 1){                              // Wizard's halo: a breathing glow with motes of light rising off it
+    const p = .55 + Math.sin(now * 2.2) * .2, g = ctx.createRadialGradient(x, top + 1, 1, x, top + 1, R * 1.1);
+    g.addColorStop(0, "rgba(255,246,190," + (.5 * p) + ")"); g.addColorStop(1, "rgba(255,246,190,0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, top + 1, R * 1.1, 0, 6.3); ctx.fill();
+    for (let i = 0; i < 4; i++){ const ph = (now * .45 + i * .25) % 1; ctx.fillStyle = "rgba(255,250,215," + (1 - ph) * .9 + ")"; ctx.beginPath(); ctx.arc(x + Math.sin(i * 2.4 + ph * 3) * R * .6, top + 2 - ph * h * .45, 1.1, 0, 6.3); ctx.fill(); }
+  } else if (t === 2){                              // Clockwork gear crown: two little cogs in orbit, turning as they go
+    ctx.globalCompositeOperation = "source-over";
+    for (let i = 0; i < 2; i++){
+      const an = now * 1.6 + i * Math.PI, gx = x + Math.cos(an) * R * .95, gy = hy - h * .08 + Math.sin(an) * h * .1, back = Math.sin(an) < 0, r = back ? 2.6 : 3.4;
+      ctx.save(); ctx.globalAlpha = alpha * (back ? .55 : 1); ctx.translate(gx, gy); ctx.rotate(now * 3 * (i ? -1 : 1));
+      ctx.fillStyle = "#e0a54a"; ctx.strokeStyle = "#6b4418"; ctx.lineWidth = .7; ctx.beginPath();
+      for (let k = 0; k < 16; k++){ const rr = k % 2 ? r : r * 1.38, q = k / 16 * 6.283; ctx.lineTo(Math.cos(q) * rr, Math.sin(q) * rr); }
+      ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = "#6b4418"; ctx.beginPath(); ctx.arc(0, 0, r * .32, 0, 6.3); ctx.fill(); ctx.restore();
+    }
+  } else if (t === 3){                              // Conservatory moon flower: moonlight on his head and petals drifting down
+    const g = ctx.createRadialGradient(x, hy - h * .1, 1, x, hy - h * .1, R);
+    g.addColorStop(0, "rgba(190,220,255,.3)"); g.addColorStop(1, "rgba(190,220,255,0)"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, hy - h * .1, R, 0, 6.3); ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
+    for (let i = 0; i < 4; i++){
+      const ph = (now * .32 + i * .25) % 1, px = x + Math.sin(i * 1.9 + ph * 5) * R * .8, py = top + ph * h * .95;
+      ctx.save(); ctx.globalAlpha = alpha * Math.sin(ph * Math.PI) * .95; ctx.translate(px, py); ctx.rotate(ph * 7 + i);
+      ctx.fillStyle = i % 2 ? "#f6c9ee" : "#fdf3ff"; ctx.beginPath(); ctx.ellipse(0, 0, 2.3, 1.1, 0, 0, 6.3); ctx.fill(); ctx.restore();
+    }
+  } else {                                          // Theatre grand crown: his own spotlight, ringed with chasing marquee bulbs
+    const g = ctx.createLinearGradient(x, top - h * .5, x, top + h);
+    g.addColorStop(0, "rgba(255,240,190,0)"); g.addColorStop(1, "rgba(255,240,190,.2)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - 3, top - h * .5); ctx.lineTo(x + 3, top - h * .5); ctx.lineTo(x + R * 1.1, top + h); ctx.lineTo(x - R * 1.1, top + h); ctx.closePath(); ctx.fill();
+    const lit = Math.floor(now * 7);
+    for (let i = 0; i < 9; i++){ const q = Math.PI + i / 8 * Math.PI, on = (i + lit) % 3 === 0; ctx.fillStyle = on ? "rgba(255,236,150,1)" : "rgba(236,109,170,.5)"; ctx.beginPath(); ctx.arc(x + Math.cos(q) * R * .92, hy + Math.sin(q) * h * .34, on ? 1.7 : 1.1, 0, 6.3); ctx.fill(); }
+  }
+  ctx.restore();
+}
 function drawActor(a, now){
   if (a.out || a.hide) return;
   const kind = a.kind;
@@ -1601,6 +1650,7 @@ function drawActor(a, now){
   if (a.rot){ ctx.translate(0,-h/2); ctx.rotate(a.rot * a.face); ctx.translate(0,h/2); }
   const bm = bmp(im); if (bm) ctx.drawImage(bm, -w/2, -h, w, h);
   ctx.restore();
+  if (kind === "king" && !a.netted && !a.flat && a.melt == null) drawTrophyFx(a.x + ox, a.y + oy + 2 - h, w, h, now, alpha);
   if (kind === "captive" && !a.freed) drawCage(a.x, a.y);
   if (kind === "king" && a.think > 0 && !air && !a.exit && !a.fear && !a.keen && !a.joy && !a.sad){   // thinking about dinner
     const u = Math.min(1, a.think * 4, (2.4 - a.think) * 6), r = P.by[a.cell], side = a.x + 34 > r.x*U + 92 ? -1 : 1, bx = a.x + side * 20, by = a.y - 66;
@@ -2520,7 +2570,7 @@ function showResult(focus){
     }
     el.className = "result win";
     el.innerHTML = '<div class="stars" role="img" aria-label="' + st + ' of 3 stars">' + "★".repeat(st) + "<i>" + "★".repeat(3 - st) + "</i></div><h2>" + (lastLv ? "The final feast!" : "Dinner is served") + "</h2>" +
-      (prize ? '<div class="prize"><img alt="" src="' + thumb(prize.id) + '"><p><b>Prize: ' + prize.name + '</b><br>' + (gain ? 'Plus <i class="gem"></i>' + gain + ". " : "") + (prize.slot === "pet" ? "It is already following him." : "He is already wearing it.") + '</p></div>'
+      (prize ? '<div class="prize"><img alt="" src="' + thumb(prize.id) + '"><p><b>' + (prize.trophy != null ? LOCATIONS[prize.trophy].name + ' trophy: ' : 'Prize: ') + prize.name + '</b><br>' + (gain ? 'Plus <i class="gem"></i>' + gain + ". " : "") + (prize.slot === "pet" ? "It is already following him." : "He is already wearing it.") + '</p></div>'
              : "<p>" + (lastLv ? (hardOn ? "On hard mode. The ad owes you an apology." : "Now try them with hard mode on.") : "Solved in " + seq.length + (seq.length === 1 ? " pull" : " pulls") + (hardOn ? ", on hard." : ".")) + "</p>" + (gain ? '<p class="gain">+<i class="gem"></i>' + gain + "</p>" : "")) +
       (!hasFullAccess() && li === FREE_LEVEL_COUNT - 1 ? '<p>Five castle puzzles down! The free bonus Level 6 is next.</p>' : "") +
       '<button class="go" id="next" type="button">' + (lastLv ? "Finish" : (!hasFullAccess() && li === FREE_LEVEL_COUNT - 1 ? "Try bonus Level 6" : "Next level")) + "</button>";
@@ -2601,16 +2651,17 @@ function drawPet(now){
   ctx.save(); ctx.translate(pet.x, pet.y + 2 - hop); ctx.scale(pet.face || 1, 1); ctx.drawImage(bmp(im) || im, -sz/2, -sz, sz, sz); ctx.restore();
 }
 /* Gems are worked out from what has been earned and bought, so they can never drift: a gem per star (two on hard),
-   five per prize level cleared, minus hints, minus the price of everything bought. Prizes are handed over for any prize level
-   already cleared, including ones cleared before prizes existed. */
+   a bonus every fifth level (bigger on hard), minus hints, minus the price of everything bought. The five location trophies are handed over for finishing a
+   location and cannot be bought; everything else is bought with gems. */
 function syncPrizes(){
+  const MILESTONE_GEMS = 10, HARD_MILESTONE_GEMS = 15;   // every fifth level cleared pays a bonus, more on hard
   let got = null, g = 0;
   const give = o => { if (!owned[o.id]){ owned[o.id] = true; if (!worn[o.slot]) worn[o.slot] = o.id; got = o; } };
   owned.wolf = true; if (!worn.hero || !owned[worn.hero]) worn.hero = "wolf";
   for (const k in stars) g += (+stars[k] || 0) * (/h$/.test(k) ? 2 : 1);
+  for (let i = 4; i < 100; i += 5){ if (cleared[i]) g += MILESTONE_GEMS; if (cleared[i + "h"]) g += HARD_MILESTONE_GEMS; }
   for (const o of OUTFITS){
-    if (o.level && (cleared[o.level - 1] || cleared[(o.level - 1) + "h"])){ g += 5; give(o); }
-    if (o.hard && cleared[(o.hard - 1) + "h"]) give(o);
+    if (o.trophy != null && (cleared[o.trophy * 20 + 19] || cleared[(o.trophy * 20 + 19) + "h"])) give(o);
     if (o.cost && owned[o.id]) g -= o.cost;
   }
   const prizeGemsSpent=Object.values(gemUnlocked).reduce((t,n)=>t+(Number.isSafeInteger(n)&&n>0?n:0),0);
@@ -2618,8 +2669,7 @@ function syncPrizes(){
   return got;
 }
 function save(){ try { localStorage.setItem("ftw-save", JSON.stringify({cleared, stars, owned, worn, gemUnlocked, bs:bonusResults, cs:campaignStage, hints, hp:hintPaid, dd:dailyDone, seen, li, hard:hardOn})); } catch (e) {} }
-/* Every cosmetic is available for gems. Level and Hard Mode rewards are
-   also earnable for free, but can be bought early instead of waiting. */
+/* Every cosmetic is bought with gems, except the five location trophies, which are only ever earned. */
 function gemPrice(o){
   if(o.free)return 0;
   if(Number.isSafeInteger(o.cost)&&o.cost>0)return o.cost;
@@ -2631,21 +2681,21 @@ function renderWardrobe(){
   $("gems").textContent=$("gems2").textContent=gems;
   if(!$("shop").hidden)renderStore();
   const tile=o=>{
-    const own=!!owned[o.id],price=gemPrice(o),on=own&&worn[o.slot]===o.id;
-    const canAfford=own||gems>=price;
+    const own=!!owned[o.id],price=gemPrice(o),on=own&&worn[o.slot]===o.id,trophy=o.trophy!=null;
+    const canAfford=own||(!trophy&&gems>=price);
     const status=on?(o.slot==="pet"?"With him":o.slot==="hero"?"Playing":"Wearing")
       :own?(o.slot==="pet"?"Bring along":o.slot==="hero"?"Play as":"Put on")
-      :'<i class="gem"></i>'+price;
-    const action=own?"Choose "+o.name:"Unlock "+o.name+" for "+price+" gems";
-    return '<button type="button" class="tile'+(on?" on":"")+
+      :trophy?"Trophy":'<i class="gem"></i>'+price;
+    const action=own?"Choose "+o.name:trophy?o.name+", earned by finishing "+LOCATIONS[o.trophy].name:"Unlock "+o.name+" for "+price+" gems";
+    return '<button type="button" class="tile'+(on?" on":"")+(trophy?" tile-trophy":"")+
       (!canAfford?" gem-unaffordable":"")+'" style="--c:'+o.c+'" data-id="'+o.id+
       '" aria-label="'+action+'"><img alt="" src="'+thumb(o.id)+'"><b>'+o.name+
       '</b><span class="tile-gem-price">'+status+'</span>'+
-      (!own&&o.level?'<small class="tile-free">or free at level '+window.FTWBonus.puzzleStage(o.level-1).number+'</small>':'')+'</button>';
+      (trophy?'<small class="tile-free">'+(own?"Earned: ":"Finish ")+LOCATIONS[o.trophy].name+'</small>':'')+'</button>';
   };
   $("tilesH").innerHTML=OUTFITS.filter(o=>o.slot==="hero").map(tile).join("");
   // One shelf for everything the wolf can wear. Some are also handed over free for clearing a level; the tile says which.
-  $("tilesS").innerHTML=OUTFITS.filter(o=>o.slot!=="pet"&&o.slot!=="hero").sort((a,b)=>gemPrice(a)-gemPrice(b)).map(tile).join("");
+  $("tilesS").innerHTML=OUTFITS.filter(o=>o.slot!=="pet"&&o.slot!=="hero").sort((a,b)=>(a.trophy!=null?a.trophy-9:gemPrice(a))-(b.trophy!=null?b.trophy-9:gemPrice(b))).map(tile).join("");
   $("tilesT").innerHTML=OUTFITS.filter(o=>o.slot==="pet").map(tile).join("");
 }
 $("shop").addEventListener("click",e=>{
@@ -2654,6 +2704,7 @@ $("shop").addEventListener("click",e=>{
   if(owned[o.id]){
     worn[o.slot]=worn[o.slot]===o.id&&o.slot!=="hero"?null:o.id;
   }else{
+    if(o.trophy!=null){testToast(o.name+" can't be bought. Finish "+LOCATIONS[o.trophy].name+" to earn it.");return;}
     const price=gemPrice(o);
     if(gems<price){
       testToast("You need "+(price-gems)+" more gems for "+o.name);
