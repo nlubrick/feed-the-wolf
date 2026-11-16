@@ -22,6 +22,9 @@ test("Public tester build keeps fake checkout, strips developer execution and in
   const manifest=JSON.parse(fs.readFileSync(path.join(dir,"manifest.webmanifest"),"utf8"));
   assert.equal(manifest.short_name,"Wolf BETA");
   assert.ok(fs.existsSync(path.join(dir,"feed-the-wolf-beta-icon.svg")));
+  assert.match(page,/<link rel="apple-touch-icon" href="\.\/feed-the-wolf-beta-icon\.png">/);
+  const png=fs.readFileSync(path.join(dir,"feed-the-wolf-beta-icon.png"));
+  assert.equal(png.subarray(0,8).toString("hex"),"89504e470d0a1a0a");
   assert.match(fs.readFileSync(path.join(dir,"service-worker.js"),"utf8"),/feed-the-wolf-beta-icon\.svg/);
   assert.match(fs.readFileSync(path.join(dir,"store-config.js"),"utf8"),/"build":"tester"/);
   assert.ok(fs.existsSync(path.join(dir,"test-store-v2.js")));

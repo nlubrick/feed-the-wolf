@@ -61,6 +61,12 @@ function createTester(out) {
   page=exactly(page,'<title>Feed the Wolf</title>','<title>Feed the Wolf BETA</title>');
   page=exactly(page,'<meta name="apple-mobile-web-app-title" content="Feed the Wolf">','<meta name="apple-mobile-web-app-title" content="Wolf BETA">');
   page=exactly(page,'<meta name="application-name" content="Feed the Wolf">','<meta name="application-name" content="Wolf BETA">');
+  // iPhone Add to Home Screen reads apple-touch-icon, not just manifest icons.
+  const touch=page.match(/<link rel="apple-touch-icon" href="data:image\/png;base64,([^"]+)">/);
+  if(!touch)throw new Error("Tester build: missing original Apple touch icon");
+  const {badgePng}=require("./beta-icon.cjs");
+  fs.writeFileSync(path.join(out,"feed-the-wolf-beta-icon.png"),badgePng(Buffer.from(touch[1],"base64")));
+  page=exactly(page,touch[0],'<link rel="apple-touch-icon" href="./feed-the-wolf-beta-icon.png">');
   fs.writeFileSync(htmlPath,page);
   // Distinct home-screen app identity and icon, without changing the user's existing install.
   const manifestPath=path.join(out,"manifest.webmanifest");
@@ -78,7 +84,7 @@ function createTester(out) {
   const swPath=path.join(out,"service-worker.js");
   let sw=fs.readFileSync(swPath,"utf8");
   sw=sw.replace(/const VERSION="[^"]+";/,'const VERSION="ftw-public-beta-v1";');
-  sw=exactly(sw,'"./feed-the-wolf-icon.svg"','"./feed-the-wolf-icon.svg","./feed-the-wolf-beta-icon.svg"');
+  sw=exactly(sw,'"./feed-the-wolf-icon.svg"','"./feed-the-wolf-icon.svg","./feed-the-wolf-beta-icon.svg","./feed-the-wolf-beta-icon.png"');
   fs.writeFileSync(swPath,sw);
   const configPath=path.join(out,"store-config.js");
   const cfg=fs.readFileSync(configPath,"utf8");
