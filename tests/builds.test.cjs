@@ -135,3 +135,47 @@ test("Progress survives an app update: same storage key, same app address, and a
  web.set("ftw-save",JSON.stringify({li:50}));assert.equal(await b.restore(),false,"never overwrites a save that is there");
  native.set("ftw-save","not json");web.clear();assert.equal(await b.restore(),false,"a damaged backup is ignored");
 });
+test("External-tester build: production code, no practice checkout, sandbox keys required",()=>{
+ const ext=build("external",path.join(tmp,"external"));
+ assert.deepEqual(check(ext.out,"external").errors,[]);
+ assert.equal(read(ext,"index.html"),read(prod,"index.html"),"outside testers get exactly the production page");
+ assert.ok(!fs.existsSync(path.join(ext.out,"test-store-v2.js")));
+ assert.match(read(ext,"store-config.js"),/"build":"external"/);
+ assert.equal(check(ext.out,"external").keys,false,"no keys yet, so the strict check that guards this build still fails");
+});
+test("Every app build gets a unique, increasing build number that both stores accept",()=>{
+ const v=require("../scripts/set-app-version.cjs");
+ const t0=Date.UTC(2026,10,16,21,0,0),a=v.buildNumber(t0,{}),b=v.buildNumber(t0+60000,{}),later=v.buildNumber(Date.UTC(2099,0,1),{});
+ assert.ok(b>a);assert.ok(later<v.ANDROID_MAX,"still valid for Android at the end of the century");
+ assert.equal(v.buildNumber(t0,{FTW_BUILD_NUMBER:"42"}),42);
+ for(const bad of ["0","-3","1.5","abc","99999999999"])assert.throws(()=>v.buildNumber(t0,{FTW_BUILD_NUMBER:bad}));
+ // the shapes Capacitor 8 generates
+ const pbx="\t\t\t\tCURRENT_PROJECT_VERSION = 1;\n\t\t\t\tMARKETING_VERSION = 1.0;\n\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.failureentertainment.feedthewolf;\n\t\t\t\tCURRENT_PROJECT_VERSION = 1;\n\t\t\t\tMARKETING_VERSION = 1.0;\n";
+ const out=v.stampIos(pbx,a,"0.2.0");
+ assert.equal((out.match(new RegExp("CURRENT_PROJECT_VERSION = "+a+";","g"))||[]).length,2);assert.equal((out.match(/MARKETING_VERSION = 0\.2\.0;/g)||[]).length,2);
+ assert.match(out,/PRODUCT_BUNDLE_IDENTIFIER = com\.failureentertainment\.feedthewolf;/);
+ const gradle='        applicationId "com.failureentertainment.feedthewolf"\n        versionCode 1\n        versionName "1.0"\n';
+ const g=v.stampAndroid(gradle,a,"0.2.0");
+ assert.match(g,new RegExp("versionCode "+a+"\\n"));assert.match(g,/versionName "0\.2\.0"/);assert.match(g,/applicationId "com\.failureentertainment\.feedthewolf"/);
+ assert.throws(()=>v.stampIos("nothing here",a,"0.2.0"));assert.throws(()=>v.stampAndroid("nothing here",a,"0.2.0"));
+ assert.match(v.versionName(),/^\d+\.\d+\.\d+$/);
+});
+test("Codemagic: every workflow stamps the build number before compiling, and none publishes",()=>{
+ const y=fs.readFileSync(path.join(root,"codemagic.yaml"),"utf8");
+ const flows=y.split(/\n  (?=[a-z0-9-]+:\n    name:)/).slice(1);
+ assert.deepEqual(flows.map(f=>f.split(":")[0]),["android-beta-debug","ios-beta-simulator","ios-beta-signed","ios-external-beta"]);
+ for(const f of flows){
+  const name=f.split(":")[0],plat=name.startsWith("android")?"android":"ios";
+  const stamp=f.indexOf("node scripts/set-app-version.cjs "+plat),sync=f.indexOf("npx cap sync "+plat),compile=f.search(/gradlew assemble|xcodebuild |xcode-project build-ipa/);
+  assert.ok(sync>0&&stamp>sync&&compile>stamp,name+": stamp must come after the project is generated and before it is compiled");
+  assert.doesNotMatch(f,/\n    publishing:/,name+" must not publish");
+  assert.match(f,/npm test/);
+ }
+ // the signing set-up of the working signed workflow is untouched
+ const signed=flows[2];
+ assert.match(signed,/app_store_connect: Feed the Wolf Codemagic/);assert.match(signed,/distribution_type: app_store/);
+ assert.match(signed,/bundle_identifier: com\.failureentertainment\.feedthewolf/);assert.match(signed,/node scripts\/build-tester\.cjs --www/);
+ const ext=flows[3];
+ assert.match(ext,/node scripts\/build\.cjs external --www/);assert.match(ext,/check-release\.cjs --target external --strict/);
+ assert.doesNotMatch(ext,/build-tester/,"outside testers never get the practice checkout");
+});
