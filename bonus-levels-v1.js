@@ -49,8 +49,21 @@ class Music{
    this.interval=setInterval(()=>this.tick(),mode==="match"?205:mode==="pipes"?255:330);
   }catch(e){this.stop();}
  }
+ /* iOS suspends (or "interrupts") Web Audio when you leave the app, and will only let it start again from inside a tap.
+    So every tap in a mini-game calls this: resume the context if it has stopped, and build a fresh one if it will not. */
+ wake(){
+  if(!this.enabled||!this.interval)return;
+  const AC=root.AudioContext||root.webkitAudioContext;if(!AC)return;
+  const fresh=()=>{try{this.ctx=new AC();if(this.ctx.state!=="running")this.ctx.resume().catch(()=>{});}catch(e){this.ctx=null;}};
+  const c=this.ctx;
+  if(!c||c.state==="closed"){fresh();return;}
+  if(c.state==="running")return;
+  let p;try{p=c.resume();}catch(e){p=null;}
+  const check=()=>{if(this.ctx===c&&c.state!=="running"){try{c.close();}catch(e){}fresh();}};
+  if(p&&p.then)p.then(check,check);else check();
+ }
  note(freq,duration=.15,shape="triangle",volume=.025){
-  if(!this.ctx||!this.enabled)return;
+  if(!this.ctx||!this.enabled||this.ctx.state!=="running")return;
   try{
    const c=this.ctx,t=c.currentTime,o=c.createOscillator(),g=c.createGain();
    o.type=shape;o.frequency.setValueAtTime(freq,t);
@@ -97,6 +110,7 @@ class Music{
 }
 class Controller{
  constructor(node,cb){this.node=node;this.cb=cb;this.music=new Music();this.stage=null;this.mode=null;
+  for(const type of ["pointerdown","touchend","click"])this.node.addEventListener(type,()=>this.music.wake(),true);
   this.node.addEventListener("click",e=>{
    const b=e.target.closest("[data-bonus-action]");if(!b)return;
    const a=b.dataset.bonusAction;

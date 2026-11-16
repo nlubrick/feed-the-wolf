@@ -2787,7 +2787,7 @@ const SFX = {
 };
 function sfx(name, arg){
   if (!sfxOn || !actx) return;
-  try { if (actx.state === "suspended") actx.resume(); SFX[name](arg); } catch (e) {}
+  try { if (actx.state !== "running") actx.resume(); SFX[name](arg); } catch (e) {}   // iOS reports "interrupted", not "suspended", after you leave the app
 }
 function soundLabel(){ const b = $("sound"); b.setAttribute("aria-pressed", sfxOn ? "true" : "false"); b.setAttribute("aria-label", "Sound effects: " + (sfxOn ? "on" : "off")); }
 soundLabel();
@@ -2796,7 +2796,8 @@ $("sound").addEventListener("click", () => {
   try { localStorage.setItem("ftw-sfx", sfxOn ? "on" : "off"); } catch (e) {}
   soundLabel(); if (sfxOn){ sfxInit(); sfx("coin"); }
 });
-document.addEventListener("click", () => { sfxInit(); if (actx && actx.state === "suspended") actx.resume(); }, true);
+document.addEventListener("click", () => { sfxInit(); if (actx && actx.state !== "running") actx.resume(); }, true);
+document.addEventListener("touchend", () => { if (actx && actx.state !== "running") actx.resume(); }, true);
 
 /* ---------- music: an original castle-caper loop, rendered to a WAV and played through an <audio> element
    (which still plays when an iPhone is on silent). Four 8-bar sections: the theme, the theme over a ticking
