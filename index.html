@@ -452,7 +452,7 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
         <span>Game progress</span><strong id="dev-progress-state">Level 1 / 100</strong>
       </div>
       <label class="dev-option" for="dev-full"><input type="checkbox" id="dev-full"> Preview full game without purchasing</label>
-      <p class="dev-help">Browse levels 1–110, including optional mini-games. The first bonus level is free. Turn off preview to test the purchase gate.</p>
+      <p class="dev-help">Jump back only to levels you have completed. Skipped mini-games do not count. Turn off preview to test the purchase gate.</p>
       <div class="dev-level-row">
         <label for="dev-level">Jump to level</label>
         <input id="dev-level" type="number" inputmode="numeric" min="1" max="110" value="1">
@@ -2344,10 +2344,19 @@ $("developer-from-unlock").addEventListener("click",openDeveloper);
 $("developer-back").addEventListener("click",()=>leaveDeveloper(false));
 $("developer-exit").addEventListener("click",()=>leaveDeveloper(true));
 $("dev-full").addEventListener("change",e=>setPreviewFull(e.target.checked));
+function completedForDeveloperJump(stage){
+  if(!stage)return false;
+  return stage.type==="bonus" ? bonusResults[stage.number]==="win" : !!cleared[stage.puzzleIndex];
+}
 $("dev-jump").addEventListener("click",()=>{
   if(!developerMode)return;
   const requested=Number($("dev-level").value);
   const level=Math.max(1,Math.min(window.FTWBonus.stages.length,Math.round(requested||1)));
+  const stage=window.FTWBonus.at(level);
+  if(!completedForDeveloperJump(stage)){
+    $("dev-message").textContent="Only completed levels can be replayed here. Play normally to unlock new levels.";
+    return;
+  }
   daily=false;hardOn=false;
   goToCampaignStage(level);
 });
