@@ -18,6 +18,7 @@ test("Public tester build keeps fake checkout, strips developer execution and in
     new vm.Script(match[1]);
   assert.match(js,/fullAccess: \(\) => testCheckoutAvailable\(\) && simulatedPurchase/);
   assert.match(js,/FTW_FAKE_SHOP\.purchase/);
+  assert.match(page,/<meta name="apple-mobile-web-app-title" content="Wolf BETA">/);
   const manifest=JSON.parse(fs.readFileSync(path.join(dir,"manifest.webmanifest"),"utf8"));
   assert.equal(manifest.short_name,"Wolf BETA");
   assert.ok(fs.existsSync(path.join(dir,"feed-the-wolf-beta-icon.svg")));

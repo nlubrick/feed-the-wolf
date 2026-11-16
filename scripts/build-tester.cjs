@@ -57,6 +57,10 @@ function createTester(out) {
   for(const id of ['id="test-checkout"','id="test-checkout-confirm"','id="beta-badge"']){
     if(!page.includes(id))throw new Error("Tester build missing "+id);
   }
+  // Safari uses this title for the separately installed iPhone home-screen app.
+  page=exactly(page,'<title>Feed the Wolf</title>','<title>Feed the Wolf BETA</title>');
+  page=exactly(page,'<meta name="apple-mobile-web-app-title" content="Feed the Wolf">','<meta name="apple-mobile-web-app-title" content="Wolf BETA">');
+  page=exactly(page,'<meta name="application-name" content="Feed the Wolf">','<meta name="application-name" content="Wolf BETA">');
   fs.writeFileSync(htmlPath,page);
   // Distinct home-screen app identity and icon, without changing the user's existing install.
   const manifestPath=path.join(out,"manifest.webmanifest");
