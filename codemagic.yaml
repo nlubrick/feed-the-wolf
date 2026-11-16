@@ -43,16 +43,19 @@ workflows:
           npm install --no-audit --no-fund
           npm test
           npm run release:check
-      - name: Generate iOS project
+      - name: Generate iOS project with Swift Package Manager
         script: |
           node scripts/build-tester.cjs --www
-          npx cap add ios
+          # This repo contains historical standalone Swift files in ios/.
+          # Preserve them elsewhere in this temporary CI checkout before generating.
+          if [ -d ios ] && [ ! -d ios/App/App.xcodeproj ]; then
+            mv ios ios-legacy-source
+          fi
+          npx cap add ios --packagemanager SPM
           npx cap sync ios
-          cd ios/App
-          pod install
       - name: Compile unsigned iOS simulator app
         script: |
-          xcodebuild -workspace ios/App/App.xcworkspace \
+          xcodebuild -project ios/App/App.xcodeproj \
             -scheme App \
             -configuration Debug \
             -sdk iphonesimulator \
