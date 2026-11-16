@@ -1,0 +1,63 @@
+# Feed the Wolf: unsigned cloud compile checks. No signing credentials or real payments needed.
+# In Codemagic choose "YAML" and select either workflow; they run manually.
+# These first workflows compile the tester flavor. A signed TestFlight/Play rollout is
+# intentionally NOT configured until the developer accounts and signing are available.
+workflows:
+  android-beta-debug:
+    name: Feed the Wolf BETA · Android debug APK
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      node: 22
+    scripts:
+      - name: Install packages and test release separation
+        script: |
+          npm install --no-audit --no-fund
+          npm test
+          npm run release:check
+      - name: Prepare shareable tester assets and Android project
+        script: |
+          node scripts/build-tester.cjs --www
+          npx cap add android
+          npx cap sync android
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+      - name: Compile debug APK without store credentials
+        script: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+    artifacts:
+      - android/app/build/outputs/**/*.apk
+
+  ios-beta-simulator:
+    name: Feed the Wolf BETA · iOS simulator compile
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      node: 22
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install packages and test release separation
+        script: |
+          npm install --no-audit --no-fund
+          npm test
+          npm run release:check
+      - name: Generate iOS project
+        script: |
+          node scripts/build-tester.cjs --www
+          npx cap add ios
+          npx cap sync ios
+          cd ios/App
+          pod install
+      - name: Compile unsigned iOS simulator app
+        script: |
+          xcodebuild -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$CM_BUILD_DIR/ios-build" \
+            CODE_SIGNING_ALLOWED=NO build
+    artifacts:
+      - ios-build/Build/Products/Debug-iphonesimulator/*.app

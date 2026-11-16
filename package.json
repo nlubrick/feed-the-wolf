@@ -10,7 +10,9 @@
     "build:production": "node scripts/build.cjs production",
     "app:beta": "node scripts/build.cjs beta --www && npx cap sync",
     "app:production": "node scripts/check-release.cjs && node scripts/build.cjs production --www && npx cap sync",
-    "app:add": "npx cap add android && npx cap add ios"
+    "app:add": "npx cap add android && npx cap add ios",
+    "build:tester": "node scripts/build-tester.cjs",
+    "app:tester": "node scripts/build-tester.cjs --www && npx cap sync"
   },
   "engines": {
     "node": ">=20"
