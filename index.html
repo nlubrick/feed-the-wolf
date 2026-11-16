@@ -348,6 +348,7 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
 .ftw-product .go{width:100%}
 .tile .tile-gem-price{font-weight:800;color:#b8edff;background:#132341b0}
 .tile .tile-gem-price .gem{width:.6em;height:.6em}
+.tile .tile-free{font-size:10px;line-height:1.15;color:#ffe6a8;opacity:.9}
 .tile.gem-unaffordable{opacity:.78}
 </style>
 <script src="./test-store-v2.js"></script>
@@ -498,10 +499,8 @@ button.quiet.danger[aria-pressed="true"]{background:var(--lava);border-color:var
   <div id="store-products" class="ftw-products"></div>
   <h2 class="shelf">Characters &amp; Companions</h2>
   <div class="mirror"><img id="petImg" alt="" hidden><img id="dress" alt="The wolf in what he is wearing now"></div>
-  <p class="hint">Collect gems by earning stars (double in Hard Mode) or buy gem packs during this test. Every item below has a gem price, even milestone rewards. Some rewards can still be earned for free by playing. Wear one hat, face accessory and neck accessory, with one pet at a time.</p>
+  <p class="hint">Collect gems by earning stars (double in Hard Mode) or buy gem packs during this test. Every item below has a gem price. Some are also given free when you clear a level; those say which level. Wear one hat, face accessory and neck accessory, with one pet at a time.</p>
   <div class="tiles" id="tilesH"></div>
-  <h2 class="shelf">Prizes</h2>
-  <div class="tiles" id="tilesP"></div>
   <h2 class="shelf">Costumes &amp; Accessories</h2>
   <div class="tiles" id="tilesS"></div>
   <h2 class="shelf">Pets</h2>
@@ -2615,11 +2614,12 @@ function renderWardrobe(){
     return '<button type="button" class="tile'+(on?" on":"")+
       (!canAfford?" gem-unaffordable":"")+'" style="--c:'+o.c+'" data-id="'+o.id+
       '" aria-label="'+action+'"><img alt="" src="'+thumb(o.id)+'"><b>'+o.name+
-      '</b><span class="tile-gem-price">'+status+'</span></button>';
+      '</b><span class="tile-gem-price">'+status+'</span>'+
+      (!own&&o.level?'<small class="tile-free">or free at level '+window.FTWBonus.puzzleStage(o.level-1).number+'</small>':'')+'</button>';
   };
   $("tilesH").innerHTML=OUTFITS.filter(o=>o.slot==="hero").map(tile).join("");
-  $("tilesP").innerHTML=OUTFITS.filter(o=>o.level).map(tile).join("");
-  $("tilesS").innerHTML=OUTFITS.filter(o=>o.cost&&o.slot!=="pet"&&o.slot!=="hero").map(tile).join("");
+  // One shelf for everything the wolf can wear. Some are also handed over free for clearing a level; the tile says which.
+  $("tilesS").innerHTML=OUTFITS.filter(o=>o.slot!=="pet"&&o.slot!=="hero").sort((a,b)=>gemPrice(a)-gemPrice(b)).map(tile).join("");
   $("tilesT").innerHTML=OUTFITS.filter(o=>o.slot==="pet").map(tile).join("");
 }
 $("shop").addEventListener("click",e=>{
