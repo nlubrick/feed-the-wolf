@@ -31,11 +31,12 @@ const palettes=[
 ["#382c35","#6b4f3d","#bb8856","#ebc783"],
 ["#21473f","#356e5f","#73b49a","#e3efc6"],
 ["#241a3a","#55345a","#b98191","#e9c49b"]];
-function scene(chapter,found){
+function scene(chapter,found,tier){
+ if(tier==null)tier=chapter;
  const [wall,edge,wood,light]=palettes[chapter];
  const room=root.FTWBonusThemes?root.FTWBonusThemes.room(chapter):null;
  const clutter=room&&root.FTWBonusThemes.clutter?root.FTWBonusThemes.clutter(chapter):{back:"",front:""};
- let s=room?'<svg class="fw-detective-scene fw-camo-'+chapter+'" viewBox="0 0 700 460" role="group" aria-label="Illustrated room with hidden objects" xmlns="http://www.w3.org/2000/svg">'+
+ let s=room?'<svg class="fw-detective-scene fw-camo-'+tier+'" viewBox="0 0 700 460" role="group" aria-label="Illustrated room with hidden objects" xmlns="http://www.w3.org/2000/svg">'+
   (room.photo?'<image href="'+room.photo+'" width="700" height="460" preserveAspectRatio="xMidYMid slice"/>':room.art())+clutter.back:'<svg class="fw-detective-scene" viewBox="0 0 700 460" role="group" aria-label="Illustrated room with hidden objects" xmlns="http://www.w3.org/2000/svg">'+
  '<defs><linearGradient id="fwwall" x2="0" y2="1"><stop stop-color="'+edge+'"/><stop offset="1" stop-color="'+wall+'"/></linearGradient></defs>'+
  '<rect width="700" height="460" rx="22" fill="url(#fwwall)"/>'+
@@ -62,15 +63,15 @@ function scene(chapter,found){
    ' data-object="'+item.id+'" aria-label="'+item.name+(complete?' found':'')+'" '+
    'transform="translate('+x+' '+y+')">'+
    '<circle r="'+(room?30:39)+'" fill="transparent" class="fw-detective-hit"/>'+
-   '<g class="fw-detective-art" transform="'+(room?'translate(0 '+(27-27*(.95-chapter*.03)).toFixed(1)+') rotate('+(((i*37+chapter*53)%50)-25)+') scale('+(.95-chapter*.03).toFixed(2)+') ':'')+'translate(-27 -27) scale(.85)">'+((root.FTWBonusThemes&&root.FTWBonusThemes.iconBody(item.id))||item.shape)+'</g>'+
+   '<g class="fw-detective-art" transform="'+(room?'translate(0 '+(27-27*(.95-tier*.03)).toFixed(1)+') rotate('+(((i*37+chapter*53)%50)-25)+') scale('+(.95-tier*.03).toFixed(2)+') ':'')+'translate(-27 -27) scale(.85)">'+((root.FTWBonusThemes&&root.FTWBonusThemes.iconBody(item.id))||item.shape)+'</g>'+
    (complete?'<circle r="32" fill="none" stroke="#9bf6ba" stroke-width="5" stroke-dasharray="6 5"/>':'')+
    '</g>';
  });
  return s+(clutter.front?'<g pointer-events="none">'+clutter.front+'</g>':'')+'</svg>';
 }
 function mount(api){
- const c=api.stage.chapter,find=targets[c],found=new Set();
- let wrong=0,alive=true,left=SECONDS[c],over=false;
+ const c=api.stage.chapter,d=api.stage.tier==null?c:api.stage.tier,find=targets[d],found=new Set();
+ let wrong=0,alive=true,left=SECONDS[d],over=false;
  api.instructions("Find everything on the list before the clock runs out. Things are tucked in among the clutter. A wrong tap costs "+MISS_COST+" seconds.");
  api.message("The wolf has lost "+find.length+" things in this room. Look closely!");
  const clock=()=>{const el=api.hud.querySelector("[data-clock]");if(el){el.textContent=Math.max(0,Math.ceil(left))+"s";el.classList.toggle("low",left<=15);}};
@@ -83,7 +84,7 @@ function mount(api){
    return '<span class="'+(found.has(id)?' done':'')+'">'+obj.name+(found.has(id)?' ✓':'')+'</span>';
   }).join('')+'<button type="button" class="fw-detective-hint" data-hint>Hint \u2212'+HINT_COST+'s</button></div>';
   const old=api.play.querySelector?api.play.querySelector(".fw-detective-pan"):null,at=old?old.scrollLeft:-1;
-  api.play.innerHTML='<p class="fw-pan-tip">\u2194 Swipe sideways to look around the room</p><div class="fw-detective-pan">'+scene(c,found)+'</div>';clock();
+  api.play.innerHTML='<p class="fw-pan-tip">\u2194 Swipe sideways to look around the room</p><div class="fw-detective-pan">'+scene(c,found,d)+'</div>';clock();
   const pan=api.play.querySelector?api.play.querySelector(".fw-detective-pan"):null;      // keep the view where it was; start in the middle
   if(pan)pan.scrollLeft=at>=0?at:Math.max(0,(pan.scrollWidth-pan.clientWidth)/2);
  }

@@ -1,26 +1,43 @@
-/* Feed the Wolf bonus arcade: 15 inserted stages with independent game modes.
+/* Feed the Wolf bonus arcade: ten mini-games, each met once, two per location.
    Original 100 pull-the-pin definitions, save indices and rewards are unchanged. */
 (function(root){
 "use strict";
 const chapters=["The Castle","The Wizard's Tower","Clockwork Citadel","Moonlit Conservatory","Ghostlight Theatre"];
-const modes=["match","pipes","hidden"];
-const modesTitle={match:"Feast Match",pipes:"Pantry Panic",hidden:"Dinner Detective"};
-const titles=[
-["The Larder Shuffle","Copper Pipes","The Missing Feast"],
-["Enchanted Ingredients","Potion Plumbing","The Vanished Recipe"],
-["Clockwork Snacks","Factory Feedline","The Hidden Gear"],
-["Moonlit Harvest","Garden Irrigation","The Secret Bouquet"],
-["Curtain Call Combo","Backstage Flow","The Final Prop"]];
+/* Each location has one mini-game after its 5th puzzle and one after its 13th. kind: what it asks of the player. */
+const LINEUP=[
+ [{mode:"match",title:"The Larder Shuffle",tier:0},{mode:"dash",title:"Dinner Dash"}],
+ [{mode:"pipes",title:"Potion Plumbing",tier:1},{mode:"catch",title:"Catch the Feast"}],
+ [{mode:"chain",title:"The Dinner Machine"},{mode:"gear",title:"Gear Jump"}],
+ [{mode:"firefly",title:"Firefly Chase"},{mode:"run",title:"Garden Delivery"}],
+ [{mode:"hidden",title:"The Final Prop",tier:2},{mode:"sneak",title:"Spotlight Sneak"}]];
+const modes=["match","pipes","hidden","dash","catch","gear","firefly","sneak","chain","run"];
+const modesTitle={match:"Feast Match",pipes:"Pantry Panic",hidden:"Dinner Detective",dash:"Reflexes",catch:"Catch and dodge",gear:"Timing",firefly:"Steering",sneak:"Stealth",chain:"Chain reaction",run:"Quick thinking"};
+const bubble={match:"roast",pipes:"mushroom",hidden:"key",dash:"roast",catch:"apple",gear:"gear",firefly:"lantern",sneak:"mask",chain:"cheese",run:"flower"};
+/* How the tune is played under each game: quick for the reflex games, steady for the thinking ones, slow for searching. */
+const pace={match:"match",dash:"match",catch:"match",gear:"match",run:"match",pipes:"pipes",chain:"pipes",sneak:"pipes",hidden:"hidden",firefly:"hidden"};
+const REWARDS=[10,11,12,13,13,14,14,15,16,17];   // 135 gems in all, the same as the fifteen stages they replace
 const stages=[],bonus=[];
 for(let i=0;i<100;i++){
  stages.push({number:stages.length+1,type:"puzzle",puzzleIndex:i,chapter:Math.floor(i/20)});
- const kind=[4,11,18].indexOf(i%20);
+ const kind=[4,12].indexOf(i%20);
  if(kind!==-1){
-  const chapter=Math.floor(i/20);
-  const stage={number:stages.length+1,type:"bonus",mode:modes[kind],
-   chapter,bonusIndex:bonus.length,afterPuzzleIndex:i,title:titles[chapter][kind],reward:5+chapter*2};
+  const chapter=Math.floor(i/20),g=LINEUP[chapter][kind];
+  const stage={number:stages.length+1,type:"bonus",mode:g.mode,
+   chapter,tier:g.tier==null?chapter:g.tier,bonusIndex:bonus.length,afterPuzzleIndex:i,title:g.title,reward:REWARDS[bonus.length]};
   stages.push(stage);bonus.push(stage);
  }
+}
+const TOTAL=stages.length;
+/* Saves made when there were 115 stages (three mini-games per location, numbered differently). Returns where that player
+   should now stand and the gems they had already won from the old mini-games, so nothing they earned is lost. */
+function legacy(oldStage,oldResults){
+ const old=[];
+ for(let i=0;i<100;i++){old.push({puzzleIndex:i});if([4,11,18].includes(i%20))old.push({after:i,reward:5+Math.floor(i/20)*2});}
+ let gems=0;
+ for(const k in (oldResults||{})){const st=old[Number(k)-1];if(st&&st.reward&&oldResults[k]==="win")gems+=st.reward;}
+ const at=old[oldStage-1];let stage=1;
+ if(at){const idx=at.puzzleIndex!=null?at.puzzleIndex:Math.min(99,at.after+1);stage=stages.find(x=>x.type==="puzzle"&&x.puzzleIndex===idx).number;}
+ return{stage,gems};
 }
 function at(number){return Number.isInteger(number)?stages[number-1]||null:null;}
 function puzzleStage(index){return stages.find(s=>s.type==="puzzle"&&s.puzzleIndex===index)||null;}
@@ -46,7 +63,8 @@ class Music{
    const AC=root.AudioContext||root.webkitAudioContext;if(!AC)return;
    this.ctx=new AC();if(this.ctx.state==="suspended")this.ctx.resume().catch(()=>{});
    this.tick();
-   this.interval=setInterval(()=>this.tick(),mode==="match"?205:mode==="pipes"?255:330);
+   this.pace=pace[mode]||"hidden";
+   this.interval=setInterval(()=>this.tick(),this.pace==="match"?205:this.pace==="pipes"?255:330);
   }catch(e){this.stop();}
  }
  /* iOS suspends (or "interrupts") Web Audio when you leave the app, and will only let it start again from inside a tap.
@@ -77,18 +95,18 @@ class Music{
   const root=score.root+score.motif[i];
   if(this.chapter===4){   // Ghostlight Theatre: the same tune on a soft calliope (a whistle plus a quiet octave, slightly flat)
    const pipe=(m,d,v)=>{this.note(midiHz(m)*.994,d,"sine",v);this.note(midiHz(m+12)*1.004,d,"sine",v*.22);};
-   const gap=this.mode==="hidden"?4:2;
-   if(i%gap===0)pipe(root,this.mode==="hidden"?.6:.3,.03);
+   const gap=this.pace==="hidden"?4:2;
+   if(i%gap===0)pipe(root,this.pace==="hidden"?.6:.3,.03);
    if(i%4===0)pipe(score.bass[(i>>2)%4],.34,.03);
    if(i%4===2)pipe(score.bass[(i>>2)%4]+12,.14,.012);
    return;
   }
   // Each bonus is a subtle arrangement of its own chapter tune, not a new song.
-  if(this.mode==="match"){
+  if(this.pace==="match"){
    this.note(midiHz(root),.18,score.color,.036);   // an octave lower than first written: the high version was shrill on a phone speaker
    if(i%4===0)this.note(midiHz(score.bass[(i>>2)%4]),.3,"triangle",.035);
    if(i%4===2)this.note(294,.04,"sine",.012);
-  }else if(this.mode==="pipes"){
+  }else if(this.pace==="pipes"){
    if(i%2===0)this.note(midiHz(root),.21,score.color,.031);
    if(i%4===2)this.note(196,.06,"sine",.02);   // a low soft tock, not a high tick
    if(i%4===0)this.note(midiHz(score.bass[(i>>2)%4]),.25,"triangle",.033);
@@ -109,7 +127,7 @@ class Music{
  }
 }
 class Controller{
- constructor(node,cb){this.node=node;this.cb=cb;this.music=new Music();this.stage=null;this.mode=null;
+ constructor(node,cb){this.node=node;this.cb=cb;this.music=new Music();this.stage=null;this.mode=null;this.losses={};
   for(const type of ["pointerdown","touchend","click"])this.node.addEventListener(type,()=>this.music.wake(),true);
   this.node.addEventListener("click",e=>{
    const b=e.target.closest("[data-bonus-action]");if(!b)return;
@@ -128,14 +146,16 @@ class Controller{
  start(stage){
   if(!stage||stage.type!=="bonus"||!registered[stage.mode])throw Error("Bonus level not available");
   this.stop();this.stage=stage;
-  const themes=root.FTWBonusThemes;
+  const themes=root.FTWBonusThemes,hard=!!(this.cb.hard&&this.cb.hard());
+  // Hard Mode plays a tougher version. Lose three times running and the game quietly eases off, so nobody is stuck on a reflex test.
+  const lost=this.losses[stage.number]||0,ease=Math.max(0,lost-2);
   this.node.innerHTML='<div class="fw-bonus fw-world-'+stage.chapter+' fw-'+stage.mode+(themes?' fw-themed':'')+'">'+
    (themes?'<div class="fw-banner" aria-hidden="true">'+themes.banner(stage.chapter)+'</div>':'')+
-   (themes&&this.cb.wolf?'<img class="fw-bonus-wolf" id="fw-bonus-wolf" alt="" src="'+this.cb.wolf("idle")+'"><div class="fw-wolf-bubble" aria-hidden="true">'+themes.icon({match:"roast",pipes:"mushroom",hidden:"key"}[stage.mode])+'</div>':'')+
+   (themes&&this.cb.wolf?'<img class="fw-bonus-wolf" id="fw-bonus-wolf" alt="" src="'+this.cb.wolf("idle")+'"><div class="fw-wolf-bubble" aria-hidden="true">'+(themes.icon(bubble[stage.mode])||themes.icon("roast"))+'</div>':'')+
    '<div class="fw-bonus-nav"><button type="button" data-bonus-action="back" aria-label="Previous level"'+(stage.number<=1?' disabled':'')+'>\u2039</button>'+
    '<button type="button" data-bonus-action="next" aria-label="Next level"'+(this.cb.canNext&&!this.cb.canNext(stage)?' disabled':'')+'>\u203A</button></div>'+
    '<header class="fw-bonus-header"><div><p class="fw-bonus-kicker">BONUS LEVEL '+stage.number+
-   ' OF 115 · '+chapters[stage.chapter]+'</p><h1>'+stage.title+'</h1><p>'+
+   ' OF '+TOTAL+' · '+chapters[stage.chapter]+(hard?' · HARD':'')+'</p><h1>'+stage.title+'</h1><p>'+
    modesTitle[stage.mode]+'</p></div><div class="fw-bonus-reward">✦ +'+stage.reward+' gems</div></header>'+
    '<p class="fw-bonus-instructions" id="fw-bonus-instructions"></p>'+
    '<div class="fw-bonus-hud" id="fw-bonus-hud"></div>'+
@@ -146,10 +166,10 @@ class Controller{
    '<button type="button" data-bonus-action="music">Music: '+(this.cb.musicEnabled()?"On":"Off")+'</button>'+
    '<button type="button" class="fw-bonus-skip" data-bonus-action="skip">Skip mini-game</button></footer>'+
    '<div class="fw-bonus-overlay" id="fw-bonus-overlay" hidden></div></div>';
-  const opts={stage,play:this.node.querySelector("#fw-bonus-play"),hud:this.node.querySelector("#fw-bonus-hud"),
+  const opts={stage:Object.assign({},stage,{tier:Math.min(4,stage.tier+(hard?2:0))}),hard,ease,play:this.node.querySelector("#fw-bonus-play"),hud:this.node.querySelector("#fw-bonus-hud"),
    message:(t)=>{const el=this.node.querySelector("#fw-bonus-message");if(el)el.textContent=t;},
    instructions:(t)=>{this.node.querySelector("#fw-bonus-instructions").textContent=t;},
-   win:()=>this.won(),lose:(msg)=>this.lost(msg),sound:(ok)=>{this.music.fx(ok);this.react(ok?"joy":"scared",ok?900:700);},
+   win:()=>{this.losses[stage.number]=0;this.won();},lose:(msg)=>{this.losses[stage.number]=(this.losses[stage.number]||0)+1;this.lost(msg);},sound:(ok)=>{this.music.fx(ok);this.react(ok?"joy":"scared",ok?900:700);},
    wolf:this.cb.wolf||null,
    tone:(f,d=.12)=>this.music.note(f,d)};
   this.mode=registered[stage.mode](opts);
@@ -171,7 +191,7 @@ class Controller{
   overlay.innerHTML='<div class="fw-bonus-end"><span>✦ ✦ ✦</span><h2>Dinner saved!</h2>'+
    '<p>Bonus level '+this.stage.number+' complete. Earn <b>+'+this.stage.reward+
    ' gems</b> for your Store.</p><button type="button" data-bonus-action="continue">'+
-   'Continue to Level '+Math.min(115,this.stage.number+1)+'</button></div>';
+   'Continue to Level '+Math.min(TOTAL,this.stage.number+1)+'</button></div>';
  }
  lost(message){
   const overlay=this.node.querySelector("#fw-bonus-overlay");
@@ -179,10 +199,10 @@ class Controller{
   this.react("sad",0);
   overlay.hidden=false;
   overlay.innerHTML='<div class="fw-bonus-end"><h2>One more try?</h2><p>'+
-   (message||"Give the puzzle another shot, or skip it.")+'</p>'+
+   (message||"Give it another shot, or skip it.")+((this.losses[this.stage.number]||0)>=3?" It will go a little easier on you this time.":"")+'</p>'+
    '<button type="button" data-bonus-action="retry">Try again</button>'+
    '<button type="button" data-bonus-action="skip">Skip this stage</button></div>';
  }
 }
-root.FTWBonus=Object.freeze({stages,bonus,chapters,worldScores,at,puzzleStage,register,mount:(node,cb)=>new Controller(node,cb)});
+root.FTWBonus=Object.freeze({stages,bonus,chapters,worldScores,at,puzzleStage,register,legacy,TOTAL,mount:(node,cb)=>new Controller(node,cb)});
 })(typeof window!=="undefined"?window:{});

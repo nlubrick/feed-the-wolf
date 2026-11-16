@@ -139,3 +139,12 @@
 .fw-beam{animation:fw-beam 5s ease-in-out infinite alternate}.fw-beam-r{animation:fw-beam 6s ease-in-out infinite alternate-reverse}
 @media(max-width:460px){.fw-themed .fw-bonus-header{padding-top:74px}.fw-pipe-wrap.fw-pipe-ends{grid-template-columns:48px minmax(0,1fr) 48px;gap:1px}.fw-themed>.fw-bonus-wolf{height:84px}.fw-themed>.fw-wolf-bubble{left:76px}.fw-themed.fw-pipes .fw-bonus-play{padding:6px 3px}}
 @media(prefers-reduced-motion:reduce){.fw-tw,.fw-flick,.fw-flame,.fw-bob,.fw-spin,.fw-spin-r,.fw-hand,.fw-steam,.fw-fly,.fw-beam,.fw-beam-r,.fw-bonus-wolf,.fw-wolf-bubble,.fw-pipe-end i,.fw-food-tile.fw-falling{animation:none}.fw-food-tile.fw-popping{animation-duration:.01s}}
+
+/* Skill games: one canvas, sized to the phone, that takes every touch itself (no page scrolling under the thumb). */
+.fw-arcade-canvas{display:block;width:100%;max-width:440px;margin:0 auto;aspect-ratio:360/420;border-radius:12px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;background:#1b1530}
+.fw-arc-hud{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;font-weight:800}
+.fw-arc-hearts{color:#ff6b81;font-size:20px;letter-spacing:3px;min-width:1em;text-shadow:0 1px 0 #0008}
+.fw-arc-hud button[disabled]{opacity:.5}
+/* These games need the screen for the play area, so their header is kept short. */
+.fw-dash .fw-wolf-bubble,.fw-catch .fw-wolf-bubble,.fw-gear .fw-wolf-bubble,.fw-firefly .fw-wolf-bubble,.fw-sneak .fw-wolf-bubble,.fw-run .fw-wolf-bubble,.fw-chain .fw-wolf-bubble{display:none}
+.fw-dash .fw-bonus-play,.fw-catch .fw-bonus-play,.fw-gear .fw-bonus-play,.fw-firefly .fw-bonus-play,.fw-sneak .fw-bonus-play,.fw-run .fw-bonus-play,.fw-chain .fw-bonus-play{padding:4px;min-height:0}

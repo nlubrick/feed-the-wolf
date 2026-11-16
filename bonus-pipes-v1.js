@@ -71,7 +71,7 @@ function minTurns(config){
 const SLACK=[0,3,2.4,2,1.7],POURS=[0,5,4,3,3];
 function limits(chapter){const c=create(chapter);return{turns:SLACK[chapter]?Math.ceil(minTurns(c)*SLACK[chapter])+2:0,pours:POURS[chapter],min:minTurns(c)};}
 function mount(api){
- const config=create(api.stage.chapter),grid=config.initial.slice(),lim=limits(api.stage.chapter);
+ const tier=api.stage.tier==null?api.stage.chapter:api.stage.tier,config=create(tier),grid=config.initial.slice(),lim=limits(tier);
  let turns=0,pours=0,lit=[],alive=true,passed=false,pouring=false,draining=false,spill=-1;
  // Timers are skipped only where there are none (the automated tests), so the pour always plays out on a phone.
  const later=(fn,ms)=>{if(typeof setTimeout==="function")setTimeout(fn,ms);else fn();};
