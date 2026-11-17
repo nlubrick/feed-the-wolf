@@ -1,7 +1,7 @@
 /* Release gate. Builds the production bundle and fails if any developer shortcut, purchase bypass,
    practice checkout or test-only storage is still in it, or if a purchase safeguard has gone missing.
-   Usage: npm run release:check   (add --strict to also require store keys, for the day real sales are switched on)
-          node scripts/check-release.cjs --target external --strict   (the build for outside testers: same rules, sandbox keys required) */
+   Usage: npm run release:check   (add --strict --platform ios to require an Apple RevenueCat SDK key for a signed iOS release)
+          node scripts/check-release.cjs --target external --strict --platform ios   (outside testers: real Apple sandbox key required) */
 "use strict";
 const fs=require("node:fs"),path=require("node:path"),os=require("node:os");
 const {build,BETA_ONLY_FILES}=require("./build.cjs");
@@ -39,13 +39,31 @@ function check(dir,target="production"){
  const keys=/"ios":"[^"]{9,}"/.test(cfg)&&/"android":"[^"]{9,}"/.test(cfg);
  return{errors,keys,files:files.length};
 }
-module.exports={check,FORBIDDEN};
+/* The iOS release must use the Apple-specific public RevenueCat SDK key.
+   Reject Test Store keys and placeholders; this is not a substitute for
+   actually configuring the products and testing the Apple sandbox. */
+function iosKeyStatus(dir){
+ const cfg=fs.readFileSync(path.join(dir,"store-config.js"),"utf8");
+ const m=cfg.match(/window\.FTW_STORE_CONFIG=(\{[^\n]*\});/);
+ if(!m)return{ok:false,reason:"missing generated production store configuration"};
+ let key="";
+ try{key=JSON.parse(m[1]).revenueCat?.ios||"";}catch(e){return{ok:false,reason:"invalid generated store configuration"};}
+ if(typeof key!=="string"||!/^appl_[a-zA-Z0-9_-]{8,}$/.test(key))
+  return{ok:false,reason:"a real Apple RevenueCat public SDK key (appl_...) is required; Test Store keys and placeholders are forbidden"};
+ return{ok:true};
+}
+module.exports={check,FORBIDDEN,iosKeyStatus};
 if(require.main===module){
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),"ftw-release-"));
  try{
   const t=process.argv.indexOf("--target"),target=t>0?process.argv[t+1]:"production";
   build(target,dir);const r=check(dir,target),strict=process.argv.includes("--strict");
-  if(strict&&!r.keys)r.errors.push("store keys are not set, so nothing could be sold (set them in build.config.json or the environment)");
+  const p=process.argv.indexOf("--platform"),platform=p>0?process.argv[p+1]:null;
+  if(platform&&platform!=="ios")r.errors.push("Unsupported strict target platform: "+platform);
+  if(strict&&platform==="ios"){
+   const k=iosKeyStatus(dir);
+   if(!k.ok)r.errors.push("iOS store: "+k.reason);
+  }else if(strict&&!r.keys)r.errors.push("store keys are not set, so nothing could be sold (set them in build.config.json or the environment)");
   if(r.errors.length){console.error("Release blocked:\n - "+r.errors.join("\n - "));process.exitCode=1;}
   else console.log((target==="production"?"Production":"External-tester")+" build is clean: "+r.files+" files, no developer tools, practice checkout or test storage."+
    (r.keys?"":"\nStore keys are not set yet, so this build cannot sell anything. That is intended until real purchases are approved."));

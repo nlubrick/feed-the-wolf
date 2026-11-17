@@ -1,5 +1,5 @@
-# Feed the Wolf: cloud builds. All workflows run manually. Only ios-beta-signed uploads, and only to internal TestFlight.
-# Owner of this file for now: Claude (agreed with Nickolas, 2026-11-16). ChatGPT: propose changes rather than editing in place.
+# Feed the Wolf: manual cloud builds. The internal and release-candidate workflows upload builds to App Store Connect; neither submits for review or public release.
+# Review candidate workflow added after the owner requested preparing an App Store submission. Never auto-submit.
 #
 #   android-beta-debug   tester build, debug APK, no credentials
 #   ios-beta-simulator   tester build, simulator compile check, no credentials
@@ -7,6 +7,8 @@
 #                        (practice checkout, clearly labeled, no money; no beta review, no App Store submission)
 #   ios-external-beta    external build, signed IPA for OUTSIDE testers (no practice checkout; Apple sandbox purchases
 #                        through RevenueCat). Needs the Codemagic variable group "revenuecat_beta" with FTW_RC_IOS_KEY.
+#   ios-appstore-review  PRODUCTION build, signed IPA; uploads to ASC WITHOUT submitting/releasing.
+#                        Needs the Codemagic variable group "revenuecat_production" with FTW_RC_IOS_KEY.
 #
 # Every app build is stamped by scripts/set-app-version.cjs with a unique build number (minutes since 1970, UTC)
 # and the version from package.json, so no upload is ever rejected as a duplicate.
@@ -182,3 +184,59 @@ workflows:
       - ios/App/build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
     # No publishing block by design. Upload to TestFlight and any App Store submission are separate, explicit steps.
+
+
+  ios-appstore-review:
+    name: Feed the Wolf RELEASE CANDIDATE · App Store Review IPA
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    # Use the SAME iOS bundle ID as the installed TestFlight app, but build the
+    # strictly clean production flavor: no DEV tools, fake checkout or BETA badge.
+    integrations:
+      app_store_connect: Feed the Wolf Codemagic
+    environment:
+      groups:
+        - revenuecat_production  # user-created group with ONLY the iOS public SDK key
+      node: 22
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.failureentertainment.feedthewolf
+    scripts:
+      - name: Test game and require real Apple purchase configuration
+        script: |
+          npm install --no-audit --no-fund
+          npm test
+          # The release gate rejects missing/test-store/iOS keys and any beta-only
+          # checkout code. The actual IAP catalog must also be configured and
+          # sandbox-tested in App Store Connect and RevenueCat before submission.
+          node scripts/check-release.cjs --target production --strict --platform ios
+      - name: Generate production iOS project and native App Store icon
+        script: |
+          node scripts/build.cjs production --www
+          if [ -d ios ] && [ ! -d ios/App/App.xcodeproj ]; then
+            mv ios ios-legacy-source
+          fi
+          npx cap add ios --packagemanager SPM
+          npx cap sync ios
+          node scripts/set-app-version.cjs ios
+      - name: Apply Apple Distribution signing profile
+        script: |
+          xcode-project use-profiles --project ios/App/App.xcodeproj
+      - name: Build signed iPhone IPA for App Store Connect
+        script: |
+          xcode-project build-ipa \
+            --project ios/App/App.xcodeproj \
+            --scheme App
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - ios/App/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    # Uploads only to App Store Connect. This does NOT submit the app
+    # for review, TestFlight external review or public availability.
+    # The owner explicitly chooses the version/build and submits manually.
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false
+        submit_to_app_store: false

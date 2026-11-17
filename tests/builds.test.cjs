@@ -163,13 +163,13 @@ test("Every app build gets a unique, increasing build number that both stores ac
 test("Codemagic: every workflow stamps the build number before compiling; only internal TestFlight uploads",()=>{
  const y=fs.readFileSync(path.join(root,"codemagic.yaml"),"utf8");
  const flows=y.split(/\n  (?=[a-z0-9-]+:\n    name:)/).slice(1);
- assert.deepEqual(flows.map(f=>f.split(":")[0]),["android-beta-debug","ios-beta-simulator","ios-beta-signed","ios-external-beta"]);
+ assert.deepEqual(flows.map(f=>f.split(":")[0]),["android-beta-debug","ios-beta-simulator","ios-beta-signed","ios-external-beta","ios-appstore-review"]);
  for(const f of flows){
   const name=f.split(":")[0],plat=name.startsWith("android")?"android":"ios";
   const stamp=f.indexOf("node scripts/set-app-version.cjs "+plat),sync=f.indexOf("npx cap sync "+plat),compile=f.search(/gradlew assemble|xcodebuild |xcode-project build-ipa/);
   assert.ok(sync>0&&stamp>sync&&compile>stamp,name+": stamp must come after the project is generated and before it is compiled");
-  // Only the internal TestFlight workflow uploads. Nothing ever goes to beta review or the public App Store from here.
-  if(name==="ios-beta-signed"){
+  // Internal TestFlight and review candidates upload to ASC but never submit.
+  if(name==="ios-beta-signed"||name==="ios-appstore-review"){
    assert.match(f,/\n    publishing:\n      app_store_connect:\n        auth: integration\n        submit_to_testflight: false\n        submit_to_app_store: false\n/);
   }else assert.doesNotMatch(f,/\n    publishing:/,name+" must not publish");
   assert.doesNotMatch(f,/submit_to_app_store: true|submit_to_testflight: true|google_play:|beta_groups:/,name+" must not release to anyone automatically");
@@ -182,4 +182,25 @@ test("Codemagic: every workflow stamps the build number before compiling; only i
  const ext=flows[3];
  assert.match(ext,/node scripts\/build\.cjs external --www/);assert.match(ext,/check-release\.cjs --target external --strict/);
  assert.doesNotMatch(ext,/build-tester/,"outside testers never get the practice checkout");
+ const review=flows[4];
+ assert.match(review,/node scripts\/build\.cjs production --www/);
+ assert.match(review,/check-release\.cjs --target production --strict --platform ios/);
+ assert.match(review,/revenuecat_production/);
+ assert.doesNotMatch(review,/build-tester|--target external/);
+ assert.match(review,/bundle_identifier: com\.failureentertainment\.feedthewolf/);
+});
+
+test("Review release gate accepts only real platform-specific Apple RevenueCat keys",()=>{
+ const {iosKeyStatus}=require("../scripts/check-release.cjs");
+ const dir=path.join(tmp,"key-review");
+ fs.mkdirSync(dir,{recursive:true});
+ const evalKey=key=>{
+  fs.writeFileSync(path.join(dir,"store-config.js"),'window.FTW_STORE_CONFIG='+JSON.stringify({build:"production",revenueCat:{ios:key,android:""}})+';\n');
+  return iosKeyStatus(dir);
+ };
+ for(const key of ["","test_demoStoreKey123","not-used-in-this-ios-build","appl_example","goog_abcdef123456","appl_"]){
+  assert.equal(evalKey(key).ok,false,key);
+ }
+ assert.equal(evalKey("appl_1234567890123456").ok,true);
+ assert.equal(evalKey("appl_1234567890123456").reason,undefined);
 });
