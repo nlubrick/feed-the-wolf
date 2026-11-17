@@ -66,6 +66,8 @@ if(require.main===module){
   }else if(strict&&!r.keys)r.errors.push("store keys are not set, so nothing could be sold (set them in build.config.json or the environment)");
   if(r.errors.length){console.error("Release blocked:\n - "+r.errors.join("\n - "));process.exitCode=1;}
   else console.log((target==="production"?"Production":"External-tester")+" build is clean: "+r.files+" files, no developer tools, practice checkout or test storage."+
-   (r.keys?"":"\nStore keys are not set yet, so this build cannot sell anything. That is intended until real purchases are approved."));
+   ((platform==="ios"&&iosKeyStatus(dir).ok)||r.keys
+    ?"\nStore configuration preflight passed. This does NOT verify product setup or sandbox purchase results."
+    :"\nStore keys are not set yet, so this build cannot sell anything. That is intended until real purchases are approved."));
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 }

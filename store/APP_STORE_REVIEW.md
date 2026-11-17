@@ -28,7 +28,7 @@
 - App price: **Free**, with $2.99 non-consumable full unlock and optional consumable gem packs; avoid setting a $2.99 download price as well.
 - Set age rating, Apple App Privacy, copyright, availability, and pricing/tax category.
 - Prepare App Review contact information and notes explaining the 5 free levels, first free mini-game, no login, $2.99 full unlock, optional gems and Restore Purchases. The reviewer may use Apple's sandbox; no test login is needed.
-- Add the **app version and the first non-consumable and consumable IAPs to the same review submission** (Apple requires a new app version with the first of each type).
+- Create/select **iOS App 1.0.0**, which matches the release candidate's marketing version; attach the processed 1.0.0 IPA, not a 0.2.0 internal beta build. Add the **app version and the first non-consumable and consumable IAPs to the same review submission** (Apple requires a new app version with the first of each type).
 - Choose **manual release** so approval does not publish immediately.
 - Only after confirming all content and the owner explicitly authorizes submission: choose the processed production build, Add for Review, and Submit for Review. This repository workflow does not press those buttons.
 
