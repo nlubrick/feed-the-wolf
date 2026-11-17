@@ -11,7 +11,7 @@
    Supply required purchase localizations and a real review screenshot for each; use the official price tiers Apple offers and check all prices before saving.
 3. Add the iOS app (bundle ID `com.failureentertainment.feedthewolf`) to RevenueCat; connect its App Store integration, import these products, create entitlement `full_game` linked to `feed_the_wolf_full_unlock`, and ensure all four products are accessible to the SDK.
 4. In Codemagic create the **secure** variable group `revenuecat_production` with `FTW_RC_IOS_KEY` set to the correct RevenueCat **public Apple-specific SDK key** (starts `appl_`). Do not use a RevenueCat Test Store key or any RevenueCat secret key. The release workflow rejects a missing/invalid iOS key.
-5. Complete the working support contact address on `support.html` before the public release. It currently contains a placeholder. Confirm the privacy disclosure matches the active RevenueCat SDK and any data collected.
+5. Public support contact configured on `support.html` and `privacy.html`: `nlubrick@gmail.com` (verify the deployed URLs show it before submitting). Confirm the privacy disclosure matches the active RevenueCat SDK and any data collected.
 
 ## 2. Real-money sandbox verification — physical iPhone
 - Build `ios-appstore-review` (or validate purchases with the clean external beta using the correct Apple SDK key). Do not use `ios-beta-signed`: it contains a simulated checkout.
@@ -24,7 +24,7 @@
 - Follow `store/LISTING.md` for the draft title, subtitle, keywords, description, promo text, purchase IDs, age-rating and privacy guidance; verify the live answers yourself.
 - Supply **real app screenshots** from a supported device, not images generated from concept art. Capture gameplay and the store on the final production version.
 - Privacy URL: https://feed-the-wolf.onrender.com/privacy.html
-- Support URL: https://feed-the-wolf.onrender.com/support.html — add the real support contact before submission.
+- Support URL: https://feed-the-wolf.onrender.com/support.html — public contact: `nlubrick@gmail.com` (confirm deployed page).
 - App price: **Free**, with $2.99 non-consumable full unlock and optional consumable gem packs; avoid setting a $2.99 download price as well.
 - Set age rating, Apple App Privacy, copyright, availability, and pricing/tax category.
 - Prepare App Review contact information and notes explaining the 5 free levels, first free mini-game, no login, $2.99 full unlock, optional gems and Restore Purchases. The reviewer may use Apple's sandbox; no test login is needed.
@@ -37,4 +37,4 @@
 It runs npm tests and strict release checks, creates a fresh Capacitor iOS project, installs the unbadged FTW native icon, signs with the existing Apple Distribution profile, and uploads to App Store Connect. It has `submit_to_testflight: false` and `submit_to_app_store: false`. Upload is **not** submission and not publication.
 
 ## Still unverified
-The code cannot verify the owner's App Store Connect Paid Apps Agreement, tax/bank status, IAP creation/localization, RevenueCat products/entitlement, availability of the real support address, screenshots, legal/privacy answers, iOS device bug resolution, or Apple's approval. These remain required gates. Do not label the game “ready for App Review” until they are completed.
+The code cannot verify the owner's App Store Connect Paid Apps Agreement, tax/bank status, IAP creation/localization, RevenueCat products/entitlement, successful deployment and reachability of the support page, screenshots, legal/privacy answers, iOS device bug resolution, or Apple's approval. These remain required gates. Do not label the game “ready for App Review” until they are completed.
