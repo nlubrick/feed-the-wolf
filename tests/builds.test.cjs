@@ -159,6 +159,8 @@ test("Every app build gets a unique, increasing build number that both stores ac
  assert.match(g,new RegExp("versionCode "+a+"\\n"));assert.match(g,/versionName "0\.2\.0"/);assert.match(g,/applicationId "com\.failureentertainment\.feedthewolf"/);
  assert.throws(()=>v.stampIos("nothing here",a,"0.2.0"));assert.throws(()=>v.stampAndroid("nothing here",a,"0.2.0"));
  assert.match(v.versionName(),/^\d+\.\d+\.\d+$/);
+ assert.equal(v.versionName({FTW_RELEASE_VERSION:"1.0.0"}),"1.0.0");
+ assert.throws(()=>v.versionName({FTW_RELEASE_VERSION:"release"}));
 });
 test("Codemagic: every workflow stamps the build number before compiling; only internal TestFlight uploads",()=>{
  const y=fs.readFileSync(path.join(root,"codemagic.yaml"),"utf8");
@@ -186,6 +188,7 @@ test("Codemagic: every workflow stamps the build number before compiling; only i
  assert.match(review,/node scripts\/build\.cjs production --www/);
  assert.match(review,/check-release\.cjs --target production --strict --platform ios/);
  assert.match(review,/revenuecat_production/);
+ assert.match(review,/FTW_RELEASE_VERSION=1\.0\.0 node scripts\/set-app-version\.cjs ios/);
  assert.doesNotMatch(review,/build-tester|--target external/);
  assert.match(review,/bundle_identifier: com\.failureentertainment\.feedthewolf/);
 });
