@@ -16,8 +16,8 @@ function buildNumber(now=Date.now(),env=process.env){
  if(!Number.isSafeInteger(n)||n<1||n>ANDROID_MAX)throw new Error("Build number must be a whole number from 1 to "+ANDROID_MAX+", got "+(chosen||n));
  return n;
 }
-function versionName(){
- const v=JSON.parse(fs.readFileSync(path.join(root,"package.json"),"utf8")).version;
+function versionName(env=process.env){
+ const v=env.FTW_RELEASE_VERSION||JSON.parse(fs.readFileSync(path.join(root,"package.json"),"utf8")).version;
  if(!/^\d+\.\d+\.\d+$/.test(v))throw new Error("package.json version must look like 1.2.3, got "+v);
  return v;
 }

@@ -101,9 +101,27 @@ Before the first external build:
 
 What changes for testers: the unlock screen shows the real Apple purchase sheet with "[Environment: Sandbox]". They are not charged.
 
-## Stage 3: release (not started)
+## Stage 3: App Store review candidate (prepared; NOT submitted)
 
-Needs, in addition: store screenshots uploaded, the listing text entered, age rating and privacy answers confirmed, a support email on the support page, production RevenueCat keys, an Android signed release workflow, and your explicit go-ahead to switch on real purchases.
+The manual `ios-appstore-review` Codemagic workflow builds the real production
+flavor (no Developer panel, practice checkout, or BETA badge), signs an IPA,
+and **uploads it to App Store Connect only**. It does NOT select the build
+for a version, submit anything for App Review, or make the game public.
+
+Before triggering it, create a Codemagic group `revenuecat_production` with
+the real iOS-specific **public** RevenueCat SDK key `FTW_RC_IOS_KEY`.
+Never use a RevenueCat Test Store key, and never provide secret API keys.
+The workflow fails closed if the iOS key is missing or has the wrong prefix.
+
+Before **submitting** the app for review, also finish Paid Apps, tax/banking,
+configure all four Apple in-app products and RevenueCat entitlement/offering,
+test real purchase and restore in Apple sandbox on a physical iPhone,
+confirm the resolved iOS sound-after-resume issue, upload actual game
+screenshots, fill in App Store Connect metadata/privacy/age rating,
+add a working support email to support.html, and select **manual release**.
+See `store/APP_STORE_REVIEW.md` for exact steps. The user must explicitly approve submission.
+
+Android signed release, Play Billing and Google Play closed testing remain separate.
 
 ## Android
 
