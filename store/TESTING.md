@@ -118,7 +118,7 @@ configure all four Apple in-app products and RevenueCat entitlement/offering,
 test real purchase and restore in Apple sandbox on a physical iPhone,
 confirm the resolved iOS sound-after-resume issue, upload actual game
 screenshots, fill in App Store Connect metadata/privacy/age rating,
-add a working support email to support.html, and select **manual release**.
+confirm nlubrick@gmail.com appears on the deployed support and privacy pages, and select **manual release**.
 See `store/APP_STORE_REVIEW.md` for exact steps. The user must explicitly approve submission.
 
 Android signed release, Play Billing and Google Play closed testing remain separate.

@@ -27,6 +27,8 @@ test("Privacy and support pages exist at the URLs the listing gives, and link to
  assert.match(privacy,/href="\.\/support\.html"/);assert.match(support,/href="\.\/privacy\.html"/);
  for(const word of ["RevenueCat","Apple","Google","no analytics","Render","Children"])assert.ok(privacy.toLowerCase().includes(word.toLowerCase()),word);
  assert.match(support,/id="contact"/);assert.match(support,/Restore purchases/);
+ for(const page of [privacy,support])assert.match(page,/mailto:nlubrick@gmail\.com/,"public support email must work on both pages");
+ assert.doesNotMatch(support,/A support email address will be listed here/,"remove placeholder before public release");
  const page=fs.readFileSync(path.join(root,"index.html"),"utf8");
  assert.match(page,/feed-the-wolf\.onrender\.com\/privacy\.html/);assert.match(page,/feed-the-wolf\.onrender\.com\/support\.html/);
 });
