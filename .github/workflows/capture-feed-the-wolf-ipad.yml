@@ -1,0 +1,40 @@
+name: Capture Feed the Wolf iPad screenshots
+on:
+  push:
+    branches: [chatgpt/appstore-ipad-screenshot-20261117]
+    paths-ignore:
+      - "appstore-screenshots/**"
+permissions:
+  contents: write
+jobs:
+  ipad-capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install app and browser
+        run: |
+          npm install --no-audit --no-fund
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Build the exact production webview
+        run: node scripts/build.cjs production
+      - name: Capture real game UI in 13-inch iPad resolution
+        run: |
+          python3 -m http.server 8765 --directory dist/production --bind 127.0.0.1 >/tmp/ftw-server.log 2>&1 &
+          node scripts/capture-appstore-ipad.cjs
+      - name: Save screenshot images to branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add appstore-screenshots/*.png
+          git commit -m "Capture iPad screenshots [skip ci]"
+          git push
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: feed-the-wolf-ipad-appstore-screenshots
+          path: appstore-screenshots/*.png
